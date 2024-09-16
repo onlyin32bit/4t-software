@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-	<title></title>
+	<title>Phan mem Thach Thuc Tri Tue</title>
 </svelte:head>
 
 <section class="flex h-screen flex-col items-center justify-center gap-6">

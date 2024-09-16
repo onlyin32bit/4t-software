@@ -48,15 +48,18 @@
 </script>
 
 <!-- main display -->
-<div class="flex flex-col items-center justify-center text-[5rem] font-[600] text-white">
-	<h1 class="text-[8rem]">TỨ KẾT 4</h1>
-	<table class="">
+
+<div
+	class="bg-bg-1 flex h-screen flex-col items-center justify-center bg-cover bg-no-repeat text-[5rem] font-[600] text-white"
+>
+	<h1 class=" mt-10 text-[7rem] font-bold">TỨ KẾT 4</h1>
+	<table class="scale-95">
 		<tbody>
 			{#each contestants as contestant}
 				<tr>
-					<td class="h-16"></td>
+					<td class="h-10"></td>
 				</tr>
-				<tr class="h-[9rem]">
+				<tr class="mt-10 h-[9rem]">
 					<td class="w-[55rem] bg-black text-center">{contestant.name.toUpperCase()}</td>
 					<td class="w-[30rem] bg-gradient-to-b from-red-700 to-red-950 px-10"
 						>{contestant.class.toUpperCase()}</td
