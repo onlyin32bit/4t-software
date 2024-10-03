@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { dict, timerSettings } from '$lib/utils';
+	import { dictionary, timerSettings, createLogMessage } from '$lib/utils';
 	import { user, pb } from '$lib/pocketBase';
 	import { onMount, onDestroy } from 'svelte';
 
@@ -83,7 +83,6 @@
 
 	async function createAnswer() {
 		if (userStats.time == -1) {
-			answer = answer.toUpperCase();
 			await pb.collection('users').update(userStats.id, {
 				answer: answer.toUpperCase(),
 				time: timerSetting - time
@@ -99,7 +98,7 @@
 	<title>Trang thí sinh | Thách Thức Trí Tuệ</title>
 </svelte:head>
 
-<div class="grid h-screen grid-cols-1 grid-rows-[50px_1fr_50px] border-[3px] border-gray-400">
+<div class="grid h-screen grid-cols-1 grid-rows-[50px_1fr_120px] border-[3px] border-gray-400">
 	<div class="grid grid-cols-4">
 		{#each contestants as contestant}
 			<div
@@ -114,7 +113,7 @@
 	<div class="grid grid-cols-[1fr_50px] items-center border-[3px] border-gray-400">
 		<form on:submit|preventDefault={createAnswer} class="flex h-full items-center pr-4">
 			<input
-				class="h-full w-full px-4 text-xl"
+				class="h-full w-full px-4 text-6xl uppercase"
 				type="text"
 				placeholder="Nhập câu trả lời của bạn, ENTER để gửi"
 				bind:value={answer}

@@ -12,11 +12,14 @@ export function getCurrentTime() {
 		'/' +
 		time.getFullYear() +
 		'-' +
-		(time.getHours() / 10 < 1 ? '0' + time.getHours() : time.getHours()) +
+		(time.getHours() < 10 ? '0' : '') +
+		time.getHours() +
 		':' +
-		(time.getMinutes() / 10 < 1 ? '0' + time.getMinutes() : time.getMinutes()) +
+		(time.getMinutes() < 10 ? '0' : '') +
+		time.getMinutes() +
 		':' +
-		(time.getSeconds() / 10 < 1 ? '0' + time.getSeconds() : time.getSeconds());
+		(time.getSeconds() < 10 ? '0' : '') +
+		time.getSeconds();
 	return currentTime;
 }
 
@@ -28,13 +31,32 @@ export function playSound(src: string) {
 	audio.play();
 }
 
-export async function createLogMessage(message: object) {
+export async function createLogMessage(message: { from: string; type: string; content: string }) {
 	const logMessages = await pb.collection('log').getOne('4t-global-logs0');
 	const logs = logMessages.logs;
-	await pb.collection('log').update('4t-global-logs0', { logs: [...logs, message] });
+	const Message = {
+		time: getCurrentTime(),
+		from: message.from,
+		type: message.type,
+		content: message.content
+	};
+	await pb.collection('log').update('4t-global-logs0', { logs: [...logs, Message] });
 }
 
-export const dict = new Map([
+export function download(filename: string, text: string) {
+	const element = document.createElement('a');
+	element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+	element.setAttribute('download', filename);
+
+	element.style.display = 'none';
+	document.body.appendChild(element);
+
+	element.click();
+
+	document.body.removeChild(element);
+}
+
+export const dictionary = new Map([
 	['main', 'Màn hình chính'],
 	['kd', 'Khởi động'],
 	['tt', 'Tăng tốc'],
@@ -45,6 +67,8 @@ export const dict = new Map([
 	['start', 'Bắt đầu'],
 	['rule', 'Luật chơi'],
 	['main_vcnv', 'Màn hình VCNV'],
+	['main_vd', 'Màn hình chinh Ve Dich'],
+	['ques_ts', 'Thi sinh'],
 	['ques', 'Bộ câu hỏi'],
 	['end', 'Kết thúc'],
 	[undefined, 'Chưa có']
@@ -105,3 +129,57 @@ const soundsCollection: Map<string, string> = new Map([
 	['', ''],
 	['', '']
 ]);
+
+export function tooltip(element: HTMLElement) {
+	let div: HTMLDivElement;
+	let title: string;
+	let timeout: number;
+	function mouseOver(event: MouseEvent) {
+		// NOTE: remove the `title` attribute, to prevent showing the default browser tooltip
+		// remember to set it back on `mouseleave`
+		title = element.getAttribute('title') ?? 'No title found';
+		// element.removeAttribute('title');
+
+		div = document.createElement('div');
+		div.textContent = title;
+		div.style.cssText = `
+			border: 1px solid #ddd;
+			box-shadow: 1px 1px 1px #ddd;
+			background: white;
+			border-radius: 4px;
+			padding: 4px;
+			position: fixed;
+			top: ${event.pageX + 5}px;
+			left: ${event.pageY + 5}px;
+		`;
+		document.body.appendChild(div);
+		timeout = setTimeout(() => {
+			document.body.removeChild(div);
+		}, 3000);
+	}
+	function mouseMove(event: MouseEvent) {
+		div.style.left = `${event.pageX + 5}px`;
+		div.style.top = `${event.pageY + 5}px`;
+		clearTimeout(timeout);
+		timeout = setTimeout(() => {
+			document.body.removeChild(div);
+		}, 3000);
+	}
+	function mouseLeave() {
+		document.body.removeChild(div);
+		// NOTE: restore the `title` attribute
+		element.setAttribute('title', title);
+	}
+
+	element.addEventListener('mouseover', mouseOver);
+	element.addEventListener('mouseleave', mouseLeave);
+	element.addEventListener('mousemove', mouseMove);
+
+	return {
+		destroy() {
+			element.removeEventListener('mouseover', mouseOver);
+			element.removeEventListener('mouseleave', mouseLeave);
+			element.removeEventListener('mousemove', mouseMove);
+		}
+	};
+}

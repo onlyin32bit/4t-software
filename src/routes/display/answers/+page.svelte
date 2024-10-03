@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { pb } from '$lib/pocketBase';
 	import { onDestroy, onMount } from 'svelte';
@@ -41,21 +42,20 @@
 		});
 	});
 
-	$: if (status != 'answers') {
-		goto('/display/' + status);
-	}
+	$: if (status != 'answers') goto('/display/' + status);
 </script>
 
 <!-- main display -->
-<div class="flex flex-col items-center justify-center text-[5rem] font-[600] text-white">
-	<h1 class="text-[8rem]">TỨ KẾT 4</h1>
-	{#each contestants as contestant}
-		<div>
-			<h1>{contestant.name}</h1>
-			<div>
-				<span>{contestant.time}</span>
-				<p>{contestant.answer}</p>
+<div class="flex h-screen w-screen flex-col items-center justify-center overflow-hidden">
+	<div>
+		{#each contestants as contestant, i}
+			<div in:fly={{ x: 200, delay: i * 100 }}>
+				<h1>{contestant.name}</h1>
+				<div>
+					<span>{contestant.time}</span>
+					<p>{contestant.answer ?? '_'}</p>
+				</div>
 			</div>
-		</div>
-	{/each}
+		{/each}
+	</div>
 </div>

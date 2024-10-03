@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { timerSettings } from '$lib/utils';
 	import { pb } from '$lib/pocketBase';
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount, tick } from 'svelte';
+	import { fade } from 'svelte/transition';
 
 	let questions: string[] = [];
 	let screen: string = 'kd';
 	let slide: string = 'start';
 	let ques: number = 1;
-	let time: number = 0;
-	const timerSetting = (timerSettings.get('kd') ?? 0) * 1000;
+	let time: number = 10;
+	let timerStart: boolean = false;
 	let unsub: (() => void)[] = [];
 
 	onMount(async () => {
@@ -28,8 +28,9 @@
 				ques = record.ques;
 			}
 		});
-		unsub[1] = await pb.collection('users').subscribe('', ({ action, record }) => {
+		unsub[1] = await pb.collection('users').subscribe('4t-contestant-1', ({ action, record }) => {
 			if (action == 'update') {
+				if (record.time === -1) timerStart = true;
 			}
 		});
 	});
@@ -41,20 +42,33 @@
 	});
 
 	async function timer() {
-		time = timerSetting;
 		let countdown: any = setInterval(() => {
-			time -= 10;
+			time -= 1;
 			if (time <= 0) {
 				clearInterval(countdown);
 				countdown = null;
+				timerStart = false;
 			}
-		}, 10);
+		}, 1000);
+	}
+
+	let show: boolean = true;
+
+	$: {
+		ques;
+		async function onChange() {
+			show = false;
+			await tick();
+			show = true;
+		}
+		onChange();
+		time = 10;
 	}
 
 	$: if (screen != 'kd') {
 		goto('/display/' + screen);
 	}
-	$: if (time === -1) timer();
+	$: if (timerStart) timer();
 </script>
 
 <div class="flex h-screen w-screen items-center justify-center bg-black">
@@ -65,7 +79,9 @@
 					class="relative flex h-[80vh] w-[70vw] items-center justify-center bg-bg-kd bg-contain bg-no-repeat text-white"
 				>
 					<div class=" absolute left-[3.5rem] top-12 text-[5rem] text-black">
-						<h1 class="absolute -top-2 left-[85px] z-10 -translate-x-1/2 font-semibold">
+						<h1
+							class="font-number-display absolute -top-2 left-[85px] z-10 -translate-x-1/2 font-semibold"
+						>
 							{ques}
 						</h1>
 
@@ -108,11 +124,16 @@
 							></path>
 						</svg>
 					</div>
-					<p class="w-[80%] text-center text-[4rem] font-medium leading-[5rem]">
-						{questions[ques - 1]}
-					</p>
+					{#if show}
+						<p
+							class="w-[80%] text-center text-2xl font-medium xl:text-[4rem] xl:leading-[5rem]"
+							in:fade={{ duration: 500 }}
+						>
+							{questions[ques - 1]}
+						</p>
+					{/if}
 				</div>
-				<h1 class="text-[7rem]">{((timerSetting - time) / 1000).toFixed(0)}</h1>
+				<h1 class="text-[7rem]">{time}</h1>
 			</div>
 		{:else}
 			<div class="h-full bg-bg-1 bg-contain"></div>

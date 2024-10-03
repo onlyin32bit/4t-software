@@ -2,14 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer utilities {
-	/* Hide scrollbar for Chrome, Safari and Opera */
-	.no-scrollbar::-webkit-scrollbar {
-		display: none;
+@layer base {
+	@font-face {
+		font-family: 'SVN-TV';
+		font-weight: 300;
+		src: url(/src/lib/font/SVN-The\ Voice\ Regular.ttf);
 	}
-	/* Hide scrollbar for IE, Edge and Firefox */
-	.no-scrollbar {
-		-ms-overflow-style: none; /* IE and Edge */
-		scrollbar-width: none; /* Firefox */
+}
+
+@layer utilities {
+	.center-element {
+		@apply left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2;
 	}
 }
