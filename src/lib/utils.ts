@@ -68,10 +68,20 @@ export const dictionary = new Map([
 	['rule', 'Luật chơi'],
 	['main_vcnv', 'Màn hình VCNV'],
 	['main_vd', 'Màn hình chinh Ve Dich'],
-	['ques_ts', 'Thi sinh'],
+	['ques_ts1', 'Thi sinh 1'],
+	['ques_ts2', 'Thi sinh 2'],
+	['ques_ts3', 'Thi sinh 3'],
+	['ques_ts4', 'Thi sinh 4'],
 	['ques', 'Bộ câu hỏi'],
 	['end', 'Kết thúc'],
 	[undefined, 'Chưa có']
+]);
+
+export const numberOfQues: Map<string, number> = new Map([
+	['kd', 12],
+	['vcnv', 8],
+	['tt', 4],
+	['vd', 4]
 ]);
 
 export const timerSettings: Map<string, number> = new Map([

@@ -5,20 +5,21 @@
 	import { fade } from 'svelte/transition';
 
 	let questions: string[] = [];
+
 	let screen: string = 'kd';
 	let slide: string = 'start';
 	let ques: number = 1;
+	let displayQuestion: boolean = false;
 	let time: number = 10;
-	let timerStart: boolean = false;
-	let unsub: (() => void)[] = [];
 
+	let unsub: (() => void)[] = [];
 	onMount(async () => {
 		const displayStatus = await pb.collection('display_status').getOne('4t-displaystate');
 		screen = displayStatus.screen;
 		slide = displayStatus.slide;
 		ques = displayStatus.ques;
 
-		const questionList = await pb.collection('ques_kd').getOne('4t-questions-kd');
+		const questionList = await pb.collection('kd').getOne('4t-questions-kd');
 		questions = questionList.question;
 
 		unsub[0] = await pb.collection('display_status').subscribe('*', ({ action, record }) => {
@@ -26,11 +27,8 @@
 				screen = record.screen;
 				slide = record.slide;
 				ques = record.ques;
-			}
-		});
-		unsub[1] = await pb.collection('users').subscribe('4t-contestant-1', ({ action, record }) => {
-			if (action == 'update') {
-				if (record.time === -1) timerStart = true;
+				if (displayQuestion !== record.displayQuestion) displayQuestion = true;
+				if (record.timer != -1) timer();
 			}
 		});
 	});
@@ -47,28 +45,19 @@
 			if (time <= 0) {
 				clearInterval(countdown);
 				countdown = null;
-				timerStart = false;
 			}
 		}, 1000);
 	}
 
-	let show: boolean = true;
-
 	$: {
 		ques;
-		async function onChange() {
-			show = false;
-			await tick();
-			show = true;
-		}
-		onChange();
 		time = 10;
+		displayQuestion = false;
 	}
 
 	$: if (screen != 'kd') {
 		goto('/display/' + screen);
 	}
-	$: if (timerStart) timer();
 </script>
 
 <div class="flex h-screen w-screen items-center justify-center bg-black">
@@ -76,11 +65,11 @@
 		{#if slide === 'ques'}
 			<div class="h-full bg-bg-2 bg-contain">
 				<div
-					class="relative flex h-[80vh] w-[70vw] items-center justify-center bg-bg-kd bg-contain bg-no-repeat text-white"
+					class="bg-co relative flex h-[80vh] w-[70vw] items-center justify-center bg-bg-kd bg-no-repeat text-white"
 				>
 					<div class=" absolute left-[3.5rem] top-12 text-[5rem] text-black">
 						<h1
-							class="font-number-display absolute -top-2 left-[85px] z-10 -translate-x-1/2 font-semibold"
+							class="absolute -top-2 left-[85px] z-10 -translate-x-1/2 font-number-display font-semibold"
 						>
 							{ques}
 						</h1>
@@ -124,10 +113,10 @@
 							></path>
 						</svg>
 					</div>
-					{#if show}
+					{#if displayQuestion}
 						<p
 							class="w-[80%] text-center text-2xl font-medium xl:text-[4rem] xl:leading-[5rem]"
-							in:fade={{ duration: 500 }}
+							in:fade={{ duration: 100 }}
 						>
 							{questions[ques - 1]}
 						</p>

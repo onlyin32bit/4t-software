@@ -1,11 +1,13 @@
 <script lang="ts">
+	import AuthCheck from '$lib/components/AuthCheck.svelte';
 	import {
 		getCurrentTime,
 		createLogMessage,
 		download,
 		dictionary,
 		timerSettings,
-		playSound
+		playSound,
+		numberOfQues
 	} from '$lib/utils';
 	import { pb, user } from '$lib/pocketBase';
 	import { onMount, onDestroy } from 'svelte';
@@ -35,26 +37,8 @@
 		question: -1,
 		numberOfQues: -1
 	};
-	let selection: string;
-	$: if (selected.screen === 'kd') {
-		selected.numberOfQues = 12;
-	} else if (selected.screen === 'tt' || selected.screen === 'vd') {
-		selected.numberOfQues = 4;
-	} else if (selected.screen === 'vcnv') {
-		selected.numberOfQues = 8;
-	} else {
-		selected.numberOfQues = -1;
-	}
-
-	$: if (current.screen === 'kd') {
-		current.numberOfQues = 12;
-	} else if (current.screen === 'tt' || current.screen === 'vd') {
-		current.numberOfQues = 4;
-	} else if (current.screen === 'vcnv') {
-		current.numberOfQues = 8;
-	} else {
-		current.numberOfQues = -1;
-	}
+	$: selected.numberOfQues = numberOfQues.get(selected.screen) ?? 0;
+	$: current.numberOfQues = numberOfQues.get(current.screen) ?? 0;
 
 	let selectedScore: number[] = [0, 0, 0, 0];
 
@@ -64,22 +48,38 @@
 
 	let menu = {
 		setContestantName: false,
-		tooltip: false,
 		settings: false
 	};
+
+	let setting: string;
 
 	let selectionSlideList = ['start', 'rule', 'ques', 'end'];
 	$: if (selected.screen === 'vcnv') {
 		selectionSlideList = ['start', 'rule', 'main_vcnv', 'ques', 'end'];
 	} else if (selected.screen === 'vd') {
-		selectionSlideList = ['start', 'rule', 'main_vd', 'ques_ts', 'end'];
+		selectionSlideList = [
+			'start',
+			'rule',
+			'main_vd',
+			'ques_ts1',
+			'ques_ts2',
+			'ques_ts3',
+			'ques_ts4',
+			'end'
+		];
 	} else {
 		selectionSlideList = ['start', 'rule', 'ques', 'end'];
 	}
 
 	let contestant_name: string[] = [];
 	let contestant_class: string[] = [];
-
+	let contestant_info = [
+		{ name: '', class: '' },
+		{ name: '', class: '' },
+		{ name: '', class: '' },
+		{ name: '', class: '' }
+	];
+	// あなたはゲイ
 	let unsub: (() => void)[] = [];
 	// chay khi component duoc load
 	onMount(async () => {
@@ -135,6 +135,7 @@
 		});
 	});
 
+	let selection: string;
 	$: selection =
 		dictionary.get(selected.screen) +
 		(selected.screen === 'answers' || selected.screen === 'main' || selected.screen === 'scores'
@@ -151,17 +152,20 @@
 		contestants.forEach(async (currentValue) => {
 			await pb.collection('users').update(currentValue.id, { answer: null, time: -1 });
 		});
+		await pb.collection('display_status').update('4t-displaystate', {
+			timer: 10
+		});
 		createLogMessage({
 			from: 'system',
 			type: 'TIMER',
 			content: 'Bắt đầu đếm thời gian: ' + timerSettings.get(current.screen) + 's'
 		});
 		let ans: string = 'Câu trả lời của thí sinh: ';
-		let countdown: number = setInterval(() => {
+		let countdown: any = setInterval(async () => {
 			time -= 10;
 			if (time <= 0) {
 				clearInterval(countdown);
-				countdown = -1;
+				countdown = null;
 
 				contestants.forEach(async (currentValue) => {
 					if (currentValue.time == -1) {
@@ -173,6 +177,9 @@
 					from: 'system',
 					type: 'TIMER',
 					content: 'Đã hết thời gian'
+				});
+				await pb.collection('display_status').update('4t-displaystate', {
+					timer: -1
 				});
 			}
 		}, 10);
@@ -213,7 +220,7 @@
 		}
 	}
 	async function setContestantName() {
-		let systemLog: string = 'Đã cập nhật tên thí sinh: ';
+		let systemLog: string = 'Cập nhật thông tin thí sinh: ';
 		for (let i = 0; i < 4; i++) {
 			systemLog +=
 				i + 1 + ': ' + contestant_name[i] + '-' + contestant_class[i] + (i === 3 ? '' : ' ; ');
@@ -257,7 +264,11 @@
 			});
 		}
 	}
-
+	async function setDisplayQuestion() {
+		await pb.collection('display_status').update('4t-displaystate', {
+			displayQuestion: true
+		});
+	}
 	function saveLog() {
 		let content = '#START LOG';
 		logs.forEach((currentValue) => {
@@ -277,7 +288,7 @@
 		);
 	}
 	async function clearLog() {
-		if (confirm('U sure?')) {
+		if (confirm('Confirm?')) {
 			await pb.collection('log').update('4t-global-logs0', {
 				logs: []
 			});
@@ -289,12 +300,15 @@
 	<title>Bảng điều khiển | BTC 4T</title>
 </svelte:head>
 
-{#if $user && $user.username.startsWith('user_kt')}
+<AuthCheck needBTC={true}>
 	<section class="h-screen w-screen overflow-hidden">
 		<div class="grid h-full grid-cols-2 grid-rows-[50px_1fr_1fr_50px] border-[3px] border-gray-400">
 			<div class="flex items-center justify-between border-[3px] border-gray-400 p-2">
-				<h1 class="text-xl font-semibold">Control Panel - Thách Thức Trí Tuệ mùa 8</h1>
-				<div class="flex items-center space-x-4">
+				<div class="flex items-center gap-4">
+					<a href="/"><img src="/src/lib/image/4t-blue.png" alt="Logo 4T" class="h-[40px]" /></a>
+					<h1 class="text-xl font-semibold">Control Panel - Thách Thức Trí Tuệ mùa 8</h1>
+				</div>
+				<div class="flex items-center gap-4">
 					<button class="transition-colors hover:text-gray-500" on:click={clearLog}
 						>CLEAR LOG</button
 					>
@@ -314,10 +328,10 @@
 			</div>
 			<div class="row-span-2 flex flex-col border-[3px] border-gray-400">
 				<div class="mt-1 flex h-full flex-col-reverse overflow-auto">
-					<table class="table table-pin-rows table-xs mb-auto">
+					<table class="table table-pin-rows table-sm mb-auto">
 						<thead>
 							<tr>
-								<th class="w-40">Thời gian</th>
+								<th class="w-48">Thời gian</th>
 								<th class="w-20">Đến từ</th>
 								<th class="w-20">Type</th>
 								<th>Nội dung</th>
@@ -447,39 +461,36 @@
 										</div>
 									</td>
 								</tr>
+								<div class="fixed top-0">{contestant}</div>
 							{/each}
 						</tbody>
 					</table>
 				{/if}
-				<div class="grid grid-cols-[1fr_1fr_1fr_50px]">
-					<button
+				<div class="grid grid-cols-[1fr_1fr_1fr]">
+					<!-- <button
 						class="border-[3px] border-gray-400 transition-colors hover:bg-gray-200"
 						on:click={() => (menu.setContestantName = !menu.setContestantName)}
 						>Set tên thí sinh</button
+					> -->
+					<select
+						class="border-[3px] border-gray-400 bg-white transition-colors hover:bg-gray-200"
+						bind:value={setting}
 					>
+						<option value="">Main</option>
+						<option value="">Cai dat</option>
+					</select>
 					<button
 						class="border-[3px]
 						border-gray-400 transition-colors hover:bg-gray-200"
-						on:click={() => (menu.setContestantName ? setContestantName() : setScore())}
-						>{menu.setContestantName ? 'SET' : 'Set diem'}
+						on:click={setScore}
+						>Set diem
 					</button>
 					<button
-						class="border-[3px] border-gray-400 transition-colors hover:bg-gray-200"
+						class="border-[3px] border-gray-400 hover:bg-gray-200"
 						on:click={() => {
 							selectedScore = [0, 0, 0, 0];
 						}}
 						>Bỏ chọn điểm
-					</button>
-					<button
-						class="border-[3px] border-gray-400 p-2 hover:bg-gray-200"
-						class:bg-gray-400={menu.settings}
-						on:click={() => (menu.settings = !menu.settings)}
-					>
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
-							><path
-								d="M495.9 166.6c3.2 8.7 .5 18.4-6.4 24.6l-43.3 39.4c1.1 8.3 1.7 16.8 1.7 25.4s-.6 17.1-1.7 25.4l43.3 39.4c6.9 6.2 9.6 15.9 6.4 24.6c-4.4 11.9-9.7 23.3-15.8 34.3l-4.7 8.1c-6.6 11-14 21.4-22.1 31.2c-5.9 7.2-15.7 9.6-24.5 6.8l-55.7-17.7c-13.4 10.3-28.2 18.9-44 25.4l-12.5 57.1c-2 9.1-9 16.3-18.2 17.8c-13.8 2.3-28 3.5-42.5 3.5s-28.7-1.2-42.5-3.5c-9.2-1.5-16.2-8.7-18.2-17.8l-12.5-57.1c-15.8-6.5-30.6-15.1-44-25.4L83.1 425.9c-8.8 2.8-18.6 .3-24.5-6.8c-8.1-9.8-15.5-20.2-22.1-31.2l-4.7-8.1c-6.1-11-11.4-22.4-15.8-34.3c-3.2-8.7-.5-18.4 6.4-24.6l43.3-39.4C64.6 273.1 64 264.6 64 256s.6-17.1 1.7-25.4L22.4 191.2c-6.9-6.2-9.6-15.9-6.4-24.6c4.4-11.9 9.7-23.3 15.8-34.3l4.7-8.1c6.6-11 14-21.4 22.1-31.2c5.9-7.2 15.7-9.6 24.5-6.8l55.7 17.7c13.4-10.3 28.2-18.9 44-25.4l12.5-57.1c2-9.1 9-16.3 18.2-17.8C227.3 1.2 241.5 0 256 0s28.7 1.2 42.5 3.5c9.2 1.5 16.2 8.7 18.2 17.8l12.5 57.1c15.8 6.5 30.6 15.1 44 25.4l55.7-17.7c8.8-2.8 18.6-.3 24.5 6.8c8.1 9.8 15.5 20.2 22.1 31.2l4.7 8.1c6.1 11 11.4 22.4 15.8 34.3zM256 336a80 80 0 1 0 0-160 80 80 0 1 0 0 160z"
-							/>
-						</svg>
 					</button>
 				</div>
 			</div>
@@ -609,13 +620,7 @@
 							<button class="btn" class:btn-disabled={selected.screen !== current.screen}
 								>Play Animation</button
 							>
-							<button
-								class="btn"
-								on:click={() => {
-									playSound('kd_start');
-								}}
-								>Display question
-							</button>
+							<button class="btn" on:click={setDisplayQuestion}>Display question </button>
 							<button
 								class="btn"
 								class:btn-disabled={time > 0 || selected.screen !== current.screen}
@@ -652,12 +657,4 @@
 			</div>
 		</div>
 	</section>
-{:else}
-	<div class="flex h-screen flex-col items-center justify-center gap-8">
-		<img src="src/lib/image/4t.png" alt="4T logo" class="h-[150px]" />
-		<h1 class="text-2xl font-semibold">
-			{!$user ? 'Đăng nhập' : 'Sử dụng tài khoản BTC'} để tiếp tục
-		</h1>
-		<a class="link-hover" href="/">Quay về</a>
-	</div>
-{/if}
+</AuthCheck>

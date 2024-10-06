@@ -1,18 +1,16 @@
 <script lang="ts">
 	import { user } from '$lib/pocketBase';
-	import { onMount } from 'svelte';
-	export let btc = false;
-	let promise = Promise.resolve(null);
-	onMount(() => {
-		promise = load();
-	});
-	const load = () => new Promise<null>((resolve) => setTimeout(() => {}, 1000));
+	export let needBTC = false;
 </script>
 
-{#await promise}
-	<span class="loading loading-infinity loading-lg"></span>
-{:then value}
-	<slot />
-{:catch error}
-	<div>error</div>
-{/await}
+{#if $user && !(needBTC != $user.username.startsWith('user_kt'))}
+	<slot></slot>
+{:else}
+	<div class="flex h-screen flex-col items-center justify-center gap-8">
+		<img src="src/lib/image/4t.png" alt="4T logo" class="h-[150px]" />
+		<h1 class="text-2xl font-semibold">
+			{needBTC ? 'Sử dụng tài khoản BTC' : 'Đăng nhập'} để tiếp tục
+		</h1>
+		<a class="link-hover" href="/">Quay về</a>
+	</div>
+{/if}

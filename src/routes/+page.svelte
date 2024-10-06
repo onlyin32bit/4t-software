@@ -14,18 +14,19 @@
 	</h1>
 	<div
 		class="flex h-screen flex-col items-center justify-center gap-6"
-		in:fly={{ y: 60, opacity: 0.5 }}
+		transition:fly={{ y: 60, opacity: 0.5 }}
 	>
-		{#if !$user}
+		{#if $user}
+			<a href="/ts">Trang thí sinh</a>
+			<a href="/mc">Trang MC</a>
+			<a href="/display/main">Màn hình</a>
+			<a href="/control-panel">Control Panel</a>
+			<a href="/settings">Global Settings</a>
+		{:else}
 			<a href="/auth/ts">Đăng nhập thí sinh</a>
 			<a href="/auth/btc">Đăng nhập BTC</a>
 			<a href="/auth/admin">Login Admin</a>
 		{/if}
-		<a href="/ts">Trang thí sinh</a>
-		<a href="/mc">Trang MC</a>
-		<a href="/display/main">Màn hình</a>
-		<a href="/control-panel">Control Panel</a>
-		<a href="/settings">Global Settings</a>
 	</div>
 	{#if $user}
 		<button
