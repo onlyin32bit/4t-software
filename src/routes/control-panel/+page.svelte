@@ -2,6 +2,7 @@
 	import AuthCheck from '$lib/components/AuthCheck.svelte';
 	import {
 		getCurrentTime,
+		getScreenStats,
 		createLogMessage,
 		download,
 		dictionary,
@@ -46,12 +47,7 @@
 
 	let time: number = 0;
 
-	let menu = {
-		setContestantName: false,
-		settings: false
-	};
-
-	let setting: string;
+	let menu: string = 'main';
 
 	let selectionSlideList = ['start', 'rule', 'ques', 'end'];
 	$: if (selected.screen === 'vcnv') {
@@ -147,7 +143,7 @@
 				? ' / Câu số ' + selected.question + '/' + selected.numberOfQues
 				: '');
 
-	async function startTimer() {
+	async function timer() {
 		time = (timerSettings.get(current.screen) ?? 0) * 1000;
 		contestants.forEach(async (currentValue) => {
 			await pb.collection('users').update(currentValue.id, { answer: null, time: -1 });
@@ -219,7 +215,8 @@
 			selectedScore = [0, 0, 0, 0];
 		}
 	}
-	async function setContestantName() {
+	// need fix
+	async function setContestantInfo() {
 		let systemLog: string = 'Cập nhật thông tin thí sinh: ';
 		for (let i = 0; i < 4; i++) {
 			systemLog +=
@@ -239,7 +236,7 @@
 			type: 'DATABASE',
 			content: systemLog + ' và đặt dữ liệu về ban đầu'
 		});
-		menu.setContestantName = false;
+		menu = 'main';
 	}
 	async function setScreen() {
 		if (selected.screen !== current.screen) {
@@ -264,9 +261,9 @@
 			});
 		}
 	}
-	async function setDisplayQuestion() {
+	async function setDisplayQuestion(value: boolean) {
 		await pb.collection('display_status').update('4t-displaystate', {
-			displayQuestion: true
+			displayQuestion: value
 		});
 	}
 	function saveLog() {
@@ -284,7 +281,7 @@
 		});
 		download(
 			'4t_LOG_' + getCurrentTime().slice(0, 10).replaceAll('/', '-'),
-			content + '\n' + '#END LOG'
+			content + '\n#END LOG'
 		);
 	}
 	async function clearLog() {
@@ -300,7 +297,7 @@
 	<title>Bảng điều khiển | BTC 4T</title>
 </svelte:head>
 
-<AuthCheck needBTC={true}>
+<AuthCheck requiredBTC={true}>
 	<section class="h-screen w-screen overflow-hidden">
 		<div class="grid h-full grid-cols-2 grid-rows-[50px_1fr_1fr_50px] border-[3px] border-gray-400">
 			<div class="flex items-center justify-between border-[3px] border-gray-400 p-2">
@@ -319,11 +316,9 @@
 			</div>
 			<div class="flex items-center justify-between border-[3px] border-gray-400 px-2">
 				<h1>
-					Current: {dictionary.get(current.screen)}
-					{dictionary.get(current.slide)}
-					{current.numberOfQues == -1 ? '' : current.question + '/' + current.numberOfQues}.
+					Current: {getScreenStats(current)}
 				</h1>
-				<h1>Selected: {selection}</h1>
+				<h1>Selected: {getScreenStats(selected)}</h1>
 				<h1>Previous: {dictionary.get(prevScreen)}</h1>
 			</div>
 			<div class="row-span-2 flex flex-col border-[3px] border-gray-400">
@@ -335,12 +330,13 @@
 								<th class="w-20">Đến từ</th>
 								<th class="w-20">Type</th>
 								<th>Nội dung</th>
+								<th class="w-4"></th>
 							</tr>
 						</thead>
 						<tbody>
 							{#each logs as log}
 								<tr
-									class="last:bg-green-50 last:dark:bg-green-950 {log.from == 'system'
+									class="bg-opacity-50 last:bg-green-50 last:dark:bg-green-950 {log.from == 'system'
 										? ' bg-red-50 dark:bg-red-950'
 										: ''}"
 									in:fly={{ y: 20 }}
@@ -351,6 +347,11 @@
 									>
 									<td>{log.type}</td>
 									<td>{log.content}</td>
+									<td>
+										{#if log.from == $user?.name}
+											<button class="btn btn-xs" on:click={() => {}}>×</button>
+										{/if}
+									</td>
 								</tr>
 							{/each}
 						</tbody>
@@ -359,139 +360,148 @@
 			</div>
 			<div class="grid grid-rows-[1fr_50px]">
 				<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-				{#if menu.settings}
-					<div class="border-[3px] border-gray-400">
-						<h1>HI</h1>
-					</div>
-				{:else if menu.setContestantName}
-					<!-- <form
-						class="flex flex-col gap-2 rounded-md bg-yellow-50 p-4 shadow-lg"
-						on:submit|preventDefault={() => {
-							if (confirm('Comfirm')) resetAllValue();
-						}}
-					> -->
-					<table class="table table-zebra table-md w-full border-[3px] border-gray-400">
-						<thead>
-							<tr>
-								<th>STT</th>
-								<th>TÊN THÍ SINH</th>
-								<th>LỚP</th>
-							</tr>
-						</thead>
-						<tbody>
-							{#each [0, 1, 2, 3] as i}
+				<div class="h-full border-[3px] border-gray-400">
+					{#if menu === 'info'}
+						<table class="table table-zebra table-md w-full">
+							<thead>
 								<tr>
-									<td>{i + 1}</td>
-									<td>
-										<input
-											class="input input-bordered"
-											placeholder="Nhập tên thí sinh"
-											type="text"
-											name="ts{i}"
-											bind:value={contestant_name[i]}
-										/>
-									</td>
-									<td>
-										<input
-											class="input input-bordered"
-											placeholder="Nhập lớp"
-											type="text"
-											name="ts{i}"
-											bind:value={contestant_class[i]}
-										/>
-									</td>
+									<th>STT</th>
+									<th>TÊN THÍ SINH</th>
+									<th>LỚP</th>
 								</tr>
-							{/each}
-						</tbody>
-					</table>
-					<!-- <button class="btn btn-warning btn-sm" type="submit">SET</button> -->
-					<!-- </form> -->
-				{:else}
-					<table
-						class="table table-lg w-full min-w-[500px] rounded-none border-[3px] border-gray-400 outline-[3px] outline-blue-500 focus:outline"
-						on:keydown={(e) => {
-							console.log(e.key);
-						}}
-						tabindex="-1"
-					>
-						<thead>
-							<tr>
-								<!-- <th class="w-4">STT</th> -->
-								<th class="w-32">TÊN THÍ SINH</th>
-								<th class="w-48">CÂU TRẢ LỜI</th>
-								<th class="w-16">THỜI GIAN</th>
-								<th class="w-52">SỐ ĐIỂM</th>
-							</tr>
-						</thead>
-						<tbody>
+							</thead>
+							<tbody>
+								{#each [0, 1, 2, 3] as i}
+									<tr>
+										<td>{i + 1}</td>
+										<td>
+											<input
+												class="input input-bordered"
+												placeholder="Nhập tên thí sinh"
+												type="text"
+												name="ts{i}"
+												bind:value={contestant_name[i]}
+											/>
+										</td>
+										<td>
+											<input
+												class="input input-bordered"
+												placeholder="Nhập lớp"
+												type="text"
+												name="ts{i}"
+												bind:value={contestant_class[i]}
+											/>
+										</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					{:else if menu === 'settings'}
+						<div>hi</div>
+					{:else}
+						<div
+							class="grid h-full grid-cols-[12rem_1fr_7rem_3rem_10rem_3rem] grid-rows-[30px_1fr_1fr_1fr_1fr]"
+						>
+							<div class="flex items-center border-b-2 px-3 py-1 text-xs font-bold text-gray-400">
+								TÊN THÍ SINH
+							</div>
+							<div class="flex items-center border-b-2 px-3 py-1 text-xs font-bold text-gray-400">
+								CÂU TRẢ LỜI
+							</div>
+							<div
+								class="flex items-center justify-center border-b-2 px-3 py-1 text-xs font-bold text-gray-400"
+							>
+								THỜI GIAN
+							</div>
+							<div
+								class="col-span-3 flex items-center justify-center border-b-2 px-3 py-1 text-xs font-bold text-gray-400"
+							>
+								ĐIỂM
+							</div>
 							{#each contestants as contestant, i (contestant.id)}
-								<tr title="{contestant.name} {contestant.class} - {contestant.score}đ">
-									<!-- <th>{i + 1}</th> -->
-									<td class="font-semibold">{contestant.name}</td>
-									<td>{contestant.answer}</td>
-									<td class="font-mono"
-										>{contestant.time === -2
-											? 'ended'
-											: contestant.time === -1
-												? 'running'
-												: contestant.time / 1000 + 's'}</td
-									>
-									<td>
-										<div class="flex items-center justify-between font-mono text-[20px]">
-											<button
-												class="btn btn-secondary btn-sm"
-												on:click={() => {
-													selectedScore[i] -= 5;
-												}}>-</button
+								<!-- <tr title="{contestant.name} {contestant.class} - {contestant.score}đ"> -->
+								<!-- <th>{i + 1}</th> -->
+								<div class="flex items-center border-b-2 px-3 text-xl font-semibold">
+									{contestant.name}
+								</div>
+								<div class="flex items-center border-b-2 px-3 text-lg">
+									{contestant.answer === '' ? 'Chưa có câu trả lời' : contestant.answer}
+								</div>
+								<div class="flex items-center justify-center border-b-2 font-mono text-xl">
+									{contestant.time === -2
+										? 'ended'
+										: contestant.time === -1
+											? 'running'
+											: contestant.time / 1000}
+								</div>
+								<button
+									class="h-full w-full bg-slate-100 text-3xl font-light text-gray-400 transition-colors hover:bg-blue-100"
+									on:click={() => {
+										selectedScore[i] -= 5;
+									}}>-</button
+								>
+								<div class="flex w-full items-center justify-center border-b-2">
+									<div class="flex items-baseline font-mono text-3xl">
+										<span class="font-bold">{contestant.score}</span>
+										<div class="ml-3 flex items-baseline">
+											<span class="font-thin text-gray-400">{selectedScore[i] >= 0 ? '+' : ''}</span
 											>
-											<div class="flex items-baseline">
-												<span>{contestant.score + (selectedScore[i] >= 0 ? '+' : '')}</span>
-												<input
-													class="ml-1 w-14 rounded-sm outline outline-2 outline-gray-200 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-													type="number"
-													bind:value={selectedScore[i]}
-												/>
-											</div>
-											<button
-												class=" btn btn-secondary btn-sm"
-												on:click={() => {
-													selectedScore[i] += 10;
-												}}>+</button
-											>
+											<input
+												class="rounded-sm text-gray-400 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+												style={`width: ${String(selectedScore[i]).length}ch`}
+												type="number"
+												bind:value={selectedScore[i]}
+											/>
 										</div>
-									</td>
-								</tr>
-								<div class="fixed top-0">{contestant}</div>
+									</div>
+								</div>
+								<button
+									class="h-full w-full bg-slate-100 text-3xl font-light text-gray-400 transition-colors hover:bg-blue-100"
+									on:click={() => {
+										selectedScore[i] += 10;
+									}}>+</button
+								>
 							{/each}
-						</tbody>
-					</table>
-				{/if}
+						</div>
+					{/if}
+				</div>
 				<div class="grid grid-cols-[1fr_1fr_1fr]">
-					<!-- <button
-						class="border-[3px] border-gray-400 transition-colors hover:bg-gray-200"
-						on:click={() => (menu.setContestantName = !menu.setContestantName)}
-						>Set tên thí sinh</button
-					> -->
 					<select
-						class="border-[3px] border-gray-400 bg-white transition-colors hover:bg-gray-200"
-						bind:value={setting}
+						class="border-[3px] border-gray-400 bg-white px-4 transition-colors hover:bg-gray-200"
+						bind:value={menu}
 					>
-						<option value="">Main</option>
-						<option value="">Cai dat</option>
+						<option value="main">Main</option>
+						<option value="info">Set thong tin thi sinh</option>
+						<option value="settings">Cai dat</option>
 					</select>
-					<button
-						class="border-[3px]
+					{#if menu === 'settings'}
+						<button
+							class="border-[3px] border-gray-400 transition-colors hover:bg-gray-200"
+							on:click={setContestantInfo}
+							>Set thong tin
+						</button>
+						<button
+							class="border-[3px] border-gray-400 hover:bg-gray-200"
+							on:click={() => {
+								selectedScore = [0, 0, 0, 0];
+							}}
+							>Bỏ chọn
+						</button>
+					{:else}
+						<button
+							class="border-[3px]
 						border-gray-400 transition-colors hover:bg-gray-200"
-						on:click={setScore}
-						>Set diem
-					</button>
-					<button
-						class="border-[3px] border-gray-400 hover:bg-gray-200"
-						on:click={() => {
-							selectedScore = [0, 0, 0, 0];
-						}}
-						>Bỏ chọn điểm
-					</button>
+							on:click={setScore}
+							>Set diem
+						</button>
+						<button
+							class="border-[3px] border-gray-400 hover:bg-gray-200"
+							on:click={() => {
+								selectedScore = [0, 0, 0, 0];
+							}}
+							>Bỏ chọn điểm
+						</button>
+					{/if}
 				</div>
 			</div>
 			<div class="border-[3px] border-gray-400">
@@ -564,7 +574,9 @@
 						</div>
 					{/if}
 					{#if selected.slide == 'ques' && (selected.screen == 'kd' || selected.screen == 'tt')}
-						<div class="grid grid-cols-[50px_1fr_50px_1fr] gap-4 xl:grid-cols-[75px_1fr_75px_1fr]">
+						fr <div
+							class="grid grid-cols-[50px_1fr_50px_1fr] gap-4 xl:grid-cols-[75px_1fr_75px_1fr]"
+						>
 							<button
 								class="btn select-none"
 								class:btn-disabled={selected.question <= 1 || selected.screen !== current.screen}
@@ -620,15 +632,19 @@
 							<button class="btn" class:btn-disabled={selected.screen !== current.screen}
 								>Play Animation</button
 							>
-							<button class="btn" on:click={setDisplayQuestion}>Display question </button>
+							<button class="btn" on:click={() => setDisplayQuestion(true)}
+								>Display question
+							</button>
 							<button
 								class="btn"
 								class:btn-disabled={time > 0 || selected.screen !== current.screen}
-								on:click={startTimer}>Start timer</button
+								on:click={timer}>Start timer</button
 							>
 							<span class="font-mono text-xl font-semibold">{(time / 1000).toFixed(2)}s</span>
 						</div>
-					{:else if selected.slide == 'main_vcnv' && selected.screen == 'vcnv'}
+					{/if}
+					<!-- phan hien thi vcnv, de sau -->
+					{#if selected.slide == 'main_vcnv' && selected.screen == 'vcnv'}
 						<div class="grid grid-cols-8">
 							{#each [1, 2, 3, 4, 5, 6, 7, 8] as i}
 								<div><button class="btn">{i}</button></div>

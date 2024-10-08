@@ -23,6 +23,27 @@ export function getCurrentTime() {
 	return currentTime;
 }
 
+type DisplayObject = {
+	screen: string;
+	slide: string;
+	question: number;
+	numberOfQues: number;
+};
+
+export function getScreenStats(e: DisplayObject) {
+	return (
+		dictionary.get(e.screen) +
+		(e.screen === 'answers' || e.screen === 'main' || e.screen === 'scores'
+			? ''
+			: ' / ' + dictionary.get(e.slide)) +
+		(e.screen === 'answers' || e.screen === 'main' || e.screen === 'scores'
+			? ''
+			: e.slide == 'ques'
+				? ' / Câu số ' + e.question + '/' + e.numberOfQues
+				: '')
+	);
+}
+
 export function playSound(src: string) {
 	const audio = new Howl({
 		src: ['src/lib/sound/' + (soundsCollection.get(src) ?? '')],
@@ -139,57 +160,3 @@ const soundsCollection: Map<string, string> = new Map([
 	['', ''],
 	['', '']
 ]);
-
-export function tooltip(element: HTMLElement) {
-	let div: HTMLDivElement;
-	let title: string;
-	let timeout: number;
-	function mouseOver(event: MouseEvent) {
-		// NOTE: remove the `title` attribute, to prevent showing the default browser tooltip
-		// remember to set it back on `mouseleave`
-		title = element.getAttribute('title') ?? 'No title found';
-		// element.removeAttribute('title');
-
-		div = document.createElement('div');
-		div.textContent = title;
-		div.style.cssText = `
-			border: 1px solid #ddd;
-			box-shadow: 1px 1px 1px #ddd;
-			background: white;
-			border-radius: 4px;
-			padding: 4px;
-			position: fixed;
-			top: ${event.pageX + 5}px;
-			left: ${event.pageY + 5}px;
-		`;
-		document.body.appendChild(div);
-		timeout = setTimeout(() => {
-			document.body.removeChild(div);
-		}, 3000);
-	}
-	function mouseMove(event: MouseEvent) {
-		div.style.left = `${event.pageX + 5}px`;
-		div.style.top = `${event.pageY + 5}px`;
-		clearTimeout(timeout);
-		timeout = setTimeout(() => {
-			document.body.removeChild(div);
-		}, 3000);
-	}
-	function mouseLeave() {
-		document.body.removeChild(div);
-		// NOTE: restore the `title` attribute
-		element.setAttribute('title', title);
-	}
-
-	element.addEventListener('mouseover', mouseOver);
-	element.addEventListener('mouseleave', mouseLeave);
-	element.addEventListener('mousemove', mouseMove);
-
-	return {
-		destroy() {
-			element.removeEventListener('mouseover', mouseOver);
-			element.removeEventListener('mouseleave', mouseLeave);
-			element.removeEventListener('mousemove', mouseMove);
-		}
-	};
-}

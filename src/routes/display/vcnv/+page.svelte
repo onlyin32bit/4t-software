@@ -1,12 +1,17 @@
 <script lang="ts">
+	import { serialize } from 'cookie';
 	import { goto } from '$app/navigation';
 	import { pb } from '$lib/pocketBase';
 	import { onDestroy, onMount } from 'svelte';
 
-	let questions: string[] = [];
+	let questions: any;
+	let firstSet: { key: string; question: string }[] = [];
+	let secondSet: { key: string; question: string }[] = [];
 	let screen: string = 'vcnv';
 	let slide: string = 'start';
 	let ques: number = 1;
+	let displayQuestion: boolean = false;
+
 	let unsub: (() => void)[] = [];
 
 	onMount(async () => {
@@ -15,14 +20,17 @@
 		slide = displayStatus.slide;
 		ques = displayStatus.ques;
 
-		// const questionList = await pb.collection('ques_tt').getOne('4t-questions-vcnv');
-		// questions = questionList.question;
+		const data = await pb.collection('vcnv').getOne('4t-quest-vcnvtk');
+		questions = data.question;
+		firstSet = questions.first;
+		secondSet = questions.second;
 
 		unsub[0] = await pb.collection('display_status').subscribe('*', ({ action, record }) => {
 			if (action === 'update') {
 				screen = record.screen;
 				slide = record.slide;
 				ques = record.ques;
+				if (displayQuestion !== record.displayQuestion) displayQuestion = true;
 			}
 		});
 	});
@@ -33,9 +41,19 @@
 		});
 	});
 
-	$: if (screen != 'vcnv') {
-		goto('/display/' + screen);
+	$: {
+		ques;
+		displayQuestion = false;
 	}
+
+	$: if (screen != 'vcnv') goto('/display/' + screen);
 </script>
 
 <h1 class="text-[10rem]">VCNV {slide} {ques}</h1>
+<div>
+	<h1>{questions?.keyword}</h1>
+	<div>{firstSet[ques - 1].key} {firstSet[ques - 1].question}</div>
+	{#each secondSet as ques}
+		<div>{ques.key} {ques.question}</div>
+	{/each}
+</div>

@@ -1,0 +1,465 @@
+[
+	{
+		"id": "5x8vv7elx14ygqg",
+		"name": "btc",
+		"type": "auth",
+		"system": false,
+		"schema": [
+			{
+				"system": false,
+				"id": "qs9vt3tn",
+				"name": "name",
+				"type": "text",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"min": null,
+					"max": null,
+					"pattern": ""
+				}
+			}
+		],
+		"indexes": [],
+		"listRule": null,
+		"viewRule": null,
+		"createRule": null,
+		"updateRule": null,
+		"deleteRule": null,
+		"options": {
+			"allowEmailAuth": false,
+			"allowOAuth2Auth": false,
+			"allowUsernameAuth": true,
+			"exceptEmailDomains": [],
+			"manageRule": null,
+			"minPasswordLength": 6,
+			"onlyEmailDomains": [],
+			"onlyVerified": false,
+			"requireEmail": false
+		}
+	},
+	{
+		"id": "_pb_users_auth_",
+		"name": "users",
+		"type": "auth",
+		"system": false,
+		"schema": [
+			{
+				"system": false,
+				"id": "urcgmgiw",
+				"name": "online",
+				"type": "bool",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {}
+			},
+			{
+				"system": false,
+				"id": "users_name",
+				"name": "name",
+				"type": "text",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"min": null,
+					"max": null,
+					"pattern": ""
+				}
+			},
+			{
+				"system": false,
+				"id": "ot9fzo72",
+				"name": "class",
+				"type": "text",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"min": null,
+					"max": null,
+					"pattern": ""
+				}
+			},
+			{
+				"system": false,
+				"id": "r9lws8wj",
+				"name": "answer",
+				"type": "text",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"min": null,
+					"max": null,
+					"pattern": ""
+				}
+			},
+			{
+				"system": false,
+				"id": "0o0vly3m",
+				"name": "time",
+				"type": "number",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"min": null,
+					"max": null,
+					"noDecimal": false
+				}
+			},
+			{
+				"system": false,
+				"id": "ztadqvdi",
+				"name": "score",
+				"type": "number",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"min": null,
+					"max": null,
+					"noDecimal": false
+				}
+			},
+			{
+				"system": false,
+				"id": "ebvxjhcr",
+				"name": "ring",
+				"type": "number",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"min": null,
+					"max": null,
+					"noDecimal": false
+				}
+			}
+		],
+		"indexes": [],
+		"listRule": "",
+		"viewRule": "",
+		"createRule": null,
+		"updateRule": "",
+		"deleteRule": null,
+		"options": {
+			"allowEmailAuth": false,
+			"allowOAuth2Auth": false,
+			"allowUsernameAuth": true,
+			"exceptEmailDomains": null,
+			"manageRule": null,
+			"minPasswordLength": 6,
+			"onlyEmailDomains": null,
+			"onlyVerified": false,
+			"requireEmail": false
+		}
+	},
+	{
+		"id": "q4s846hvm00rq4p",
+		"name": "display_status",
+		"type": "base",
+		"system": false,
+		"schema": [
+			{
+				"system": false,
+				"id": "bih13f9z",
+				"name": "screen",
+				"type": "text",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"min": null,
+					"max": null,
+					"pattern": ""
+				}
+			},
+			{
+				"system": false,
+				"id": "q9kszzso",
+				"name": "slide",
+				"type": "text",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"min": null,
+					"max": null,
+					"pattern": ""
+				}
+			},
+			{
+				"system": false,
+				"id": "w9b2j1yk",
+				"name": "ques",
+				"type": "number",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"min": null,
+					"max": null,
+					"noDecimal": false
+				}
+			},
+			{
+				"system": false,
+				"id": "tnoi7ppe",
+				"name": "displayQuestion",
+				"type": "bool",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {}
+			},
+			{
+				"system": false,
+				"id": "ph8pp8go",
+				"name": "timer",
+				"type": "number",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"min": null,
+					"max": null,
+					"noDecimal": false
+				}
+			},
+			{
+				"system": false,
+				"id": "otlhli1y",
+				"name": "displayed",
+				"type": "json",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"maxSize": 2000000
+				}
+			}
+		],
+		"indexes": [],
+		"listRule": "",
+		"viewRule": "",
+		"createRule": null,
+		"updateRule": "",
+		"deleteRule": null,
+		"options": {}
+	},
+	{
+		"id": "in93pj9ecq25b1f",
+		"name": "kd",
+		"type": "base",
+		"system": false,
+		"schema": [
+			{
+				"system": false,
+				"id": "0txol5fm",
+				"name": "question",
+				"type": "json",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"maxSize": 2000000
+				}
+			},
+			{
+				"system": false,
+				"id": "0csr73kv",
+				"name": "state",
+				"type": "json",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"maxSize": 2000000
+				}
+			}
+		],
+		"indexes": [],
+		"listRule": "",
+		"viewRule": "",
+		"createRule": null,
+		"updateRule": "",
+		"deleteRule": null,
+		"options": {}
+	},
+	{
+		"id": "r9czifbr30souwa",
+		"name": "log",
+		"type": "base",
+		"system": false,
+		"schema": [
+			{
+				"system": false,
+				"id": "fpup01z4",
+				"name": "logs",
+				"type": "json",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"maxSize": 2000000
+				}
+			}
+		],
+		"indexes": [],
+		"listRule": "",
+		"viewRule": "",
+		"createRule": "",
+		"updateRule": "",
+		"deleteRule": "",
+		"options": {}
+	},
+	{
+		"id": "775hrghctwf0mfm",
+		"name": "settings",
+		"type": "base",
+		"system": false,
+		"schema": [
+			{
+				"system": false,
+				"id": "3s4h15cn",
+				"name": "field",
+				"type": "json",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"maxSize": 2000000
+				}
+			}
+		],
+		"indexes": [],
+		"listRule": null,
+		"viewRule": null,
+		"createRule": null,
+		"updateRule": null,
+		"deleteRule": null,
+		"options": {}
+	},
+	{
+		"id": "2p3nbmhjzs4rcea",
+		"name": "tt",
+		"type": "base",
+		"system": false,
+		"schema": [
+			{
+				"system": false,
+				"id": "euyfpgmm",
+				"name": "question",
+				"type": "json",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"maxSize": 2000000
+				}
+			},
+			{
+				"system": false,
+				"id": "qrusixji",
+				"name": "state",
+				"type": "json",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"maxSize": 2000000
+				}
+			}
+		],
+		"indexes": [],
+		"listRule": null,
+		"viewRule": null,
+		"createRule": null,
+		"updateRule": null,
+		"deleteRule": null,
+		"options": {}
+	},
+	{
+		"id": "pyym7yntfrtumfh",
+		"name": "vcnv",
+		"type": "base",
+		"system": false,
+		"schema": [
+			{
+				"system": false,
+				"id": "xncurgev",
+				"name": "question",
+				"type": "json",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"maxSize": 2000000
+				}
+			},
+			{
+				"system": false,
+				"id": "kxqpi8nt",
+				"name": "state",
+				"type": "json",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"maxSize": 2000000
+				}
+			}
+		],
+		"indexes": [],
+		"listRule": null,
+		"viewRule": null,
+		"createRule": null,
+		"updateRule": null,
+		"deleteRule": null,
+		"options": {}
+	},
+	{
+		"id": "4nx8jqbkxnpql7q",
+		"name": "vd",
+		"type": "base",
+		"system": false,
+		"schema": [
+			{
+				"system": false,
+				"id": "kadu0bmq",
+				"name": "contestant",
+				"type": "text",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"min": null,
+					"max": null,
+					"pattern": ""
+				}
+			},
+			{
+				"system": false,
+				"id": "jacmrtbe",
+				"name": "question",
+				"type": "json",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"maxSize": 2000000
+				}
+			}
+		],
+		"indexes": [],
+		"listRule": "",
+		"viewRule": "",
+		"createRule": null,
+		"updateRule": "",
+		"deleteRule": null,
+		"options": {}
+	}
+]

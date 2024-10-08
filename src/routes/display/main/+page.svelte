@@ -5,15 +5,18 @@
 
 	let contestants: any[] = [];
 	let status: string = 'main';
+	let settings;
 	let unsub: (() => void)[] = [];
 
 	onMount(async () => {
 		const userList = await pb.collection('users').getFullList();
 		const displayStatus = await pb.collection('display_status').getOne('4t-displaystate');
+		const settingsList = await pb.collection('settings').getOne('4t-settings-all');
 		// console.log(displayStatus[0].action);
 
 		contestants = userList;
 		status = displayStatus.screen;
+		settings = settingsList.field.game;
 		// console.log(status);
 
 		unsub[0] = await pb.collection('users').subscribe('*', ({ action, record }) => {
@@ -50,7 +53,7 @@
 <!-- main display -->
 
 <div
-	class="bg-bg-1 flex h-screen flex-col items-center justify-center bg-cover bg-no-repeat text-[5rem] font-[600] text-white"
+	class="flex h-screen flex-col items-center justify-center bg-bg-1 bg-cover bg-no-repeat text-[5rem] font-[600] text-white"
 >
 	<h1 class=" mt-10 text-[7rem] font-bold">TỨ KẾT 4</h1>
 	<table class="scale-95">

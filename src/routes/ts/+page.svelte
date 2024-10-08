@@ -55,7 +55,6 @@
 		});
 		unsub[2] = await pb.collection('display_status').subscribe('*', ({ action, record }) => {
 			if (action === 'update') {
-				console.log(record);
 				current.screen = record.screen;
 				current.slide = record.slide;
 				current.question = record.ques;
@@ -67,6 +66,7 @@
 			currentValue?.();
 		});
 	});
+
 	$: if (userStats?.time == -1) timer();
 
 	async function timer() {
@@ -120,7 +120,7 @@
 			/>
 		</form>
 		<div>
-			<span>{(time / 1000).toFixed(2)}s</span>
+			<span class="text-3xl">{(time / 1000).toFixed(2)}s</span>
 			{#if current.screen === 'vcnv'}
 				<button>BELL</button>
 			{/if}
