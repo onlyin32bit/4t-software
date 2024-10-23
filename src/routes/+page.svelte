@@ -9,12 +9,12 @@
 </svelte:head>
 
 <section class="h-screen w-screen overflow-hidden">
-	<h1 class="fixed left-8 top-8" transition:fade={{ duration: 50 }}>
+	<h1 class="fixed left-8 top-8" in:fade={{ duration: 50 }}>
 		{$user ? 'Da dang nhap: ' + $user?.name : 'Chua dang nhap'}
 	</h1>
 	<div
 		class="flex h-screen flex-col items-center justify-center gap-6"
-		transition:fly={{ y: 60, opacity: 0.5 }}
+		in:fly={{ y: 60, opacity: 0.5 }}
 	>
 		{#if $user}
 			<a href="/ts">Trang thí sinh</a>
@@ -31,7 +31,7 @@
 	{#if $user}
 		<button
 			class="btn fixed bottom-8 left-8"
-			transition:fade={{ duration: 50 }}
+			in:fade={{ duration: 50 }}
 			on:click={() => pb.authStore.clear()}>Log out</button
 		>
 	{/if}

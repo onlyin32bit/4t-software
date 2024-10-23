@@ -25,7 +25,7 @@
 			<img src="/src/lib/image/4t.png" alt="Logo 4T" class="h-20" />
 			<h1 class="text-4xl font-medium">Thách Thức Trí Tuệ</h1>
 			<h2>Đăng nhập ban tổ chức</h2>
-			<p class="mt-auto">v1.0</p>
+			<p class="mt-auto">InDev</p>
 		</div>
 		<form on:submit|preventDefault={login} class="ml-auto flex w-96 flex-col items-end gap-2">
 			<label class="form-control w-full max-w-xs">

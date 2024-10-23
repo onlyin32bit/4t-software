@@ -11,12 +11,12 @@
 	onMount(async () => {
 		const userList = await pb.collection('users').getFullList();
 		const displayStatus = await pb.collection('display_status').getOne('4t-displaystate');
-		const settingsList = await pb.collection('settings').getOne('4t-settings-all');
+		// const settingsList = await pb.collection('settings').getOne('4t-settings-all');
 		// console.log(displayStatus[0].action);
 
 		contestants = userList;
 		status = displayStatus.screen;
-		settings = settingsList.field.game;
+		// settings = settingsList.field.game;
 		// console.log(status);
 
 		unsub[0] = await pb.collection('users').subscribe('*', ({ action, record }) => {

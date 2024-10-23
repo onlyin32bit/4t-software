@@ -11,7 +11,7 @@ export function getCurrentTime() {
 		(time.getMonth() + 1) +
 		'/' +
 		time.getFullYear() +
-		'-' +
+		' ' +
 		(time.getHours() < 10 ? '0' : '') +
 		time.getHours() +
 		':' +
@@ -52,17 +52,17 @@ export function playSound(src: string) {
 	audio.play();
 }
 
-export async function createLogMessage(message: { from: string; type: string; content: string }) {
-	const logMessages = await pb.collection('log').getOne('4t-global-logs0');
-	const logs = logMessages.logs;
+export async function createLogMessage(from: string, type: string, content: string) {
 	const Message = {
 		time: getCurrentTime(),
-		from: message.from,
-		type: message.type,
-		content: message.content
+		from: from,
+		type: type,
+		content: content
 	};
-	await pb.collection('log').update('4t-global-logs0', { logs: [...logs, Message] });
+	await pb.collection('logs').create(Message);
 }
+
+// export async function changeStatus(status) {}
 
 export function download(filename: string, text: string) {
 	const element = document.createElement('a');
@@ -85,6 +85,7 @@ export const dictionary = new Map([
 	['vd', 'Về đích'],
 	['answers', 'Đáp án thí sinh'],
 	['scores', 'Điểm thí sinh'],
+	['extra', 'Bổ sung'],
 	['start', 'Bắt đầu'],
 	['rule', 'Luật chơi'],
 	['main_vcnv', 'Màn hình VCNV'],
@@ -95,9 +96,17 @@ export const dictionary = new Map([
 	['ques_ts4', 'Thi sinh 4'],
 	['ques', 'Bộ câu hỏi'],
 	['end', 'Kết thúc'],
-	[undefined, 'Chưa có']
+	[undefined, 'Loading'],
+	[null, 'Loading']
 ]);
 
+export const scoreDistribution: Map<number, Array<number>> = new Map([
+	[40, [10, 10, 10, 10]],
+	[60, [10, 10, 20, 20]],
+	[80, [10, 20, 20, 30]]
+]);
+
+//overdated
 export const numberOfQues: Map<string, number> = new Map([
 	['kd', 12],
 	['vcnv', 8],
@@ -106,13 +115,14 @@ export const numberOfQues: Map<string, number> = new Map([
 ]);
 
 export const timerSettings: Map<string, number> = new Map([
-	['kd', 10],
-	['tt', 30],
-	['vcnv', 15],
-	['vd_5', 5],
-	['vd_10', 10],
-	['vd_20', 15],
-	['vd_30', 20]
+	['kd', 10000],
+	['kd_bk', 3000],
+	['tt', 30000],
+	['vcnv', 15000],
+	['vd_5', 5000],
+	['vd_10', 10000],
+	['vd_15', 15000],
+	['vd_20', 20000]
 ]);
 
 const soundsCollection: Map<string, string> = new Map([
@@ -124,8 +134,8 @@ const soundsCollection: Map<string, string> = new Map([
 	['kd_0', 'kd/WrongAnswer.mp3'],
 	['', ''],
 	['tt', ''],
-	['', ''],
-	['', ''],
+	['bell_vcnv', 'vcnv/ObstacleGrant.mp3'],
+	['bell_vd', 'vd/Grant.mp3'],
 	['', ''],
 	['', ''],
 	['', ''],

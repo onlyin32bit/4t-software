@@ -13,6 +13,7 @@
 	import { pb, user } from '$lib/pocketBase';
 	import { onMount, onDestroy } from 'svelte';
 	import { fly, fade } from 'svelte/transition';
+	import { Toaster, toast } from 'svelte-sonner';
 
 	let contestants: any[] = [];
 	let logs: any[] = [];
@@ -45,12 +46,26 @@
 
 	let prevScreen: string;
 
-	let time: number = 0;
+	let elapsed: number = 0;
 
 	let menu: string = 'main';
 
+	let game: string;
+
 	let selectionSlideList = ['start', 'rule', 'ques', 'end'];
-	$: if (selected.screen === 'vcnv') {
+	$: if (selected.screen === 'kd') {
+		selectionSlideList = [
+			'start',
+			'rule',
+			'main_kd',
+			'ques',
+			'ques_ts1',
+			'ques_ts2',
+			'ques_ts3',
+			'ques_ts4',
+			'end'
+		];
+	} else if (selected.screen === 'vcnv') {
 		selectionSlideList = ['start', 'rule', 'main_vcnv', 'ques', 'end'];
 	} else if (selected.screen === 'vd') {
 		selectionSlideList = [
@@ -67,51 +82,48 @@
 		selectionSlideList = ['start', 'rule', 'ques', 'end'];
 	}
 
-	let contestant_name: string[] = [];
-	let contestant_class: string[] = [];
 	let contestant_info = [
-		{ name: '', class: '' },
-		{ name: '', class: '' },
-		{ name: '', class: '' },
-		{ name: '', class: '' }
+		{ name: undefined, class: undefined },
+		{ name: undefined, class: undefined },
+		{ name: undefined, class: undefined },
+		{ name: undefined, class: undefined }
 	];
 	// あなたはゲイ
 	let unsub: (() => void)[] = [];
 	// chay khi component duoc load
 	onMount(async () => {
 		// fetch data
-		const userList = await pb.collection('users').getFullList();
-		const logMessages = await pb.collection('log').getOne('4t-global-logs0');
-		const displayStatus = await pb.collection('display_status').getOne('4t-displaystate');
+		const userListRecord = await pb.collection('users').getFullList();
+		const logsRecord = await pb.collection('logs').getFullList();
+		console.log(logsRecord);
 
-		contestants = userList;
-		logs = logMessages.logs;
+		const displayStatusRecord = await pb.collection('display_status').getOne('4t-displaystate');
+		const settingsRecord = await pb.collection('settings').getOne('4t-settings-all');
+
+		contestants = userListRecord;
+		logs = logsRecord;
 		current = {
-			screen: displayStatus.screen,
-			slide: displayStatus.slide,
-			question: displayStatus.ques,
+			screen: displayStatusRecord.screen,
+			slide: displayStatusRecord.slide,
+			question: displayStatusRecord.ques,
 			numberOfQues: -1
 		};
 		selected = { ...current };
+		game = settingsRecord.field.game;
 
 		// riel time database setup
 		unsub[0] = await pb.collection('users').subscribe('*', ({ action, record }) => {
 			// console.log(record);
 			if (action === 'update') {
-				contestants = contestants.map((currentValue) => {
-					if (currentValue.username === record.username) {
-						return record;
-					} else {
-						return currentValue;
-					}
-				});
+				contestants = contestants.map((currentValue) =>
+					currentValue.username === record.username ? record : currentValue
+				);
 			}
 		});
-		unsub[1] = await pb.collection('log').subscribe('4t-global-logs0', ({ action, record }) => {
-			// console.log(record);
-			if (action === 'update') {
-				logs = record.logs;
-			}
+		unsub[1] = await pb.collection('logs').subscribe('*', ({ action, record }) => {
+			if (action === 'create') logs = [...logs, record];
+			else if (action === 'delete')
+				logs = logs.filter((currentValue) => currentValue.id !== record.id);
 		});
 		unsub[2] = await pb
 			.collection('display_status')
@@ -131,65 +143,80 @@
 		});
 	});
 
-	let selection: string;
-	$: selection =
-		dictionary.get(selected.screen) +
-		(selected.screen === 'answers' || selected.screen === 'main' || selected.screen === 'scores'
-			? ''
-			: ' / ' + dictionary.get(selected.slide)) +
-		(selected.screen === 'answers' || selected.screen === 'main' || selected.screen === 'scores'
-			? ''
-			: selected.slide == 'ques'
-				? ' / Câu số ' + selected.question + '/' + selected.numberOfQues
-				: '');
+	// async function timer() {
+	// 	time = (timerSettings.get(current.screen) ?? 0) * 1000;
+	// 	contestants.forEach(async (currentValue) => {
+	// 		await pb.collection('users').update(currentValue.id, { answer: null, time: -1 });
+	// 	});
+	// 	await pb.collection('display_status').update('4t-displaystate', {
+	// 		timer: timerSettings.get(current.screen)
+	// 	});
+	// 	createLogMessage({
+	// 		from: 'system',
+	// 		type: 'TIMER',
+	// 		content: 'Bắt đầu đếm thời gian: ' + timerSettings.get(current.screen) + 's'
+	// 	});
+	// 	let countdown: any = setInterval(async () => {
+	// 		time -= 10;
+	// 		if (time <= 0) {
+	// 			clearInterval(countdown);
+	// 			countdown = null;
 
-	async function timer() {
-		time = (timerSettings.get(current.screen) ?? 0) * 1000;
+	// 			contestants.forEach(async (currentValue) => {
+	// 				if (currentValue.time == -1) {
+	// 					await pb.collection('users').update(currentValue.id, { time: -2 });
+	// 				}
+	// 			});
+	// 			createLogMessage({
+	// 				from: 'system',
+	// 				type: 'TIMER',
+	// 				content: 'Đã hết thời gian'
+	// 			});
+	// 			await pb.collection('display_status').update('4t-displaystate', {
+	// 				timer: -1
+	// 			});
+	// 		}
+	// 	}, 10);
+	// }
+	async function startTimer(duration: number) {
 		contestants.forEach(async (currentValue) => {
 			await pb.collection('users').update(currentValue.id, { answer: null, time: -1 });
 		});
 		await pb.collection('display_status').update('4t-displaystate', {
-			timer: 10
+			timer: duration
 		});
-		createLogMessage({
-			from: 'system',
-			type: 'TIMER',
-			content: 'Bắt đầu đếm thời gian: ' + timerSettings.get(current.screen) + 's'
-		});
-		let ans: string = 'Câu trả lời của thí sinh: ';
-		let countdown: any = setInterval(async () => {
-			time -= 10;
-			if (time <= 0) {
-				clearInterval(countdown);
-				countdown = null;
+		let last_time = window.performance.now();
+		let frame;
+		createLogMessage('system', 'TIMER', 'Bắt đầu đếm thời gian: ' + duration + 'ms');
+		(async function update() {
+			frame = requestAnimationFrame(update);
 
+			const time = window.performance.now();
+			elapsed += Math.min(time - last_time, duration - elapsed);
+			last_time = time;
+			if (elapsed >= duration) {
+				cancelAnimationFrame(frame);
+				createLogMessage('system', 'TIMER', 'Đã hết thời gian');
 				contestants.forEach(async (currentValue) => {
 					if (currentValue.time == -1) {
 						await pb.collection('users').update(currentValue.id, { time: -2 });
 					}
-					ans += currentValue.name + ': ' + (currentValue.answer ?? 'Khong co') + '; ';
-				});
-				createLogMessage({
-					from: 'system',
-					type: 'TIMER',
-					content: 'Đã hết thời gian'
 				});
 				await pb.collection('display_status').update('4t-displaystate', {
 					timer: -1
 				});
+				elapsed = 0;
 			}
-		}, 10);
+		})();
+		elapsed = 0;
 	}
 	async function createMessage() {
-		if (messageContent) {
-			createLogMessage({
-				from: $user?.name,
-				type: 'MESSAGE',
-				content: messageContent
-			});
+		if (/\w/.test(messageContent)) {
+			createLogMessage($user?.name, 'MESSAGE', messageContent);
+			toast.success('Đã gửi tin nhắn');
 			messageContent = '';
 		} else {
-			alert('Hãy nhập nội dung tin nhắn');
+			toast.warning('Hãy nhập nội dung tin nhắn');
 		}
 	}
 	async function setScore() {
@@ -203,39 +230,29 @@
 					' (' +
 					((selectedScore[i] >= 0 ? '+' : '') + selectedScore[i]) +
 					'); ';
-				await pb
-					.collection('users')
-					.update(currentValue.id, { score: currentValue.score + selectedScore[i] });
+				if (selectedScore[i] !== 0)
+					await pb
+						.collection('users')
+						.update(currentValue.id, { score: currentValue.score + selectedScore[i] });
 			});
-			createLogMessage({
-				from: 'system',
-				type: 'SCORE',
-				content: message
-			});
+			createLogMessage('system', 'SCORE', message);
 			selectedScore = [0, 0, 0, 0];
 		}
 	}
-	// need fix
 	async function setContestantInfo() {
-		let systemLog: string = 'Cập nhật thông tin thí sinh: ';
-		for (let i = 0; i < 4; i++) {
-			systemLog +=
-				i + 1 + ': ' + contestant_name[i] + '-' + contestant_class[i] + (i === 3 ? '' : ' ; ');
+		contestant_info.forEach(async (currentValue, i) => {
+			// systemLog += i + 1 + ': ' + currentValue.name + '-' + currentValue.name + ';';
 			await pb.collection('users').update('4t-contestant-' + (i + 1), {
-				name: contestant_name[i],
-				class: contestant_class[i],
-				answer: '',
+				name: currentValue.name,
+				class: currentValue.class,
+				answer: null,
 				time: 0,
 				score: 0,
-				ring: false
+				ring: 0
 			});
-		}
-
-		createLogMessage({
-			from: 'system',
-			type: 'DATABASE',
-			content: systemLog + ' và đặt dữ liệu về ban đầu'
 		});
+
+		createLogMessage('system', 'DATABASE', 'Đã cập nhật thông tin thí sinh');
 		menu = 'main';
 	}
 	async function setScreen() {
@@ -259,9 +276,15 @@
 			await pb.collection('display_status').update('4t-displaystate', {
 				ques: selected.question
 			});
+			contestants.forEach(async (currentValue) => {
+				await pb.collection('users').update(currentValue.id, { answer: null, time: 0 });
+			});
 		}
 	}
 	async function setDisplayQuestion(value: boolean) {
+		// contestants.forEach(async (currentValue) => {
+		// 	await pb.collection('users').update(currentValue.id, { answer: null, time: 0 });
+		// });
 		await pb.collection('display_status').update('4t-displaystate', {
 			displayQuestion: value
 		});
@@ -286,9 +309,11 @@
 	}
 	async function clearLog() {
 		if (confirm('Confirm?')) {
-			await pb.collection('log').update('4t-global-logs0', {
-				logs: []
+			logs.forEach(async (currentValue) => {
+				await pb.collection('logs').delete(currentValue.id);
 			});
+			logs = [];
+			toast.success('Đã xóa Log');
 		}
 	}
 </script>
@@ -297,13 +322,14 @@
 	<title>Bảng điều khiển | BTC 4T</title>
 </svelte:head>
 
+<Toaster closeButton richColors position="top-right" />
 <AuthCheck requiredBTC={true}>
 	<section class="h-screen w-screen overflow-hidden">
 		<div class="grid h-full grid-cols-2 grid-rows-[50px_1fr_1fr_50px] border-[3px] border-gray-400">
 			<div class="flex items-center justify-between border-[3px] border-gray-400 p-2">
-				<div class="flex items-center gap-4">
-					<a href="/"><img src="/src/lib/image/4t-blue.png" alt="Logo 4T" class="h-[40px]" /></a>
-					<h1 class="text-xl font-semibold">Control Panel - Thách Thức Trí Tuệ mùa 8</h1>
+				<div class="flex items-center gap-4 text-xl font-semibold">
+					<a href="/"><img src="/src/lib/image/4t-blue.png" alt="Logo 4T" class="h-10" /></a>
+					<h1>Control Panel - Thách Thức Trí Tuệ mùa 8</h1>
 				</div>
 				<div class="flex items-center gap-4">
 					<button class="transition-colors hover:text-gray-500" on:click={clearLog}
@@ -324,10 +350,10 @@
 			<div class="row-span-2 flex flex-col border-[3px] border-gray-400">
 				<div class="mt-1 flex h-full flex-col-reverse overflow-auto">
 					<table class="table table-pin-rows table-sm mb-auto">
-						<thead>
+						<thead class="border-b-2">
 							<tr>
 								<th class="w-48">Thời gian</th>
-								<th class="w-20">Đến từ</th>
+								<th class="w-28">Đến từ</th>
 								<th class="w-20">Type</th>
 								<th>Nội dung</th>
 								<th class="w-4"></th>
@@ -336,21 +362,26 @@
 						<tbody>
 							{#each logs as log}
 								<tr
-									class="bg-opacity-50 last:bg-green-50 last:dark:bg-green-950 {log.from == 'system'
-										? ' bg-red-50 dark:bg-red-950'
-										: ''}"
+									class={'bg-opacity-50 last:bg-green-50 last:dark:bg-green-950' +
+										(log.from == 'system' ? ' bg-red-50 dark:bg-red-950' : '')}
 									in:fly={{ y: 20 }}
 								>
-									<th>{log.time}</th>
-									<td class={log.from == 'system' ? 'font-medium text-red-700' : ''}
+									<th class="font-mono">{log.time}</th>
+									<td class={'font-medium ' + (log.from == 'system' ? 'text-red-700' : '')}
 										>{log.from.toUpperCase()}</td
 									>
 									<td>{log.type}</td>
 									<td>{log.content}</td>
-									<td>
-										{#if log.from == $user?.name}
-											<button class="btn btn-xs" on:click={() => {}}>×</button>
-										{/if}
+									<td class="border-x-2">
+										<button
+											class="hover:text-gray-500"
+											on:click={async () => {
+												if (confirm('Xoa tin nhan nay?')) {
+													await pb.collection('logs').delete(log.id);
+													toast.success('Đã xóa tin nhắn: "' + log.content + '"');
+												}
+											}}>×</button
+										>
 									</td>
 								</tr>
 							{/each}
@@ -380,7 +411,7 @@
 												placeholder="Nhập tên thí sinh"
 												type="text"
 												name="ts{i}"
-												bind:value={contestant_name[i]}
+												bind:value={contestant_info[i].name}
 											/>
 										</td>
 										<td>
@@ -389,7 +420,7 @@
 												placeholder="Nhập lớp"
 												type="text"
 												name="ts{i}"
-												bind:value={contestant_class[i]}
+												bind:value={contestant_info[i].class}
 											/>
 										</td>
 									</tr>
@@ -400,7 +431,7 @@
 						<div>hi</div>
 					{:else}
 						<div
-							class="grid h-full grid-cols-[12rem_1fr_7rem_3rem_10rem_3rem] grid-rows-[30px_1fr_1fr_1fr_1fr]"
+							class="grid h-full grid-cols-[12rem_1fr_7rem_3rem_1fr_3rem] grid-rows-[30px_1fr_1fr_1fr_1fr]"
 						>
 							<div class="flex items-center border-b-2 px-3 py-1 text-xs font-bold text-gray-400">
 								TÊN THÍ SINH
@@ -432,7 +463,7 @@
 										? 'ended'
 										: contestant.time === -1
 											? 'running'
-											: contestant.time / 1000}
+											: (contestant.time / 1000).toFixed(3)}
 								</div>
 								<button
 									class="h-full w-full bg-slate-100 text-3xl font-light text-gray-400 transition-colors hover:bg-blue-100"
@@ -440,12 +471,21 @@
 										selectedScore[i] -= 5;
 									}}>-</button
 								>
-								<div class="flex w-full items-center justify-center border-b-2">
-									<div class="flex items-baseline font-mono text-3xl">
-										<span class="font-bold">{contestant.score}</span>
+								<div class="flex items-center justify-center border-b-2">
+									<div class="flex translate-x-6 font-mono text-3xl">
+										{#key contestant.score}
+											<div class="relative">
+												<span
+													class="absolute right-0 font-bold"
+													in:fly={{ y: 20 }}
+													out:fly={{ y: -20 }}>{contestant.score}</span
+												>
+											</div>
+										{/key}
 										<div class="ml-3 flex items-baseline">
-											<span class="font-thin text-gray-400">{selectedScore[i] >= 0 ? '+' : ''}</span
-											>
+											<span class="font-thin text-gray-400">
+												{selectedScore[i] >= 0 ? '+' : ''}
+											</span>
 											<input
 												class="rounded-sm text-gray-400 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
 												style={`width: ${String(selectedScore[i]).length}ch`}
@@ -474,11 +514,12 @@
 						<option value="info">Set thong tin thi sinh</option>
 						<option value="settings">Cai dat</option>
 					</select>
-					{#if menu === 'settings'}
+					{#if menu === 'info'}
 						<button
 							class="border-[3px] border-gray-400 transition-colors hover:bg-gray-200"
 							on:click={setContestantInfo}
-							>Set thong tin
+						>
+							Set thong tin
 						</button>
 						<button
 							class="border-[3px] border-gray-400 hover:bg-gray-200"
@@ -507,7 +548,7 @@
 			<div class="border-[3px] border-gray-400">
 				<!-- dieu khien man hinh -->
 				<div role="tablist" class="tabs tabs-lifted tabs-sm rounded-lg bg-gray-100 xl:tabs-md">
-					{#each ['main', 'answers', 'scores', 'kd', 'tt', 'vcnv', 'vd'] as item}
+					{#each ['main', 'answers', 'scores', 'kd', 'tt', 'vcnv', 'vd', 'extra'] as item}
 						<button
 							class=" tab transition-colors duration-300 [--tab-bg:white]"
 							class:tab-active={selected.screen === item}
@@ -574,9 +615,7 @@
 						</div>
 					{/if}
 					{#if selected.slide == 'ques' && (selected.screen == 'kd' || selected.screen == 'tt')}
-						fr <div
-							class="grid grid-cols-[50px_1fr_50px_1fr] gap-4 xl:grid-cols-[75px_1fr_75px_1fr]"
-						>
+						<div class="grid grid-cols-[50px_1fr_50px_1fr] gap-4 xl:grid-cols-[75px_1fr_75px_1fr]">
 							<button
 								class="btn select-none"
 								class:btn-disabled={selected.question <= 1 || selected.screen !== current.screen}
@@ -637,10 +676,13 @@
 							</button>
 							<button
 								class="btn"
-								class:btn-disabled={time > 0 || selected.screen !== current.screen}
-								on:click={timer}>Start timer</button
+								class:btn-disabled={elapsed > 0 || selected.screen !== current.screen}
+								on:click={() => startTimer(timerSettings.get(current.screen) ?? 0)}
+								>Start timer</button
 							>
-							<span class="font-mono text-xl font-semibold">{(time / 1000).toFixed(2)}s</span>
+							<span class="flex items-center justify-center font-mono text-2xl font-semibold"
+								>{(elapsed / 1000).toFixed(2)}s</span
+							>
 						</div>
 					{/if}
 					<!-- phan hien thi vcnv, de sau -->

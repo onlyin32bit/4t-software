@@ -291,20 +291,64 @@
 	},
 	{
 		"id": "r9czifbr30souwa",
-		"name": "log",
+		"name": "logs",
 		"type": "base",
 		"system": false,
 		"schema": [
 			{
 				"system": false,
-				"id": "fpup01z4",
-				"name": "logs",
-				"type": "json",
+				"id": "dizaould",
+				"name": "time",
+				"type": "text",
 				"required": false,
 				"presentable": false,
 				"unique": false,
 				"options": {
-					"maxSize": 2000000
+					"min": null,
+					"max": null,
+					"pattern": ""
+				}
+			},
+			{
+				"system": false,
+				"id": "umltj7hu",
+				"name": "from",
+				"type": "text",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"min": null,
+					"max": null,
+					"pattern": ""
+				}
+			},
+			{
+				"system": false,
+				"id": "2appdjm8",
+				"name": "type",
+				"type": "text",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"min": null,
+					"max": null,
+					"pattern": ""
+				}
+			},
+			{
+				"system": false,
+				"id": "9fyljhop",
+				"name": "content",
+				"type": "text",
+				"required": false,
+				"presentable": false,
+				"unique": false,
+				"options": {
+					"min": null,
+					"max": null,
+					"pattern": ""
 				}
 			}
 		],
@@ -336,8 +380,8 @@
 			}
 		],
 		"indexes": [],
-		"listRule": null,
-		"viewRule": null,
+		"listRule": "",
+		"viewRule": "",
 		"createRule": null,
 		"updateRule": null,
 		"deleteRule": null,
@@ -363,20 +407,24 @@
 			},
 			{
 				"system": false,
-				"id": "qrusixji",
-				"name": "state",
-				"type": "json",
+				"id": "h4083cud",
+				"name": "files",
+				"type": "file",
 				"required": false,
 				"presentable": false,
 				"unique": false,
 				"options": {
-					"maxSize": 2000000
+					"mimeTypes": [],
+					"thumbs": [],
+					"maxSelect": 99,
+					"maxSize": 30000000,
+					"protected": false
 				}
 			}
 		],
 		"indexes": [],
-		"listRule": null,
-		"viewRule": null,
+		"listRule": "",
+		"viewRule": "",
 		"createRule": null,
 		"updateRule": null,
 		"deleteRule": null,
@@ -414,8 +462,8 @@
 			}
 		],
 		"indexes": [],
-		"listRule": null,
-		"viewRule": null,
+		"listRule": "",
+		"viewRule": "",
 		"createRule": null,
 		"updateRule": null,
 		"deleteRule": null,
