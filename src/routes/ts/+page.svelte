@@ -4,12 +4,15 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { Toaster, toast } from 'svelte-sonner';
 	import { fly } from 'svelte/transition';
+	import type { AuthModel } from 'pocketbase';
 
-	let userStats: any = $user;
+	let thisUser: AuthModel | any = $user;
 	let contestants: any[] = [];
 	let answer: string;
 	let elapsed: number = 0;
 	let timer: number = -1;
+
+	let inputFocus: boolean = false;
 
 	let current: {
 		screen: string;
@@ -26,7 +29,8 @@
 	let unsub: (() => void)[] = [];
 	onMount(async () => {
 		const userList = await pb.collection('users').getFullList();
-		const displayStatus = await pb.collection('display_status').getOne('4t-displaystate');
+		const displayStatus = await pb.collection('display_status').getOne('4T-DISPLAYSTATE');
+		const settingsRecord = await pb.collection('settings').getOne('4t-settings-all');
 
 		contestants = userList;
 		current = {
@@ -38,53 +42,52 @@
 
 		unsub[0] = await pb.collection('users').subscribe('*', ({ action, record }) => {
 			if (action === 'update') {
-				if (record.username === userStats?.username) userStats = record;
-				contestants = contestants.map((currentValue) => {
-					if (currentValue.username === record.username) {
-						return record;
-					} else {
-						return currentValue;
-					}
-				});
+				if (record.id === thisUser.id) thisUser = record;
+				contestants = contestants.map((currentValue) =>
+					currentValue.id === record.id ? record : currentValue
+				);
 			}
 		});
 		unsub[1] = await pb
 			.collection('display_status')
-			.subscribe('4t-displaystate', ({ action, record }) => {
+			.subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
 				if (action === 'update') {
 					current.screen = record.screen;
 					current.slide = record.slide;
 					current.question = record.ques;
-					timer = record.timer;
+					if (record.timer !== timer) timer = record.timer;
+					if (timer !== -1) startTimer(timer);
 				}
 			});
 	});
+
 	onDestroy(() => {
 		unsub.forEach((currentValue) => {
 			currentValue?.();
 		});
 	});
 
-	$: if (timer !== -1) startTimer(timer);
-
 	async function createAnswer() {
 		if (timer === -1) toast.error('Chưa bắt đầu thời gian');
 		else if (!/\w/.test(answer)) toast.warning('Chưa nhập câu trả lời');
 		else {
 			const answerTime = elapsed;
-			await pb.collection('users').update(userStats.id, {
+			await pb.collection('users').update(thisUser.id, {
 				answer: answer.toUpperCase(),
 				time: answerTime
 			});
+			toast.success(
+				`Đã gửi câu trả lời: [${(answerTime / 1000).toFixed(3)}] ${answer.toUpperCase()}`
+			);
 			createLogMessage(
-				userStats.name,
+				thisUser.name,
 				'ANSWER',
 				'[' + (answerTime / 1000).toFixed(3) + ']: ' + answer.toUpperCase()
 			);
-			toast.success(`Đã gửi câu trả lời: [${answerTime / 1000}] ${answer.toUpperCase()}`);
 			answer = '';
 		}
 	}
+
 	async function startTimer(duration: number) {
 		let last_time = window.performance.now();
 		let frame;
@@ -94,24 +97,27 @@
 			const time = window.performance.now();
 			elapsed += Math.min(time - last_time, duration - elapsed);
 			last_time = time;
-			if (elapsed >= duration) cancelAnimationFrame(frame);
+			if (elapsed >= duration) {
+				cancelAnimationFrame(frame);
+
+				elapsed = 0;
+			}
 		})();
-		elapsed = 0;
 	}
 
 	async function ringBell() {
 		if (current.screen === 'vcnv' || current.screen === 'vd') {
-			if (userStats.ring === 0) {
-				await pb.collection('users').update(userStats.id, {
+			if (thisUser.ring === 0) {
+				await pb.collection('users').update(thisUser.id, {
 					ring: 1
 				});
 				toast.success('Đã nhấn chuông');
-				createLogMessage(userStats.name, 'BELL', 'Đã nhấn chuông');
+				createLogMessage(thisUser.name, 'BELL', 'Đã nhấn chuông');
 			} else {
 				toast.warning('Chuông đã được nhấn');
 			}
 		} else {
-			toast.error('Chưa được nhấn chuông');
+			toast.warning('Chưa được nhấn chuông');
 		}
 	}
 </script>
@@ -120,11 +126,11 @@
 	<title>Trang thí sinh | Thách Thức Trí Tuệ</title>
 </svelte:head>
 
-<!-- <svelte:window
+<svelte:window
 	on:keydown={(e) => {
-		if (e.key === ' ') ringBell();
+		if (e.key === ' ' && !inputFocus) ringBell();
 	}}
-/> -->
+/>
 
 <Toaster expand={true} richColors closeButton position="top-right" />
 
@@ -136,8 +142,8 @@
 	<div class="grid grid-cols-4">
 		{#each contestants as contestant}
 			<div
-				class="flex items-center justify-between border-[3px] border-gray-400 px-4 text-sm font-semibold lg:text-xl"
-				class:bg-green-100={contestant.id === userStats.id}
+				class={'flex items-center justify-between border-[3px] border-gray-400 px-4 text-sm font-semibold lg:text-xl' +
+					(contestant.id === thisUser.id ? 'bg-green-100 dark:bg-green-900' : '')}
 			>
 				<span>{contestant.name.toUpperCase()}</span>
 				{#if current.screen === 'answers'}
@@ -164,14 +170,14 @@
 		{/each}
 	</div>
 	<div class="grid grid-cols-4">
-		<div class="col-span-3 border-[3px] border-gray-400 text-6xl">if</div>
+		<div class="col-span-3 border-[3px] border-gray-400 text-6xl"></div>
 		<div class="grid grid-rows-2">
 			<div
 				class="flex flex-col items-center justify-center gap-4 border-[3px] border-gray-400 font-mono text-6xl font-semibold"
 			>
 				<span class="text-xl">Thời gian:</span>
 				{#if timer === -1}
-					<span class="text-2xl font-medium">Chua bat dau</span>
+					<span class="text-2xl font-medium">Chưa bắt đầu</span>
 				{:else}
 					<span>{(elapsed / 1000).toFixed(2)}s</span>
 					<!-- else content here -->
@@ -188,7 +194,7 @@
 					>
 					<div class="flex flex-col">
 						NHẤN CHUÔNG
-						<span class="text-xl">Có thể nhấn phím cách</span>
+						<span class="text-xl font-thin">Có thể nhấn phím cách</span>
 					</div>
 				</div></button
 			>
@@ -200,6 +206,12 @@
 				class="h-full w-full px-4 text-6xl uppercase"
 				type="text"
 				placeholder="Nhập câu trả lời của bạn, ENTER để gửi"
+				on:focusin={() => {
+					inputFocus = true;
+				}}
+				on:focusout={() => {
+					inputFocus = false;
+				}}
 				bind:value={answer}
 			/>
 		</form>

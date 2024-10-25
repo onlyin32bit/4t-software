@@ -10,7 +10,7 @@
 
 	onMount(async () => {
 		const userList = await pb.collection('users').getFullList();
-		const displayStatus = await pb.collection('display_status').getOne('4t-displaystate');
+		const displayStatus = await pb.collection('display_status').getOne('4T-DISPLAYSTATE');
 		// const settingsList = await pb.collection('settings').getOne('4t-settings-all');
 		// console.log(displayStatus[0].action);
 

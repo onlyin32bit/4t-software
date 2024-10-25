@@ -137,7 +137,7 @@ const soundsCollection: Map<string, string> = new Map([
 	['bell_vcnv', 'vcnv/ObstacleGrant.mp3'],
 	['bell_vd', 'vd/Grant.mp3'],
 	['', ''],
-	['', ''],
+	['vd_5', 'vd/5Seconds.mp3'],
 	['', ''],
 	['', ''],
 	['', ''],

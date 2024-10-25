@@ -14,7 +14,7 @@
 
 	let unsub: (() => void)[] = [];
 	onMount(async () => {
-		const displayStatus = await pb.collection('display_status').getOne('4t-displaystate');
+		const displayStatus = await pb.collection('display_status').getOne('4T-DISPLAYSTATE');
 		screen = displayStatus.screen;
 		slide = displayStatus.slide;
 		ques = displayStatus.ques;

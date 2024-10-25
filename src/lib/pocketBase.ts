@@ -1,6 +1,9 @@
 import PocketBase, { type AuthModel } from 'pocketbase';
 import { writable, type Writable } from 'svelte/store';
-import { PUBLIC_DB_ADDRESS } from '$env/static/public';
+// import 'dotenv/config';
+
+const PUBLIC_DB_ADDRESS = '192.168.2.8';
+console.log(PUBLIC_DB_ADDRESS);
 
 export const pb = new PocketBase('http://' + PUBLIC_DB_ADDRESS + ':8090');
 

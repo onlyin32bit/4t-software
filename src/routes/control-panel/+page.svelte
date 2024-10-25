@@ -95,9 +95,8 @@
 		// fetch data
 		const userListRecord = await pb.collection('users').getFullList();
 		const logsRecord = await pb.collection('logs').getFullList();
-		console.log(logsRecord);
 
-		const displayStatusRecord = await pb.collection('display_status').getOne('4t-displaystate');
+		const displayStatusRecord = await pb.collection('display_status').getOne('4T-DISPLAYSTATE');
 		const settingsRecord = await pb.collection('settings').getOne('4t-settings-all');
 
 		contestants = userListRecord;
@@ -116,8 +115,9 @@
 			// console.log(record);
 			if (action === 'update') {
 				contestants = contestants.map((currentValue) =>
-					currentValue.username === record.username ? record : currentValue
+					currentValue.id === record.id ? record : currentValue
 				);
+				// if (record.ring > 0) playSound('bell_vd');
 			}
 		});
 		unsub[1] = await pb.collection('logs').subscribe('*', ({ action, record }) => {
@@ -127,7 +127,7 @@
 		});
 		unsub[2] = await pb
 			.collection('display_status')
-			.subscribe('4t-displaystate', ({ action, record }) => {
+			.subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
 				if (action === 'update') {
 					current.screen = record.screen;
 					current.slide = record.slide;
@@ -143,46 +143,11 @@
 		});
 	});
 
-	// async function timer() {
-	// 	time = (timerSettings.get(current.screen) ?? 0) * 1000;
-	// 	contestants.forEach(async (currentValue) => {
-	// 		await pb.collection('users').update(currentValue.id, { answer: null, time: -1 });
-	// 	});
-	// 	await pb.collection('display_status').update('4t-displaystate', {
-	// 		timer: timerSettings.get(current.screen)
-	// 	});
-	// 	createLogMessage({
-	// 		from: 'system',
-	// 		type: 'TIMER',
-	// 		content: 'Bắt đầu đếm thời gian: ' + timerSettings.get(current.screen) + 's'
-	// 	});
-	// 	let countdown: any = setInterval(async () => {
-	// 		time -= 10;
-	// 		if (time <= 0) {
-	// 			clearInterval(countdown);
-	// 			countdown = null;
-
-	// 			contestants.forEach(async (currentValue) => {
-	// 				if (currentValue.time == -1) {
-	// 					await pb.collection('users').update(currentValue.id, { time: -2 });
-	// 				}
-	// 			});
-	// 			createLogMessage({
-	// 				from: 'system',
-	// 				type: 'TIMER',
-	// 				content: 'Đã hết thời gian'
-	// 			});
-	// 			await pb.collection('display_status').update('4t-displaystate', {
-	// 				timer: -1
-	// 			});
-	// 		}
-	// 	}, 10);
-	// }
 	async function startTimer(duration: number) {
-		contestants.forEach(async (currentValue) => {
-			await pb.collection('users').update(currentValue.id, { answer: null, time: -1 });
-		});
-		await pb.collection('display_status').update('4t-displaystate', {
+		// contestants.forEach(async (currentValue) => {
+		// 	await pb.collection('users').update(currentValue.id, { answer: null, time: -1 });
+		// });
+		await pb.collection('display_status').update('4T-DISPLAYSTATE', {
 			timer: duration
 		});
 		let last_time = window.performance.now();
@@ -202,7 +167,7 @@
 						await pb.collection('users').update(currentValue.id, { time: -2 });
 					}
 				});
-				await pb.collection('display_status').update('4t-displaystate', {
+				await pb.collection('display_status').update('4T-DISPLAYSTATE', {
 					timer: -1
 				});
 				elapsed = 0;
@@ -235,6 +200,7 @@
 						.collection('users')
 						.update(currentValue.id, { score: currentValue.score + selectedScore[i] });
 			});
+
 			createLogMessage('system', 'SCORE', message);
 			selectedScore = [0, 0, 0, 0];
 		}
@@ -257,7 +223,7 @@
 	}
 	async function setScreen() {
 		if (selected.screen !== current.screen) {
-			await pb.collection('display_status').update('4t-displaystate', {
+			await pb.collection('display_status').update('4T-DISPLAYSTATE', {
 				screen: selected.screen,
 				slide: selected.slide,
 				ques: selected.question
@@ -266,14 +232,14 @@
 	}
 	async function setSlide() {
 		if (selected.slide !== current.slide) {
-			await pb.collection('display_status').update('4t-displaystate', {
+			await pb.collection('display_status').update('4T-DISPLAYSTATE', {
 				slide: selected.slide
 			});
 		}
 	}
 	async function setQuestion() {
 		if (selected.question !== current.question) {
-			await pb.collection('display_status').update('4t-displaystate', {
+			await pb.collection('display_status').update('4T-DISPLAYSTATE', {
 				ques: selected.question
 			});
 			contestants.forEach(async (currentValue) => {
@@ -285,7 +251,7 @@
 		// contestants.forEach(async (currentValue) => {
 		// 	await pb.collection('users').update(currentValue.id, { answer: null, time: 0 });
 		// });
-		await pb.collection('display_status').update('4t-displaystate', {
+		await pb.collection('display_status').update('4T-DISPLAYSTATE', {
 			displayQuestion: value
 		});
 	}
@@ -303,7 +269,7 @@
 				currentValue.content;
 		});
 		download(
-			'4t_LOG_' + getCurrentTime().slice(0, 10).replaceAll('/', '-'),
+			'4T_LOG_' + getCurrentTime().slice(0, 10).replaceAll('/', '-'),
 			content + '\n#END LOG'
 		);
 	}
@@ -668,8 +634,14 @@
 							>
 						</div>
 						<div class="grid grid-cols-4 gap-4">
-							<button class="btn" class:btn-disabled={selected.screen !== current.screen}
-								>Play Animation</button
+							<button
+								class="btn"
+								class:btn-disabled={selected.screen !== current.screen}
+								on:click={() => {
+									contestants.forEach(async (currentValue) => {
+										await pb.collection('users').update(currentValue.id, { ring: 0 });
+									});
+								}}>Play Animation (clr ring)</button
 							>
 							<button class="btn" on:click={() => setDisplayQuestion(true)}
 								>Display question
