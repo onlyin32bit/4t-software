@@ -14,7 +14,7 @@ Start-Job -ScriptBlock {
 }
 
 # Change directory and start the database
-Set-Location pocketbase_linux
+Set-Location pocketbase_windows
 Start-Job -ScriptBlock {
     .\launchDB.ps1
 }

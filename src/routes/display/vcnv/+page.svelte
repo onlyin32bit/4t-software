@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { serialize } from 'cookie';
 	import { goto } from '$app/navigation';
 	import { pb } from '$lib/pocketBase';
 	import { onDestroy, onMount } from 'svelte';

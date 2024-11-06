@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Tektur:wght@400..900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,7 +7,17 @@
 	@font-face {
 		font-family: 'SVN-TV';
 		font-weight: 300;
-		src: url(/src/lib/font/SVN-The\ Voice\ Regular.ttf);
+		src: url(/src/lib/font/SVN-TheVoiceRegular.ttf);
+	}
+	@font-face {
+		font-family: 'SVN-HEAD';
+		font-weight: 300;
+		src: url(/src/lib/font/SVN-TheVoiceHeavyItalic.ttf);
+	}
+	@font-face {
+		font-family: 'HANZEL';
+		font-weight: 300;
+		src: url(/src/lib/font/UTM-Hanzel.ttf);
 	}
 }
 

@@ -1,13 +1,19 @@
 <script lang="ts">
-	import { dictionary, timerSettings, createLogMessage } from '$lib/utils';
+	import {
+		dictionary,
+		timerSettings,
+		createLogMessage,
+		playSound,
+		sendSoundRequest
+	} from '$lib/utils';
 	import { user, pb } from '$lib/pocketBase';
 	import { onMount, onDestroy } from 'svelte';
 	import { Toaster, toast } from 'svelte-sonner';
 	import { fly } from 'svelte/transition';
 	import type { AuthModel } from 'pocketbase';
 
-	let thisUser: AuthModel | any = $user;
-	let contestants: any[] = [];
+	let thisUser: NonNullable<AuthModel> = $user ?? {};
+	let contestants: NonNullable<AuthModel>[] = [];
 	let answer: string;
 	let elapsed: number = 0;
 	let timer: number = -1;
@@ -30,7 +36,7 @@
 	onMount(async () => {
 		const userList = await pb.collection('users').getFullList();
 		const displayStatus = await pb.collection('display_status').getOne('4T-DISPLAYSTATE');
-		const settingsRecord = await pb.collection('settings').getOne('4t-settings-all');
+		// const settingsRecord = await pb.collection('settings').getOne('4t-settings-all');
 
 		contestants = userList;
 		current = {
@@ -42,7 +48,7 @@
 
 		unsub[0] = await pb.collection('users').subscribe('*', ({ action, record }) => {
 			if (action === 'update') {
-				if (record.id === thisUser.id) thisUser = record;
+				if (record.id === thisUser!.id) thisUser = record;
 				contestants = contestants.map((currentValue) =>
 					currentValue.id === record.id ? record : currentValue
 				);
@@ -106,19 +112,21 @@
 	}
 
 	async function ringBell() {
-		if (current.screen === 'vcnv' || current.screen === 'vd') {
-			if (thisUser.ring === 0) {
-				await pb.collection('users').update(thisUser.id, {
-					ring: 1
-				});
-				toast.success('Đã nhấn chuông');
-				createLogMessage(thisUser.name, 'BELL', 'Đã nhấn chuông');
-			} else {
-				toast.warning('Chuông đã được nhấn');
-			}
+		// if (current.screen === 'vcnv' || current.screen === 'vd') {
+		if (thisUser.ring === 0) {
+			await pb.collection('users').update(thisUser.id, {
+				ring: 1
+			});
+			toast.success('Đã nhấn chuông');
+			createLogMessage(thisUser.name, 'BELL', 'Đã nhấn chuông');
+			// playSound('bell_vcnv');
+			// sendSoundRequest('bell_' + current.screen);
 		} else {
-			toast.warning('Chưa được nhấn chuông');
+			toast.warning('Chuông đã được nhấn');
 		}
+		// } else {
+		// 	toast.warning('Chưa được nhấn chuông');
+		// }
 	}
 </script>
 
@@ -142,25 +150,15 @@
 	<div class="grid grid-cols-4">
 		{#each contestants as contestant}
 			<div
-				class={'flex items-center justify-between border-[3px] border-gray-400 px-4 text-sm font-semibold lg:text-xl' +
-					(contestant.id === thisUser.id ? 'bg-green-100 dark:bg-green-900' : '')}
+				class="flex items-center justify-between border-[3px] border-gray-400 px-4 text-sm font-semibold lg:text-xl"
 			>
 				<span>{contestant.name.toUpperCase()}</span>
 				{#if current.screen === 'answers'}
-					<div class="flex">
-						<span>{contestant.answer}</span>
-						{#if contestant.ring > 0}
-							<svg class="w-10" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"
-								><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path
-									d="M224 0c-17.7 0-32 14.3-32 32l0 19.2C119 66 64 130.6 64 208l0 18.8c0 47-17.3 92.4-48.5 127.6l-7.4 8.3c-8.4 9.4-10.4 22.9-5.3 34.4S19.4 416 32 416l384 0c12.6 0 24-7.4 29.2-18.9s3.1-25-5.3-34.4l-7.4-8.3C401.3 319.2 384 273.9 384 226.8l0-18.8c0-77.4-55-142-128-156.8L256 32c0-17.7-14.3-32-32-32zm45.3 493.3c12-12 18.7-28.3 18.7-45.3l-64 0-64 0c0 17 6.7 33.3 18.7 45.3s28.3 18.7 45.3 18.7s33.3-6.7 45.3-18.7z"
-								/></svg
-							>
-						{/if}
-					</div>
+					<span class="text-[1rem] font-medium tracking-tighter">{contestant.answer}</span>
 				{:else}
 					<div>
 						{#key contestant.score}
-							<span class="font-bold" out:fly={{ y: -20 }}>
+							<span class="font-mono font-bold" out:fly={{ y: -20 }}>
 								{contestant.score}
 							</span>
 						{/key}
@@ -169,8 +167,15 @@
 			</div>
 		{/each}
 	</div>
-	<div class="grid grid-cols-4">
-		<div class="col-span-3 border-[3px] border-gray-400 text-6xl"></div>
+	<div class="grid grid-cols-5">
+		<div class="col-span-4 grid grid-rows-[1fr_100px] text-6xl">
+			<div class="border-[3px] border-gray-400"></div>
+			<div class="grid grid-cols-[1fr_4rem] grid-rows-2">
+				<div class="text-2xl">Câu trả lời đã gửi:</div>
+				<div class="row-span-2">{thisUser.time}</div>
+				<div class="">{thisUser.answer}</div>
+			</div>
+		</div>
 		<div class="grid grid-rows-2">
 			<div
 				class="flex flex-col items-center justify-center gap-4 border-[3px] border-gray-400 font-mono text-6xl font-semibold"

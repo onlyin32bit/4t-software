@@ -7,10 +7,24 @@ export default {
 			backgroundImage: {
 				'bg-1': "url('/src/lib/image/bg-1.png')",
 				'bg-2': "url('/src/lib/image/bg-2.jpg')",
+				'bg-3': "url('/src/lib/image/bg-3.png')",
+				'bg-rule': "url('/src/lib/image/rule.png')",
 				'bg-kd': "url('/src/lib/image/kd-bg.png')"
 			},
 			fontFamily: {
-				'number-display': ['SVN-TV']
+				'header-text': ['SVN-HEAD'],
+				'number-display': ['SVN-TV'],
+				'game-display': ['HANZEL'],
+				futuristic: ['Tektur', 'sans-serif']
+			},
+			animation: {
+				wiggle: 'wiggle 0.5s ease-in-out infinite'
+			},
+			keyframes: {
+				wiggle: {
+					'0%, 100%': { transform: 'rotate(-5deg)' },
+					'50%': { transform: 'rotate(5deg)' }
+				}
 			}
 		}
 	},

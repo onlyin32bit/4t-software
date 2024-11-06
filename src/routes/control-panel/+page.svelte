@@ -8,7 +8,9 @@
 		dictionary,
 		timerSettings,
 		playSound,
-		numberOfQues
+		formatTime2,
+		numberOfQues,
+		sendSoundRequest
 	} from '$lib/utils';
 	import { pb, user } from '$lib/pocketBase';
 	import { onMount, onDestroy } from 'svelte';
@@ -33,12 +35,7 @@
 		numberOfQues: -1
 	};
 
-	let selected: DisplayObject = {
-		screen: '',
-		slide: '',
-		question: -1,
-		numberOfQues: -1
-	};
+	let selected: DisplayObject = { ...current };
 	$: selected.numberOfQues = numberOfQues.get(selected.screen) ?? 0;
 	$: current.numberOfQues = numberOfQues.get(current.screen) ?? 0;
 
@@ -50,15 +47,16 @@
 
 	let menu: string = 'main';
 
-	let game: string;
+	let settings: { season: number; game: string; game_number: number };
 
 	let selectionSlideList = ['start', 'rule', 'ques', 'end'];
 	$: if (selected.screen === 'kd') {
 		selectionSlideList = [
 			'start',
 			'rule',
+			'intro',
 			'main_kd',
-			'ques',
+			'ques_chung',
 			'ques_ts1',
 			'ques_ts2',
 			'ques_ts3',
@@ -88,16 +86,15 @@
 		{ name: undefined, class: undefined },
 		{ name: undefined, class: undefined }
 	];
-	// あなたはゲイ
+
 	let unsub: (() => void)[] = [];
 	// chay khi component duoc load
 	onMount(async () => {
 		// fetch data
 		const userListRecord = await pb.collection('users').getFullList();
 		const logsRecord = await pb.collection('logs').getFullList();
-
 		const displayStatusRecord = await pb.collection('display_status').getOne('4T-DISPLAYSTATE');
-		const settingsRecord = await pb.collection('settings').getOne('4t-settings-all');
+		const settingsRecord = await pb.collection('settings').getOne('GLOBAL-SETTINGS');
 
 		contestants = userListRecord;
 		logs = logsRecord;
@@ -108,16 +105,19 @@
 			numberOfQues: -1
 		};
 		selected = { ...current };
-		game = settingsRecord.field.game;
+		settings = {
+			season: settingsRecord.field.season,
+			game: settingsRecord.field.game,
+			game_number: settingsRecord.field.game_number
+		};
 
 		// riel time database setup
 		unsub[0] = await pb.collection('users').subscribe('*', ({ action, record }) => {
-			// console.log(record);
 			if (action === 'update') {
 				contestants = contestants.map((currentValue) =>
 					currentValue.id === record.id ? record : currentValue
 				);
-				// if (record.ring > 0) playSound('bell_vd');
+				if (record.ring > 0) sendSoundRequest('bell_vd');
 			}
 		});
 		unsub[1] = await pb.collection('logs').subscribe('*', ({ action, record }) => {
@@ -203,6 +203,8 @@
 
 			createLogMessage('system', 'SCORE', message);
 			selectedScore = [0, 0, 0, 0];
+		} else {
+			toast.warning('Chưa nhập điểm thí sinh');
 		}
 	}
 	async function setContestantInfo() {
@@ -245,6 +247,7 @@
 			contestants.forEach(async (currentValue) => {
 				await pb.collection('users').update(currentValue.id, { answer: null, time: 0 });
 			});
+			setDisplayQuestion(false);
 		}
 	}
 	async function setDisplayQuestion(value: boolean) {
@@ -289,6 +292,7 @@
 </svelte:head>
 
 <Toaster closeButton richColors position="top-right" />
+
 <AuthCheck requiredBTC={true}>
 	<section class="h-screen w-screen overflow-hidden">
 		<div class="grid h-full grid-cols-2 grid-rows-[50px_1fr_1fr_50px] border-[3px] border-gray-400">
@@ -420,6 +424,7 @@
 								<!-- <th>{i + 1}</th> -->
 								<div class="flex items-center border-b-2 px-3 text-xl font-semibold">
 									{contestant.name}
+									{contestant.ring > 0 ? 'bel' : ''}
 								</div>
 								<div class="flex items-center border-b-2 px-3 text-lg">
 									{contestant.answer === '' ? 'Chưa có câu trả lời' : contestant.answer}
@@ -429,7 +434,7 @@
 										? 'ended'
 										: contestant.time === -1
 											? 'running'
-											: (contestant.time / 1000).toFixed(3)}
+											: formatTime2(contestant.time)}
 								</div>
 								<button
 									class="h-full w-full bg-slate-100 text-3xl font-light text-gray-400 transition-colors hover:bg-blue-100"
@@ -480,64 +485,51 @@
 						<option value="info">Set thong tin thi sinh</option>
 						<option value="settings">Cai dat</option>
 					</select>
-					{#if menu === 'info'}
-						<button
-							class="border-[3px] border-gray-400 transition-colors hover:bg-gray-200"
-							on:click={setContestantInfo}
-						>
-							Set thong tin
-						</button>
-						<button
-							class="border-[3px] border-gray-400 hover:bg-gray-200"
-							on:click={() => {
-								selectedScore = [0, 0, 0, 0];
-							}}
-							>Bỏ chọn
-						</button>
-					{:else}
-						<button
-							class="border-[3px]
+					<button
+						class="border-[3px]
 						border-gray-400 transition-colors hover:bg-gray-200"
-							on:click={setScore}
-							>Set diem
-						</button>
-						<button
-							class="border-[3px] border-gray-400 hover:bg-gray-200"
-							on:click={() => {
-								selectedScore = [0, 0, 0, 0];
-							}}
-							>Bỏ chọn điểm
-						</button>
-					{/if}
+						on:click={() => {
+							menu === 'info' ? setContestantInfo() : setScore();
+						}}
+					>
+						Set {menu === 'info' ? 'thông tin' : 'điểm'}
+					</button>
+					<button
+						class="border-[3px] border-gray-400 hover:bg-gray-200"
+						on:click={() => {
+							selectedScore = [0, 0, 0, 0];
+						}}
+						>Bỏ chọn điểm
+					</button>
 				</div>
 			</div>
 			<div class="border-[3px] border-gray-400">
 				<!-- dieu khien man hinh -->
 				<div role="tablist" class="tabs tabs-lifted tabs-sm rounded-lg bg-gray-100 xl:tabs-md">
-					{#each ['main', 'answers', 'scores', 'kd', 'tt', 'vcnv', 'vd', 'extra'] as item}
+					{#each ['main', 'answers', 'scores', 'kd', 'tt', 'vcnv', 'vd', 'extra'] as screen}
 						<button
 							class=" tab transition-colors duration-300 [--tab-bg:white]"
-							class:tab-active={selected.screen === item}
-							class:text-black={current.screen === item}
-							class:text-gray-400={current.screen !== item}
-							class:hover:text-gray-500={current.screen !== item}
-							class:hover:bg-gray-50={selected.screen !== item}
+							class:tab-active={selected.screen === screen}
+							class:text-black={current.screen === screen}
+							class:text-gray-400={current.screen !== screen}
+							class:hover:text-gray-500={current.screen !== screen}
+							class:hover:bg-gray-50={selected.screen !== screen}
 							on:click={() => {
-								if (item === current.screen) {
+								if (screen === current.screen) {
 									selected.slide = current.slide;
 									selected.question = current.question;
-								} else if (['kd', 'tt', 'vcnv', 'vd'].includes(item) && prevScreen !== item) {
+								} else if (['kd', 'tt', 'vcnv', 'vd'].includes(screen) && prevScreen !== screen) {
 									selected.slide = 'start';
 									selected.question = 1;
 								}
-								if (selected.screen === item) {
+								if (selected.screen === screen) {
 									prevScreen = current.screen;
 									setScreen();
 								}
-								selected.screen = item;
+								selected.screen = screen;
 							}}
 						>
-							{dictionary.get(item)}
+							{dictionary.get(screen)}
 						</button>
 					{/each}
 				</div>
@@ -580,7 +572,7 @@
 							>
 						</div>
 					{/if}
-					{#if selected.slide == 'ques' && (selected.screen == 'kd' || selected.screen == 'tt')}
+					{#if selected.slide == 'ques' || (selected.slide == 'ques_chung' && (selected.screen == 'kd' || selected.screen == 'tt'))}
 						<div class="grid grid-cols-[50px_1fr_50px_1fr] gap-4 xl:grid-cols-[75px_1fr_75px_1fr]">
 							<button
 								class="btn select-none"
@@ -653,16 +645,18 @@
 								>Start timer</button
 							>
 							<span class="flex items-center justify-center font-mono text-2xl font-semibold"
-								>{(elapsed / 1000).toFixed(2)}s</span
+								>{formatTime2(elapsed)}s</span
 							>
 						</div>
 					{/if}
 					<!-- phan hien thi vcnv, de sau -->
 					{#if selected.slide == 'main_vcnv' && selected.screen == 'vcnv'}
-						<div class="grid grid-cols-8">
-							{#each [1, 2, 3, 4, 5, 6, 7, 8] as i}
-								<div><button class="btn">{i}</button></div>
-							{/each}
+						<div>
+							<div class="grid grid-cols-8">
+								{#each [1, 2, 3, 4, 'center'] as i}
+									<div><button class="btn">{i}</button></div>
+								{/each}
+							</div>
 						</div>
 					{/if}
 				</div>
@@ -677,7 +671,11 @@
 						class:input-error={!messageContent}
 					/>
 				</form>
-				<button class="btn btn-circle btn-sm ml-auto" on:click|preventDefault={() => {}}>
+				<button
+					title="Emoji"
+					class="btn btn-circle btn-sm ml-auto"
+					on:click|preventDefault={() => {}}
+				>
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 						<path
 							d="M464 256A208 208 0 1 0 48 256a208 208 0 1 0 416 0zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256zm177.6 62.1C192.8 334.5 218.8 352 256 352s63.2-17.5 78.4-33.9c9-9.7 24.2-10.4 33.9-1.4s10.4 24.2 1.4 33.9c-22 23.8-60 49.4-113.6 49.4s-91.7-25.5-113.6-49.4c-9-9.7-8.4-24.9 1.4-33.9s24.9-8.4 33.9 1.4zM144.4 208a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm192-32a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"
