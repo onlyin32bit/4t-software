@@ -19,10 +19,12 @@ export function typewriter(node: Element, { delay = 0, speed = 1 }) {
 	};
 }
 
-export function zoomin(node: Element, { duration = 1000, delay = 0, speed = 1 }) {
+export function zoomIn(node: Element, { duration = 1000, delay = 0 }) {
 	return {
-		delay,
 		duration,
-		css: (t: number) => `transform: scale(${t})`
+		delay,
+		css: (t: number) => {
+			return `transform: scale(${4 - t * 3})`;
+		}
 	};
 }

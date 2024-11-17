@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { pb } from '$lib/pocketBase';
-	import { playSound } from '$lib/utils';
+	import { playSound, soundsCollection } from '$lib/utils';
+	import { Howl } from 'howler';
 	import { onDestroy, onMount } from 'svelte';
 	let soundAllowed: boolean = false;
 
@@ -39,6 +40,8 @@
 
 	let sound: string;
 
+	let audio: Howl;
+
 	let unsub: () => void;
 	onMount(async () => {
 		const displayStatus = await pb.collection('display_status').getOne('4T-DISPLAYSTATE');
@@ -48,9 +51,22 @@
 			.collection('display_status')
 			.subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
 				if (action === 'update') {
-					if (sound !== record.sound) {
-						sound = record.sound;
+					if (sound !== '' || sound !== record.sound) {
 						playSound(sound);
+						// audio.stop();
+						// sound = record.sound;
+						// audio = new Howl({
+						// 	src: ['src/lib/sound/' + (soundsCollection.get(sound) ?? '')],
+						// 	volume: 1
+						// });
+						// audio.once('load', () => {
+						// 	audio.play();
+						// });
+						// audio.on('end', async () => {
+						// 	await pb.collection('display_status').update('4T-DISPLAYSTATE', {
+						// 		sound: ''
+						// 	});
+						// });
 					}
 				}
 			});

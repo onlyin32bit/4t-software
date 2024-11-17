@@ -41,11 +41,14 @@
 <div
 	class="flex h-screen w-screen items-center justify-center bg-bg-1 bg-cover bg-no-repeat text-[8vh] text-white"
 >
-	<div>
+	<div class="space-y-[3vh]">
 		{#each contestants as contestant, i}
-			<div class="flex flex-col" in:fly={{ x: 200, delay: i * 100 }}>
-				<h1 class="text-[6vh]">{contestant.name}</h1>
-				<div class="flex min-w-[40vw] items-center" in:fade={{ duration: 1000 }}>
+			<div
+				class="flex flex-col border-[0.7vh] bg-gradient-to-tr from-[#0F247D] to-[#26164D] px-[1.5vw]"
+				in:fly={{ x: 200, delay: i * 100 }}
+			>
+				<h1 class="z-50 text-[6vh]">{contestant.name}</h1>
+				<div class="z-50 flex h-[9vh] min-w-[40vw] items-center" in:fade={{ duration: 1000 }}>
 					<p class="mr-[2vw] inline font-semibold tracking-tighter">
 						{contestant.answer.toUpperCase()}
 					</p>

@@ -31,11 +31,13 @@
 		// 		);
 		// 	}
 		// });
-		unsub[1] = await pb.collection('display_status').subscribe('*', ({ action, record }) => {
-			if (action === 'update') {
-				status = record.screen;
-			}
-		});
+		unsub = [
+			await pb.collection('display_status').subscribe('*', ({ action, record }) => {
+				if (action === 'update') {
+					status = record.screen;
+				}
+			})
+		];
 	});
 
 	onDestroy(() => {
@@ -60,8 +62,7 @@
 	/>
 	{#if settings.game !== ''}
 		<h1 class="text-[14vh] font-semibold uppercase text-blue-100" in:scale>
-			{dictionary.get(settings.game) ?? '...'}
-			{settings.game_number}
+			{`${dictionary.get(settings.game) ?? '...'} ${settings.game === 'ck' ? '' : settings.game_number}`}
 		</h1>
 	{/if}
 	<table class="scale-95">

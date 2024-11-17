@@ -1,3 +1,3 @@
-import skio from 'sveltekit-io';
+import ioClient from 'socket.io-client';
 
-export const socket = skio.get();
+export const socket = ioClient();

@@ -38,7 +38,7 @@ export function getScreenStats(e: DisplayObject) {
 			: ' / ' + dictionary.get(e.slide)) +
 		(e.screen === 'answers' || e.screen === 'main' || e.screen === 'scores'
 			? ''
-			: e.slide == 'ques'
+			: e.slide.startsWith('ques')
 				? ' / Câu số ' + e.question + '/' + e.numberOfQues
 				: '')
 	);
@@ -47,7 +47,7 @@ export function getScreenStats(e: DisplayObject) {
 export function playSound(src: string) {
 	const audio = new Howl({
 		src: ['src/lib/sound/' + (soundsCollection.get(src) ?? '')],
-		volume: 0.1
+		volume: 1
 	});
 	audio.play();
 }
@@ -99,10 +99,10 @@ export function formatTime3(time: number) {
 	return (time / 1000).toFixed(3);
 }
 
-export function download(filename: string, text: string) {
+export function download(fileName: string, text: string) {
 	const element = document.createElement('a');
 	element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-	element.setAttribute('download', filename);
+	element.setAttribute('download', fileName);
 	element.style.display = 'none';
 
 	document.body.appendChild(element);
@@ -150,17 +150,18 @@ export const scoreDistribution: Map<number, Array<number>> = new Map([
 
 //overdated
 export const numberOfQues: Map<string, number> = new Map([
-	['kd', 12],
-	['vcnv', 8],
-	['vcnv_bk', 5],
+	['kd_chung', 12],
+	['kd_rieng', 10],
+	['vcnv', 5],
+	// ['vcnv_bk', 5],
 	['tt', 4],
-	['vd', 4],
-	['vd_bk', 3]
+	['vd', 3]
+	// ['vd_bk', 3]
 ]);
 
 export const timerSettings: Map<string, number> = new Map([
-	['kd', 10000],
-	['kd_bk', 3000],
+	['kd', 3000],
+	// ['kd_bk', 3000],
 	['tt', 30000],
 	['vcnv', 15000],
 	['vd_5', 5000],
@@ -169,7 +170,7 @@ export const timerSettings: Map<string, number> = new Map([
 	['vd_20', 20000]
 ]);
 
-const soundsCollection: Map<string, string> = new Map([
+export const soundsCollection: Map<string, string> = new Map([
 	['tong_ket_diem', 'main/PointSummary.mp3'],
 	['space', 'main/Space.mp3'],
 	['kd_start', 'kd/StartRound.mp3'],

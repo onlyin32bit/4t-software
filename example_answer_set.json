@@ -1,0 +1,102 @@
+{
+	"settings": {
+		"season": 8,
+		"game": "bk",
+		"game_number": 1
+	},
+	"contestant": [
+		{
+			"name": "",
+			"class": ""
+		},
+		{
+			"name": "",
+			"class": ""
+		},
+		{
+			"name": "",
+			"class": ""
+		},
+		{
+			"name": "",
+			"class": ""
+		}
+	],
+	"question": {
+		"kd": {
+			"chung": ["", "", "", "", "", "", "", "", "", "", "", ""],
+			"rieng": [
+				["", "", "", "", "", "", "", "", "", ""],
+				["", "", "", "", "", "", "", "", "", ""],
+				["", "", "", "", "", "", "", "", "", ""],
+				["", "", "", "", "", "", "", "", "", ""]
+			]
+		},
+		"vcnv": {
+			"obstacle": "QUÂN KHU 9",
+			"rows": [
+				{
+					"keyword": "QUỐCPHÒNG",
+					"question": "Điền từ còn thiếu vào chỗ trống trong chỉ thị thành lập Bộ tham mưu của Chủ tịch Chính phủ Lâm thời Hồ Chí Minh: \"Chính phủ lâm thời đã quyết định tổ chức Bộ [...] nay Đoàn thể lập Bộ Tham mưu để chỉ huy, điều hành lực lượng vũ trang trong cả nước. Bộ Tham mưu là cơ quan quân sự cơ mật của đoàn thể, là cơ quan quan trọng của quân đội\""
+				},
+				{
+					"keyword": "TÂYNAMBỘ",
+					"question": "Nhằm phục vụ cộng đồng người dân tộc Khmer ở khu vực phía nam, ngày 1/1/2016, Đài truyền hình Việt Nam cho ra mắt kênh VTV5 Khmer, đến ngày 13/6/2016, kênh VTV5 Khmer chính thức được đổi tên thành gì? (đáp án không chứa từ VTV5)"
+				},
+				{
+					"keyword": "CẦNTHƠ",
+					"question": "{file}Đây là biểu trưng của tỉnh/ thành phố nào ở nước ta?"
+				},
+				{
+					"keyword": "12",
+					"question": "Tìm số nguyên dương nhỏ nhất có 2 chữ số mà khi ta viết vào bên trái nó bất kỳ số tự nhiên nào ta đều nhận được một số chia hết cho 4."
+				}
+			],
+			"center_ques": "Trong phân chia hành chính của Quân đội Nhân dân Việt Nam, các liên binh đoàn trên một khu vực vùng trực thuộc Bộ Quốc phòng thực hiện việc củng cố quốc phòng - an ninh quốc gia và có chung một chiến lược được gọi là gì?"
+		},
+		"tt": [
+			{
+				"question": "Nếu hình phía trên được gấp thành một khối lập phương thì sẽ tạo thành khối nào dưới đây?",
+				"file_type": "img"
+			},
+			{
+				"question": "Đây là chữ gì?",
+				"file_type": "vid"
+			},
+			{
+				"question": "Sắp xếp các chiến thắng sau với thứ tự tương ứng trên bản đồ Việt Nam",
+				"file_type": "img"
+			},
+			{
+				"question": "Đây là loài hoa nào?",
+				"file_type": "vid"
+			}
+		],
+		"vd": [
+			{
+				"20": [
+					"Nguyễn Du đã nhắc đến ai trong những câu thơ sau: \"Nổi danh tài sắc một thì/ Xôn xao ngoài cửa hiếm gì yến anh/ Kiếp hồng nhan có mong manh/ Nửa chừng xuân thoắt gãy cành thiên hương\"? (trích Truyện Kiều)",
+					"Acid hữu cơ nào có tên gọi bắt nguồn từ tiếng Latin nghĩa là \"cây liễu\", nằm trong Danh sách thuốc thiết yếu của WHO; được sử dụng rộng rãi trong tổng hợp hữu cơ và có chức năng như một hormone thực vật; có công dụng giúp tẩy tế bào chết và thường dùng trong điều trị các bệnh về da?",
+					"Nếu quy ước mỗi vĩ tuyến cách nhau 1 độ thì trên bề mặt của quả Địa Cầu từ cực Nam đến cực Bắc có bao nhiêu vĩ tuyến?"
+				],
+				"30": [
+					"{audio}Bạn hãy trả lời câu hỏi sau bằng Tiếng Anh",
+					"Đêm ngày 9/3/1945, tù chính trị ở Nhà tù Hỏa Lò chủ trương: “Kiên quyết giữ vững lập trường, khí tiết của người cộng sản, tranh thủ tình hình còn đang rối ren, quân Nhật chưa vững chân, đây là thời cơ có một không hai, cần phải tìm và tạo mọi cơ hội khẩn trương vượt ngục”. Chủ trương trên được đề ra khi ở Đông Dương lúc này đang diễn ra sự kiện gì?",
+					"Trong 9 tháng đầu năm 2023, tổng lượng xuất khẩu gạo của nước ta khoảng 4,2 triệu tấn, riêng 3 thị trường ở Châu Á chiếm đến 65,4% tổng lượng gạo xuất khẩu cả nước. Đó là 3 quốc gia nào?"
+				]
+			},
+			{
+				"20": [],
+				"30": []
+			},
+			{
+				"20": [],
+				"30": []
+			},
+			{
+				"20": [],
+				"30": []
+			}
+		]
+	}
+}

@@ -3,7 +3,7 @@
 	import { pb } from '$lib/pocketBase';
 	import { onDestroy, onMount } from 'svelte';
 	import { fade, slide, scale } from 'svelte/transition';
-	import logo from '$lib/image/4t.png';
+	import ScreenStart from '$lib/components/display/ScreenStart.svelte';
 	import { typewriter } from '$lib/transitions';
 
 	let questions: { question: string; file_type: string }[] = [];
@@ -74,9 +74,7 @@
 
 <div class="pointer-events-none h-screen w-screen select-none bg-black text-white">
 	{#if scr_slide === 'start'}
-		<div class="fixed h-full w-full bg-bg-3 bg-cover bg-no-repeat" out:fade>
-			<img class="center-element fixed h-[50vh]" src={logo} alt="Logo 4T" in:fade />
-		</div>
+		<ScreenStart />
 	{:else if scr_slide === 'rule'}
 		<div
 			class="fixed h-screen w-screen bg-bg-rule bg-contain bg-center bg-no-repeat"
@@ -103,6 +101,22 @@
 • 1 câu hỏi sắp xếp bao gồm ghép nối các dữ kiện theo từng cặp hoặc sắp xếp theo một thứ tự nhất định.`}
 				</p>
 			</div>
+		</div>
+	{:else if scr_slide === 'intro'}
+		<div class="fixed h-full w-full bg-bg-3 bg-cover bg-no-repeat" out:fade>
+			<!-- <img
+				class="center-element fixed h-[50vh]"
+				src={logo}
+				alt="Logo 4T"
+				in:scale={{ duration: 4500 }}
+			/> -->
+			<h1
+				class="center-element fixed font-game-display text-[15vh] text-red-500"
+				style="-webkit-text-stroke: 5px #fff;"
+				in:scale={{ duration: 4500 }}
+			>
+				TĂNG TỐC
+			</h1>
 		</div>
 	{:else if scr_slide === 'ques'}
 		<!-- <div >

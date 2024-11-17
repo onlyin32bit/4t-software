@@ -2,6 +2,7 @@
 	import { pb } from '$lib/pocketBase';
 	import { fly, fade } from 'svelte/transition';
 	import { user } from '$lib/pocketBase';
+	import { socket } from '$lib/socket.io-client';
 </script>
 
 <svelte:head>
@@ -33,7 +34,10 @@
 		<button
 			class="btn fixed bottom-8 left-8"
 			in:fade={{ duration: 50 }}
-			on:click={() => pb.authStore.clear()}>Log out</button
+			on:click={() => {
+				socket.emit('userLogOut', $user);
+				pb.authStore.clear();
+			}}>Log out</button
 		>
 	{/if}
 </section>

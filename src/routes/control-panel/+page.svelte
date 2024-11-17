@@ -13,20 +13,15 @@
 		sendSoundRequest
 	} from '$lib/utils';
 	import { pb, user } from '$lib/pocketBase';
-	import { onMount, onDestroy } from 'svelte';
-	import { fly, fade } from 'svelte/transition';
+	import { onMount, onDestroy, tick } from 'svelte';
+	import { fly, fade, scale } from 'svelte/transition';
 	import { Toaster, toast } from 'svelte-sonner';
+	import type { RecordModel } from 'pocketbase';
+	import type { DisplayObject } from '$lib/types';
 
-	let contestants: any[] = [];
-	let logs: any[] = [];
+	let contestants: RecordModel[] = [];
+	let logs: RecordModel[] = [];
 	let messageContent: string = '';
-
-	type DisplayObject = {
-		screen: string;
-		slide: string;
-		question: number;
-		numberOfQues: number;
-	};
 
 	let current: DisplayObject = {
 		screen: '',
@@ -36,8 +31,28 @@
 	};
 
 	let selected: DisplayObject = { ...current };
-	$: selected.numberOfQues = numberOfQues.get(selected.screen) ?? 0;
-	$: current.numberOfQues = numberOfQues.get(current.screen) ?? 0;
+	$: selected.numberOfQues =
+		numberOfQues.get(
+			selected.screen +
+				(selected.screen === 'kd'
+					? selected.slide === 'ques_chung'
+						? '_chung'
+						: selected.slide.startsWith('ques_ts')
+							? '_rieng'
+							: ''
+					: '')
+		) ?? 0;
+	$: current.numberOfQues =
+		numberOfQues.get(
+			current.screen +
+				(current.screen === 'kd'
+					? current.slide === 'ques_chung'
+						? '_chung'
+						: current.slide.startsWith('ques_ts')
+							? '_rieng'
+							: ''
+					: '')
+		) ?? 0;
 
 	let selectedScore: number[] = [0, 0, 0, 0];
 
@@ -63,8 +78,10 @@
 			'ques_ts4',
 			'end'
 		];
+	} else if (selected.screen === 'tt') {
+		selectionSlideList = ['start', 'rule', 'intro', 'ques', 'end'];
 	} else if (selected.screen === 'vcnv') {
-		selectionSlideList = ['start', 'rule', 'main_vcnv', 'ques', 'end'];
+		selectionSlideList = ['start', 'rule', 'intro', 'main_vcnv', 'image_vcnv', 'ques', 'end'];
 	} else if (selected.screen === 'vd') {
 		selectionSlideList = [
 			'start',
@@ -86,6 +103,9 @@
 		{ name: undefined, class: undefined },
 		{ name: undefined, class: undefined }
 	];
+	let resetContestantsParams: boolean = false;
+
+	let stopTimer: boolean = false;
 
 	let unsub: (() => void)[] = [];
 	// chay khi component duoc load
@@ -110,30 +130,33 @@
 			game: settingsRecord.field.game,
 			game_number: settingsRecord.field.game_number
 		};
+		console.log(settings.season);
 
 		// riel time database setup
-		unsub[0] = await pb.collection('users').subscribe('*', ({ action, record }) => {
-			if (action === 'update') {
-				contestants = contestants.map((currentValue) =>
-					currentValue.id === record.id ? record : currentValue
-				);
-				if (record.ring > 0) sendSoundRequest('bell_vd');
-			}
-		});
-		unsub[1] = await pb.collection('logs').subscribe('*', ({ action, record }) => {
-			if (action === 'create') logs = [...logs, record];
-			else if (action === 'delete')
-				logs = logs.filter((currentValue) => currentValue.id !== record.id);
-		});
-		unsub[2] = await pb
-			.collection('display_status')
-			.subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
+		unsub = [
+			await pb.collection('users').subscribe('*', ({ action, record }) => {
 				if (action === 'update') {
-					current.screen = record.screen;
-					current.slide = record.slide;
-					current.question = record.ques;
+					contestants = contestants.map((currentValue) =>
+						currentValue.id === record.id ? record : currentValue
+					);
+					// if (record.ring > 0) sendSoundRequest('bell_vd');
 				}
-			});
+			}),
+			await pb.collection('logs').subscribe('*', ({ action, record }) => {
+				if (action === 'create') {
+					logs = [...logs, record];
+					scrollLogToBottom();
+				} else if (action === 'delete')
+					logs = logs.filter((currentValue) => currentValue.id !== record.id);
+			}),
+			await pb.collection('display_status').subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
+				if (action === 'update') {
+					if (current.screen !== record.screen) current.screen = record.screen;
+					if (current.slide !== record.slide) current.slide = record.slide;
+					if (current.question !== record.ques) current.question = record.ques;
+				}
+			})
+		];
 	});
 	// chay khi component bi pha huy
 	onDestroy(() => {
@@ -143,10 +166,13 @@
 		});
 	});
 
+	let logsElement: HTMLElement;
+	async function scrollLogToBottom() {
+		await tick();
+		logsElement.scrollTop = logsElement.scrollHeight;
+	}
+
 	async function startTimer(duration: number) {
-		// contestants.forEach(async (currentValue) => {
-		// 	await pb.collection('users').update(currentValue.id, { answer: null, time: -1 });
-		// });
 		await pb.collection('display_status').update('4T-DISPLAYSTATE', {
 			timer: duration
 		});
@@ -159,9 +185,9 @@
 			const time = window.performance.now();
 			elapsed += Math.min(time - last_time, duration - elapsed);
 			last_time = time;
-			if (elapsed >= duration) {
+			if (elapsed >= duration || stopTimer) {
 				cancelAnimationFrame(frame);
-				createLogMessage('system', 'TIMER', 'Đã hết thời gian');
+				createLogMessage('system', 'TIMER', `Đã ${stopTimer ? 'ngưng' : 'hết'} thời gian`);
 				contestants.forEach(async (currentValue) => {
 					if (currentValue.time == -1) {
 						await pb.collection('users').update(currentValue.id, { time: -2 });
@@ -170,6 +196,9 @@
 				await pb.collection('display_status').update('4T-DISPLAYSTATE', {
 					timer: -1
 				});
+				// if (stopTimer) {
+				stopTimer = false;
+				// }
 				elapsed = 0;
 			}
 		})();
@@ -177,7 +206,7 @@
 	}
 	async function createMessage() {
 		if (/\w/.test(messageContent)) {
-			createLogMessage($user?.name, 'MESSAGE', messageContent);
+			if ($user) createLogMessage($user.name, 'MESSAGE', messageContent);
 			toast.success('Đã gửi tin nhắn');
 			messageContent = '';
 		} else {
@@ -185,7 +214,7 @@
 		}
 	}
 	async function setScore() {
-		if (JSON.stringify(selectedScore) !== JSON.stringify([0, 0, 0, 0])) {
+		if (JSON.stringify(selectedScore) !== '[0,0,0,0]') {
 			let message: string = '';
 			contestants.forEach(async (currentValue, i) => {
 				message +=
@@ -210,17 +239,22 @@
 	async function setContestantInfo() {
 		contestant_info.forEach(async (currentValue, i) => {
 			// systemLog += i + 1 + ': ' + currentValue.name + '-' + currentValue.name + ';';
-			await pb.collection('users').update('4t-contestant-' + (i + 1), {
+			const currentContestant = '4t-contestant-' + (i + 1);
+			await pb.collection('users').update(currentContestant, {
 				name: currentValue.name,
-				class: currentValue.class,
-				answer: null,
-				time: 0,
-				score: 0,
-				ring: 0
+				class: currentValue.class
 			});
+			if (resetContestantsParams) {
+				await pb.collection('users').update(currentContestant, {
+					answer: null,
+					time: 0,
+					score: 0,
+					ring: 0
+				});
+			}
 		});
 
-		createLogMessage('system', 'DATABASE', 'Đã cập nhật thông tin thí sinh');
+		createLogMessage('system', 'INFO', 'Đã cập nhật thông tin thí sinh');
 		menu = 'main';
 	}
 	async function setScreen() {
@@ -230,13 +264,19 @@
 				slide: selected.slide,
 				ques: selected.question
 			});
+			setDisplayQuestion(false);
+			stopTimer = true;
 		}
 	}
 	async function setSlide() {
 		if (selected.slide !== current.slide) {
+			selected.question = 1;
 			await pb.collection('display_status').update('4T-DISPLAYSTATE', {
-				slide: selected.slide
+				slide: selected.slide,
+				ques: selected.question
 			});
+			setDisplayQuestion(false);
+			stopTimer = true;
 		}
 	}
 	async function setQuestion() {
@@ -244,39 +284,36 @@
 			await pb.collection('display_status').update('4T-DISPLAYSTATE', {
 				ques: selected.question
 			});
-			contestants.forEach(async (currentValue) => {
-				await pb.collection('users').update(currentValue.id, { answer: null, time: 0 });
-			});
-			setDisplayQuestion(false);
+			clearContestantAnswer();
+			stopTimer = true;
+			// setDisplayQuestion(false);
 		}
 	}
+
 	async function setDisplayQuestion(value: boolean) {
-		// contestants.forEach(async (currentValue) => {
-		// 	await pb.collection('users').update(currentValue.id, { answer: null, time: 0 });
-		// });
 		await pb.collection('display_status').update('4T-DISPLAYSTATE', {
 			displayQuestion: value
 		});
 	}
-	function saveLog() {
-		let content = '#START LOG';
-		logs.forEach((currentValue) => {
-			content +=
-				'\n' +
-				currentValue.time +
-				': <' +
-				currentValue.from +
-				'> [' +
-				currentValue.type +
-				']: ' +
-				currentValue.content;
+
+	async function clearContestantAnswer() {
+		contestants.forEach(async (currentValue) => {
+			await pb.collection('users').update(currentValue.id, { answer: null, time: 0 });
 		});
+	}
+
+	function saveLog() {
+		let logContent = '#START LOG';
+		logs.forEach(
+			(currentValue) =>
+				(logContent += `\n${currentValue.time}: <${currentValue.from}> [${currentValue.type}]: ${currentValue.content}`)
+		);
 		download(
-			'4T_LOG_' + getCurrentTime().slice(0, 10).replaceAll('/', '-'),
-			content + '\n#END LOG'
+			`4TMua${settings.season}-LOG-${settings.game.toUpperCase()}${settings.game === 'ck' ? '' : '-' + settings.game_number}`,
+			logContent + '\n#END LOG'
 		);
 	}
-	async function clearLog() {
+	function clearLog() {
 		if (confirm('Confirm?')) {
 			logs.forEach(async (currentValue) => {
 				await pb.collection('logs').delete(currentValue.id);
@@ -299,7 +336,7 @@
 			<div class="flex items-center justify-between border-[3px] border-gray-400 p-2">
 				<div class="flex items-center gap-4 text-xl font-semibold">
 					<a href="/"><img src="/src/lib/image/4t-blue.png" alt="Logo 4T" class="h-10" /></a>
-					<h1>Control Panel - Thách Thức Trí Tuệ mùa 8</h1>
+					<h1>CONTROL PANEL - THÁCH THỨC TRÍ TUỆ MÙA 8</h1>
 				</div>
 				<div class="flex items-center gap-4">
 					<button class="transition-colors hover:text-gray-500" on:click={clearLog}
@@ -318,7 +355,7 @@
 				<h1>Previous: {dictionary.get(prevScreen)}</h1>
 			</div>
 			<div class="row-span-2 flex flex-col border-[3px] border-gray-400">
-				<div class="mt-1 flex h-full flex-col-reverse overflow-auto">
+				<div class="mt-1 flex h-full flex-col-reverse overflow-auto" bind:this={logsElement}>
 					<table class="table table-pin-rows table-sm mb-auto">
 						<thead class="border-b-2">
 							<tr>
@@ -360,7 +397,6 @@
 				</div>
 			</div>
 			<div class="grid grid-rows-[1fr_50px]">
-				<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 				<div class="h-full border-[3px] border-gray-400">
 					{#if menu === 'info'}
 						<table class="table table-zebra table-md w-full">
@@ -420,10 +456,21 @@
 								ĐIỂM
 							</div>
 							{#each contestants as contestant, i (contestant.id)}
-								<!-- <tr title="{contestant.name} {contestant.class} - {contestant.score}đ"> -->
-								<!-- <th>{i + 1}</th> -->
-								<div class="flex items-center border-b-2 px-3 text-xl font-semibold">
+								<div
+									class="flex items-center gap-1 border-b-2 px-3 text-xl font-semibold"
+									title={`${contestant.name} - Lớp ${contestant.class} [Status: ${contestant.online ? 'ONLINE' : 'OFFLINE'}]`}
+								>
+									<svg viewBox="0 0 500 500" width="12px" height="12px"
+										><ellipse
+											style={`fill: #${contestant.online ? '00ff00' : 'aaaaaa'};`}
+											cx="250"
+											cy="250"
+											rx="250"
+											ry="250"
+										></ellipse></svg
+									>
 									{contestant.name}
+
 									{contestant.ring > 0 ? 'bel' : ''}
 								</div>
 								<div class="flex items-center border-b-2 px-3 text-lg">
@@ -482,6 +529,7 @@
 						bind:value={menu}
 					>
 						<option value="main">Main</option>
+						<option value="other-accounts">Tài khoản khác</option>
 						<option value="info">Set thong tin thi sinh</option>
 						<option value="settings">Cai dat</option>
 					</select>
@@ -494,26 +542,29 @@
 					>
 						Set {menu === 'info' ? 'thông tin' : 'điểm'}
 					</button>
-					<button
-						class="border-[3px] border-gray-400 hover:bg-gray-200"
-						on:click={() => {
-							selectedScore = [0, 0, 0, 0];
-						}}
-						>Bỏ chọn điểm
-					</button>
+					{#if menu === 'main'}
+						<button
+							class="border-[3px] border-gray-400 hover:bg-gray-200"
+							on:click={() => {
+								selectedScore = [0, 0, 0, 0];
+							}}
+						>
+							Bỏ chọn điểm
+						</button>
+					{:else if menu === 'info'}
+						<div class="flex items-center justify-center gap-2 border-[3px] border-gray-400">
+							<input type="checkbox" class="checkbox" bind:checked={resetContestantsParams} />
+							<span>Đặt lại các tham số</span>
+						</div>
+					{/if}
 				</div>
 			</div>
-			<div class="border-[3px] border-gray-400">
+			<div class="select-none border-[3px] border-gray-400">
 				<!-- dieu khien man hinh -->
-				<div role="tablist" class="tabs tabs-lifted tabs-sm rounded-lg bg-gray-100 xl:tabs-md">
-					{#each ['main', 'answers', 'scores', 'kd', 'tt', 'vcnv', 'vd', 'extra'] as screen}
+				<div class="grid h-16 grid-flow-col border-b-2 text-xl">
+					{#each ['main', 'answers', 'scores', 'kd', 'vcnv', 'tt', 'vd', 'extra'] as screen}
 						<button
-							class=" tab transition-colors duration-300 [--tab-bg:white]"
-							class:tab-active={selected.screen === screen}
-							class:text-black={current.screen === screen}
-							class:text-gray-400={current.screen !== screen}
-							class:hover:text-gray-500={current.screen !== screen}
-							class:hover:bg-gray-50={selected.screen !== screen}
+							class={`transition-colors duration-300 ${current.screen === screen ? 'text-black' : 'text-gray-400 hover:text-gray-500'} ${selected.screen === screen ? 'bg-red-100' : 'hover:bg-gray-50'}`}
 							on:click={() => {
 								if (screen === current.screen) {
 									selected.slide = current.slide;
@@ -533,12 +584,8 @@
 						</button>
 					{/each}
 				</div>
-				<div class="grid grid-cols-1 grid-rows-3 gap-4 p-4">
-					<!-- {#if selected.screen !== current.screen}
-						<button class="btn" on:click={changeScreen}>Switch To This Screen</button>
-					{/if} -->
-					<!-- chon slide -->
-					{#if selected.screen === 'kd' || selected.screen === 'tt' || selected.screen === 'vcnv' || selected.screen === 'vd'}
+				<div class="grid grid-cols-1 grid-rows-4 gap-4 p-4">
+					{#if ['kd', 'tt', 'vcnv', 'vd'].includes(selected.screen)}
 						<div class="grid grid-cols-[50px_1fr_50px_1fr] gap-4 xl:grid-cols-[75px_1fr_75px_1fr]">
 							<button
 								class="btn"
@@ -548,9 +595,10 @@
 									const prevIndex = selectionSlideList.indexOf(selected.slide) - 1;
 									selected.slide = selectionSlideList[prevIndex];
 									setSlide();
-								}}>{'<'}</button
-							>
-							<select class="select select-bordered select-md" bind:value={selected.slide}>
+								}}
+								>{'<'}
+							</button>
+							<select class="select select-bordered select-md text-xl" bind:value={selected.slide}>
 								{#each selectionSlideList as value}
 									<option {value}>{dictionary.get(value)}</option>
 								{/each}
@@ -562,20 +610,21 @@
 									const nextIndex = selectionSlideList.indexOf(selected.slide) + 1;
 									selected.slide = selectionSlideList[nextIndex];
 									setSlide();
-								}}>{'>'}</button
-							>
+								}}
+								>{'>'}
+							</button>
 							<button
 								class="btn"
 								class:btn-disabled={selected.screen !== current.screen ||
 									selected.slide === current.slide}
-								on:click={setSlide}>Change Slide</button
+								on:click={setSlide}>Jump To Slide</button
 							>
 						</div>
 					{/if}
-					{#if selected.slide == 'ques' || (selected.slide == 'ques_chung' && (selected.screen == 'kd' || selected.screen == 'tt'))}
+					{#if selected.slide.startsWith('ques')}
 						<div class="grid grid-cols-[50px_1fr_50px_1fr] gap-4 xl:grid-cols-[75px_1fr_75px_1fr]">
 							<button
-								class="btn select-none"
+								class="btn"
 								class:btn-disabled={selected.question <= 1 || selected.screen !== current.screen}
 								on:click={() => {
 									selected.question -= 1;
@@ -588,19 +637,18 @@
 									type="number"
 									min="1"
 									max={current.numberOfQues}
-									on:input={() => {}}
 									bind:value={selected.question}
 								/>
 								<div class="flex w-8 flex-col">
 									<button
-										class="btn btn-xs select-none"
+										class="btn btn-xs"
 										class:btn-disabled={selected.question === selected.numberOfQues}
 										on:click={() => (selected.question += 1)}
 									>
 										+
 									</button>
 									<button
-										class="btn btn-xs select-none"
+										class="btn btn-xs"
 										class:btn-disabled={selected.question <= 1}
 										on:click={() => (selected.question -= 1)}
 									>
@@ -619,10 +667,10 @@
 								}}>{'>'}</button
 							>
 							<button
-								class="btn select-none"
+								class="btn"
 								class:btn-disabled={selected.screen !== current.screen ||
 									selected.question === current.question}
-								on:click={setQuestion}>Change Question</button
+								on:click={setQuestion}>Jump To Question</button
 							>
 						</div>
 						<div class="grid grid-cols-4 gap-4">
@@ -638,26 +686,97 @@
 							<button class="btn" on:click={() => setDisplayQuestion(true)}
 								>Display question
 							</button>
+
+							<span class="flex items-center justify-center font-mono text-2xl font-semibold"
+								>{formatTime2(elapsed)}s</span
+							>
+						</div>
+						<div class="grid grid-cols-3 gap-4">
+							<button class="btn">Đúng</button>
 							<button
 								class="btn"
 								class:btn-disabled={elapsed > 0 || selected.screen !== current.screen}
 								on:click={() => startTimer(timerSettings.get(current.screen) ?? 0)}
 								>Start timer</button
 							>
-							<span class="flex items-center justify-center font-mono text-2xl font-semibold"
-								>{formatTime2(elapsed)}s</span
-							>
+							<button class="btn">Sai</button>
 						</div>
 					{/if}
-					<!-- phan hien thi vcnv, de sau -->
-					{#if selected.slide == 'main_vcnv' && selected.screen == 'vcnv'}
-						<div>
-							<div class="grid grid-cols-8">
-								{#each [1, 2, 3, 4, 'center'] as i}
-									<div><button class="btn">{i}</button></div>
+
+					{#if selected.slide === 'main_kd'}
+						<div class="grid grid-cols-2 gap-x-4">
+							<button
+								class="btn"
+								on:click={() => {
+									selected.slide = 'ques_ts1';
+									setSlide();
+								}}>TS 1</button
+							>
+							<button
+								class="btn"
+								on:click={() => {
+									selected.slide = 'ques_ts2';
+									setSlide();
+								}}>TS 2</button
+							>
+						</div>
+						<div class="grid grid-cols-2 gap-x-4">
+							<button
+								class="btn"
+								on:click={() => {
+									selected.slide = 'ques_ts3';
+									setSlide();
+								}}>TS 3</button
+							>
+							<button
+								class="btn"
+								on:click={() => {
+									selected.slide = 'ques_ts4';
+									setSlide();
+								}}>TS 4</button
+							>
+						</div>
+						<button
+							class="btn"
+							on:click={() => {
+								selected.slide = 'ques_chung';
+								setSlide();
+							}}>ques chung</button
+						>
+					{/if}
+
+					{#if selected.screen === 'vcnv'}
+						{#if selected.slide === 'main_vcnv'}
+							<div class="grid grid-cols-5">
+								{#each [1, 2, 3, 4] as i}
+									<button class="btn">Select {i}</button>
 								{/each}
 							</div>
-						</div>
+							<div class="grid grid-cols-5">
+								{#each [1, 2, 3, 4, 'center'] as i}
+									<button class="btn">Go to {i}</button>
+								{/each}
+							</div>
+							<div class="grid grid-cols-5">
+								{#each [1, 2, 3, 4] as i}
+									<button class="btn">Show {i}</button>
+								{/each}
+							</div>
+							<div>
+								<button class="btn">Show Obstacle Hint</button>
+								<button class="btn">Go to image</button>
+								<button class="btn">Correct Obstacle</button>
+								<button class="btn">Wrong Obstacle</button>
+								<button class="btn">Start timer</button>
+							</div>
+						{/if}
+						{#if selected.slide === 'image_vcnv'}
+							<div class="grid grid-cols-5">
+								{#each [1, 2, 3, 4, 'center'] as i}
+									<button class="btn">Show {i}</button>
+								{/each}
+							</div>
+						{/if}
 					{/if}
 				</div>
 			</div>

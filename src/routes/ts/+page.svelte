@@ -4,7 +4,8 @@
 		timerSettings,
 		createLogMessage,
 		playSound,
-		sendSoundRequest
+		sendSoundRequest,
+		formatTime2
 	} from '$lib/utils';
 	import { user, pb } from '$lib/pocketBase';
 	import { onMount, onDestroy } from 'svelte';
@@ -119,8 +120,8 @@
 			});
 			toast.success('Đã nhấn chuông');
 			createLogMessage(thisUser.name, 'BELL', 'Đã nhấn chuông');
-			// playSound('bell_vcnv');
-			// sendSoundRequest('bell_' + current.screen);
+			// playSound('bell_vd');
+			sendSoundRequest('bell_vd');
 		} else {
 			toast.warning('Chuông đã được nhấn');
 		}
@@ -169,11 +170,13 @@
 	</div>
 	<div class="grid grid-cols-5">
 		<div class="col-span-4 grid grid-rows-[1fr_100px] text-6xl">
-			<div class="border-[3px] border-gray-400"></div>
-			<div class="grid grid-cols-[1fr_4rem] grid-rows-2">
+			<div class="border-[3px] border-gray-400">
+				<div>:))))))))))</div>
+			</div>
+			<div class="grid grid-cols-[1fr_12rem] grid-rows-2">
 				<div class="text-2xl">Câu trả lời đã gửi:</div>
-				<div class="row-span-2">{thisUser.time}</div>
-				<div class="">{thisUser.answer}</div>
+				<div class="row-span-1">{formatTime2(thisUser.time)}</div>
+				<div class="col-span-2">{thisUser.answer}</div>
 			</div>
 		</div>
 		<div class="grid grid-rows-2">
@@ -189,8 +192,8 @@
 				{/if}
 			</div>
 			<button
-				class="border-[3px] border-gray-400 text-center font-mono text-6xl hover:bg-red-100"
-				on:click={ringBell}
+				class="select-none border-[3px] border-gray-400 text-center font-mono text-6xl hover:bg-red-100"
+				on:click|preventDefault={ringBell}
 				><div class="flex flex-col items-center gap-4">
 					<svg class="w-10" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"
 						><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path

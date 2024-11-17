@@ -4,8 +4,13 @@
 	import { pb, user } from '$lib/pocketBase';
 	import '../app.css';
 
-	onMount(() => {});
-	// $: if ($user !== null) socket.emit('user', $user);
+	onMount(() => {
+		socket.on('message', (message) => {
+			console.log(message);
+		});
+	});
+
+	if ($user !== null) socket.emit('knownUserAccessed', $user);
 </script>
 
 <main>

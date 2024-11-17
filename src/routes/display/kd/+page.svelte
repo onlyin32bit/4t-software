@@ -4,15 +4,26 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { fade, slide, scale, fly } from 'svelte/transition';
 	import logo from '$lib/image/4t.png';
-	import { typewriter } from '$lib/transitions';
+	import { typewriter, zoomIn } from '$lib/transitions';
 	import { getCurrentTime, sendSoundRequest } from '$lib/utils';
+	import ScreenStart from '$lib/components/display/ScreenStart.svelte';
+	import ScreenRule from '$lib/components/display/ScreenRule.svelte';
 
-	let questions: string[] = [];
+	let generalQuestions: string[] = [];
+	let personalQuestions: string[][] = [[]];
+
+	const contestantMap: Map<string, number> = new Map([
+		['ques_ts1', 0],
+		['ques_ts2', 1],
+		['ques_ts3', 2],
+		['ques_ts4', 3]
+	]);
 
 	let screen: string = 'kd';
 	let scr_slide: string = 'start';
 	let ques: number = 1;
-	let time: number = 10;
+	let time: number = 3;
+	let timeStatus: boolean = false;
 	let displayQuestion: boolean = false;
 	let bellRingedContestant: string = '';
 
@@ -23,18 +34,19 @@
 		scr_slide = displayStatus.slide;
 		ques = displayStatus.ques;
 
-		const questionList = await pb.collection('kd').getOne('4t-questions-kd');
-		questions = questionList.question;
+		const generalQuestionList = await pb.collection('kd').getOne('4T-QUESKD-CHUNG');
+		const personalQuestionList = await pb.collection('kd').getOne('4T-QUESTS-RIENG');
+		generalQuestions = generalQuestionList.question;
+		personalQuestions = personalQuestionList.question as string[][];
 
 		unsub[0] = await pb.collection('display_status').subscribe('*', ({ action, record }) => {
 			if (action === 'update') {
 				screen = record.screen;
 				scr_slide = record.slide;
-				ques = record.ques;
-				if (displayQuestion !== record.displayQuestion) {
-					displayQuestion = true;
-				}
-				if (record.timer != -1) timer();
+				if (ques !== record.ques) ques = record.ques;
+				// if (displayQuestion !== record.displayQuestion) {
+				displayQuestion = record.displayQuestion;
+				if (record.timer !== -1) timer();
 				if (scr_slide === 'rule') sendSoundRequest('kd_start');
 				else if (scr_slide === 'intro') sendSoundRequest('kd_start_2');
 			}
@@ -58,29 +70,37 @@
 	let fontSize: number = 1;
 
 	async function timer() {
+		timeStatus = true;
 		let countdown: any = setInterval(() => {
 			time -= 1;
-			if (time <= 0) {
+			if (time < 0) {
 				clearInterval(countdown);
 				countdown = null;
+				timeStatus = false;
+				time = 3;
 			}
 		}, 1000);
 	}
 
 	$: {
 		ques;
-		time = 3;
-		displayQuestion = false;
-		bellRingedContestant = '';
+		// time = 3;
 		fontSize = 1;
+		displayQuestion = false;
+		setTimeout(() => {
+			displayQuestion = true;
+		}, 100);
+		bellRingedContestant = '';
 	}
 
 	function calcPercent(x: number, y: number): number {
 		return (x / y) * 100;
 	}
 
-	$: if (calcPercent(textHeight, containerHeight) < 53) {
-		fontSize += 0.5;
+	$: if (calcPercent(textHeight, containerHeight) < 40) {
+		fontSize += 1.5;
+	} else if (calcPercent(textHeight, containerHeight) > 65) {
+		fontSize -= 1;
 	}
 
 	$: if (screen != 'kd') goto('/display/' + screen);
@@ -92,40 +112,19 @@
 
 <div class="pointer-events-none h-screen w-screen select-none bg-black text-white">
 	{#if scr_slide === 'start'}
-		<div class="fixed h-full w-full bg-bg-3 bg-cover bg-no-repeat" out:fade>
-			<img class="center-element fixed h-[50vh]" src={logo} alt="Logo 4T" in:fade />
-		</div>
+		<ScreenStart />
 	{:else if scr_slide === 'rule'}
+		<ScreenRule screen="kd" />
+	{:else if scr_slide === 'intro'}
 		<div
-			class="fixed h-screen w-screen bg-bg-rule bg-contain bg-center bg-no-repeat"
-			in:slide={{ duration: 2000 }}
+			class="fixed h-full w-full bg-bg-3 bg-cover bg-no-repeat"
+			in:scale={{ duration: 2500 }}
+			out:fade
 		>
 			<h1
-				class="text fixed left-1/2 top-0 z-50 -translate-x-1/2 font-header-text text-[8vh] text-yellow-300"
-				in:typewriter={{ speed: 0.5 }}
-			>
-				KHỞI ĐỘNG
-			</h1>
-			<div
-				class="fixed left-1/2 top-[17vh] z-50 w-[72.5vw] -translate-x-1/2 text-left indent-[3vw] font-futuristic text-[4.1vh] text-white"
-			>
-				<p class="whitespace-break-spaces" in:typewriter={{ delay: 2100, speed: 7 }}>
-					{`Phần thi được chia thành 2 lượt: lượt riêng và lượt chung.\n    Trong lượt riêng, mỗi thí sinh trả lời 10 câu hỏi. Thời gian trả lời cho mỗi câu hỏi là 3 giây từ lúc MC đọc xong câu hỏi. Mỗi câu trả lời đúng được 10 điểm, trả lời sai không bị trừ điểm.\n    Trong lượt chung, các thí sinh trả lời 12 câu hỏi trong thời gian không giới hạn. Thí sinh giành quyền trả lời bằng cách bấm chuông. Thí sinh có tối đa 3 giây tính từ lúc giành được quyền trả lời để đưa ra đáp án. Mỗi câu trả lời đúng được 10 điểm, trả lời sai hoặc bấm chuông mà không có câu trả lời trong 3 giây sẽ bị trừ 5 điểm. Sau 3 giây tính từ thời điểm MC đọc xong câu hỏi, nếu không có thí sinh nào giành quyền trả lời, câu hỏi đó sẽ bị bỏ qua.`}
-				</p>
-			</div>
-		</div>
-	{:else if scr_slide === 'intro'}
-		<div class="fixed h-full w-full bg-bg-3 bg-cover bg-no-repeat" out:fade>
-			<!-- <img
-				class="center-element fixed h-[50vh]"
-				src={logo}
-				alt="Logo 4T"
-				in:scale={{ duration: 4500 }}
-			/> -->
-			<h1
-				class="center-element font-game-display fixed text-[15vh] text-yellow-300"
-				style="-webkit-text-stroke: 5px #fff;"
-				in:scale={{ duration: 4500 }}
+				class="center-element fixed font-game-display text-[15vh] text-yellow-300"
+				style="-webkit-text-stroke: 6px #fff;"
+				in:scale={{ duration: 4000, delay: 200 }}
 			>
 				KHỞI ĐỘNG
 			</h1>
@@ -136,6 +135,7 @@
 		<div class="fixed h-full w-full bg-bg-2 bg-cover bg-no-repeat px-[2vw]">
 			<div
 				class="fixed bottom-[7vh] h-[84vh] w-[80vw] rounded-[1vh] bg-slate-950 bg-bg-kd bg-contain bg-center bg-no-repeat"
+				in:scale={{ duration: 7000 }}
 				bind:clientHeight={containerHeight}
 			>
 				<div class="absolute left-[4.3vw] top-[6vh]">
@@ -151,7 +151,7 @@
 					bind:clientHeight={textHeight}
 				>
 					<div class:invisible={!displayQuestion}>
-						{questions[ques - 1]}
+						{generalQuestions[ques - 1]}
 					</div>
 				</div>
 			</div>
@@ -174,34 +174,67 @@
 			{/if}
 			<div
 				class="fixed bottom-[7vh] right-[2vw] flex h-[18vh] w-[14vw] items-center justify-center rounded-[1vh] bg-slate-950 text-[13vh] font-bold"
+				in:slide={{ duration: 7000 }}
 			>
-				{time}
+				{timeStatus ? time : ''}
 			</div>
 		</div>
-		<!-- {:else if scr_slide === 'ques'}
-		<div class="h-full w-screen bg-bg-2 bg-cover">
+	{:else if scr_slide.startsWith('ques_ts')}
+		<div class="fixed h-full w-full bg-bg-2 bg-cover bg-no-repeat px-[2vw]">
 			<div
-				class="relative flex h-[90vh] items-center justify-center bg-bg-kd bg-contain bg-no-repeat text-white"
+				class="fixed bottom-[7vh] h-[84vh] w-[80vw] rounded-[1vh] bg-slate-950 bg-bg-kd bg-contain bg-center bg-no-repeat"
+				in:scale={{ duration: 7000 }}
+				bind:clientHeight={containerHeight}
 			>
-				<div class=" absolute left-[3.5rem] top-12 text-[5rem] text-black">
-					<h1
-						class="absolute -top-2 left-[85px] z-10 -translate-x-1/2 font-number-display font-semibold"
+				<div class="absolute left-[4.3vw] top-[6vh]">
+					<img class="h-[11vh] scale-x-[130%]" src="/src/lib/image/quesFrame.png" alt="" />
+					<span
+						class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[56%] font-number-display text-[9vh] text-black"
+						>{ques}</span
 					>
-						{ques}
-					</h1>
 				</div>
-				{#if displayQuestion}
-					<p
-						class="w-[80%] text-center text-2xl font-medium xl:text-[4rem] xl:leading-[5rem]"
-						in:fade={{ duration: 100 }}
-					>
-						{questions[ques - 1]}
-					</p>
-				{/if}
+				<div
+					class="absolute left-1/2 top-1/2 z-50 w-[70vw] -translate-x-1/2 -translate-y-1/2 text-center font-semibold"
+					style={`font-size: ${fontSize}vh;`}
+					bind:clientHeight={textHeight}
+				>
+					<div class:invisible={!displayQuestion}>
+						{personalQuestions[contestantMap.get(scr_slide) ?? 0][ques - 1]}
+					</div>
+				</div>
 			</div>
-			<h1 class="text-[7rem]">{time}</h1>
-		</div> -->
+			<div
+				class="fixed bottom-[7vh] right-[2vw] flex h-[18vh] w-[14vw] items-center justify-center rounded-[1vh] bg-slate-950 text-[13vh] font-bold"
+				in:slide={{ duration: 7000 }}
+			>
+				{timeStatus ? time : ''}
+			</div>
+		</div>
 	{:else if scr_slide === 'end'}
 		<div></div>
 	{/if}
 </div>
+
+<!-- {:else if scr_slide === 'ques'}
+<div class="h-full w-screen bg-bg-2 bg-cover">
+	<div
+		class="relative flex h-[90vh] items-center justify-center bg-bg-kd bg-contain bg-no-repeat text-white"
+	>
+		<div class=" absolute left-[3.5rem] top-12 text-[5rem] text-black">
+			<h1
+				class="absolute -top-2 left-[85px] z-10 -translate-x-1/2 font-number-display font-semibold"
+			>
+				{ques}
+			</h1>
+		</div>
+		{#if displayQuestion}
+			<p
+				class="w-[80%] text-center text-2xl font-medium xl:text-[4rem] xl:leading-[5rem]"
+				in:fade={{ duration: 100 }}
+			>
+				{questions[ques - 1]}
+			</p>
+		{/if}
+	</div>
+	<h1 class="text-[7rem]">{time}</h1>
+</div> -->
