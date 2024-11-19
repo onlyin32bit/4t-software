@@ -5,6 +5,8 @@
 	import { fade, slide, scale } from 'svelte/transition';
 	import ScreenStart from '$lib/components/display/ScreenStart.svelte';
 	import { typewriter } from '$lib/transitions';
+	import ScreenRule from '$lib/components/display/ScreenRule.svelte';
+	import ScreenIntro from '$lib/components/display/ScreenIntro.svelte';
 
 	let questions: { question: string; file_type: string }[] = [];
 	let fileNames: string[] = [];
@@ -76,48 +78,9 @@
 	{#if scr_slide === 'start'}
 		<ScreenStart />
 	{:else if scr_slide === 'rule'}
-		<div
-			class="fixed h-screen w-screen bg-bg-rule bg-contain bg-center bg-no-repeat"
-			in:slide={{ duration: 2000 }}
-		>
-			<h1
-				class="text fixed left-1/2 top-0 z-50 -translate-x-1/2 font-header-text text-[8vh] text-yellow-300"
-				in:typewriter={{ delay: 200, speed: 0.5 }}
-			>
-				TĂNG TỐC
-			</h1>
-			<div
-				class="fixed left-1/2 top-[17vh] z-50 w-[70vw] -translate-x-1/2 text-left font-futuristic text-[3.6vh] text-white"
-			>
-				<p class="whitespace-pre-wrap" in:typewriter={{ delay: 2100, speed: 7 }}>
-					{`    	Trong vòng 30 giây, các thí sinh cùng trả lời bằng máy tính:
-• Thí sinh trả lời đúng và nhanh nhất được 40 điểm.
-• Thí sinh trả lời đúng và nhanh thứ 2 được 30 điểm.
-• Thí sinh trả lời đúng và nhanh thứ 3 được 20 điểm.
-• Thí sinh trả lời đúng và nhanh thứ 4 được 10 điểm.
-		Phần thi sẽ có 4 câu hỏi:
-• 1 câu hỏi IQ-Logic bao gồm các dạng: Tìm số thích hợp điền vào chỗ trống, tìm hình khác nhất, tìm hình còn thiếu, giải mật mã,…
-• 2 câu hỏi dữ kiện: các dữ kiện sẽ lần lượt xuất hiện với độ khó giảm dần. Dựa vào đó, thí sinh sẽ trả lời các câu hỏi như: Đây là ai? Đây là địa danh nào? Đây là gì?...
-• 1 câu hỏi sắp xếp bao gồm ghép nối các dữ kiện theo từng cặp hoặc sắp xếp theo một thứ tự nhất định.`}
-				</p>
-			</div>
-		</div>
+		<ScreenRule screen="tt" />
 	{:else if scr_slide === 'intro'}
-		<div class="fixed h-full w-full bg-bg-3 bg-cover bg-no-repeat" out:fade>
-			<!-- <img
-				class="center-element fixed h-[50vh]"
-				src={logo}
-				alt="Logo 4T"
-				in:scale={{ duration: 4500 }}
-			/> -->
-			<h1
-				class="center-element fixed font-game-display text-[15vh] text-red-500"
-				style="-webkit-text-stroke: 5px #fff;"
-				in:scale={{ duration: 4500 }}
-			>
-				TĂNG TỐC
-			</h1>
-		</div>
+		<ScreenIntro screen="tt" />
 	{:else if scr_slide === 'ques'}
 		<!-- <div >
 			<div

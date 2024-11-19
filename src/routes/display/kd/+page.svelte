@@ -8,6 +8,7 @@
 	import { getCurrentTime, sendSoundRequest } from '$lib/utils';
 	import ScreenStart from '$lib/components/display/ScreenStart.svelte';
 	import ScreenRule from '$lib/components/display/ScreenRule.svelte';
+	import ScreenIntro from '$lib/components/display/ScreenIntro.svelte';
 
 	let generalQuestions: string[] = [];
 	let personalQuestions: string[][] = [[]];
@@ -116,19 +117,7 @@
 	{:else if scr_slide === 'rule'}
 		<ScreenRule screen="kd" />
 	{:else if scr_slide === 'intro'}
-		<div
-			class="fixed h-full w-full bg-bg-3 bg-cover bg-no-repeat"
-			in:scale={{ duration: 2500 }}
-			out:fade
-		>
-			<h1
-				class="center-element fixed font-game-display text-[15vh] text-yellow-300"
-				style="-webkit-text-stroke: 6px #fff;"
-				in:scale={{ duration: 4000, delay: 200 }}
-			>
-				KHỞI ĐỘNG
-			</h1>
-		</div>
+		<ScreenIntro screen="kd" />
 	{:else if scr_slide === 'main_kd'}
 		<div class="fixed h-full w-full bg-bg-3 bg-cover bg-no-repeat"></div>
 	{:else if scr_slide === 'ques_chung'}

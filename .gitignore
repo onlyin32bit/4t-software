@@ -1,5 +1,6 @@
 node_modules
-pocketbase_linux
+/pocketbase_linux/pb_data
+/pocketbase_windows/pb_data
 
 # Output
 .output

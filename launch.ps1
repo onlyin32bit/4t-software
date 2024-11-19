@@ -7,6 +7,7 @@ $IP = (Get-NetRoute -DestinationPrefix 0.0.0.0/0 | Select-Object -First 1).NextH
 (Get-Content .env) -replace '.*PUBLIC_DB_ADDRESS.*', "PUBLIC_DB_ADDRESS=$IP" | Set-Content .env
 
 Write-Host 'IP ADDRESS HAS BEEN SET UP'
+Write-Host "IP ADDRESS: $IP"
 
 # Start npm in the background
 Start-Job -ScriptBlock {

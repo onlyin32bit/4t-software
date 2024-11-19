@@ -1,6 +1,14 @@
 <script lang="ts">
 	import { fade, scale } from 'svelte/transition';
-	import { zoomIn } from '$lib/transitions';
+
+	export let screen: 'kd' | 'tt' | 'vcnv' | 'vd';
+
+	const nameMap: Map<string, { name: string; color: string }> = new Map([
+		['kd', { name: 'KHỞI ĐỘNG', color: 'FFC000' }],
+		['vcnv', { name: 'VƯỢT CHƯỚNG NGẠI VẬT', color: 'F58F3E' }],
+		['tt', { name: 'TĂNG TỐC', color: 'D52E29' }],
+		['vd', { name: 'VỀ ĐÍCH', color: 'FF0000' }]
+	]);
 </script>
 
 <div
@@ -9,10 +17,10 @@
 	out:fade
 >
 	<h1
-		class="center-element fixed font-game-display text-[15vh] text-yellow-300"
-		style="-webkit-text-stroke: 5px #fff;"
-		in:zoomIn={{ duration: 5000 }}
+		class="center-element fixed w-3/4 text-center font-game-display text-[15vh] font-semibold"
+		style={`-webkit-text-stroke: 2px #fff; color: #${nameMap.get(screen)?.color};`}
+		in:scale={{ duration: 5000 }}
 	>
-		KHỞI ĐỘNG
+		{nameMap.get(screen)?.name}
 	</h1>
 </div>

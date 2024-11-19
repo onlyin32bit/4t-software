@@ -188,7 +188,6 @@
 					<span class="text-2xl font-medium">Chưa bắt đầu</span>
 				{:else}
 					<span>{(elapsed / 1000).toFixed(2)}s</span>
-					<!-- else content here -->
 				{/if}
 			</div>
 			<button

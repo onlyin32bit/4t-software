@@ -2,7 +2,7 @@
 	import { fade, slide, scale, fly } from 'svelte/transition';
 	import { typewriter } from '$lib/transitions';
 
-	export let screen: string;
+	export let screen: 'kd' | 'tt' | 'vcnv' | 'vd';
 
 	const rule: Map<string, { fullname: string; content: string; fontSize: number }> = new Map([
 		[
