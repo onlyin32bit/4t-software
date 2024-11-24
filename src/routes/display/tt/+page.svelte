@@ -4,7 +4,6 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { fade, slide, scale } from 'svelte/transition';
 	import ScreenStart from '$lib/components/display/ScreenStart.svelte';
-	import { typewriter } from '$lib/transitions';
 	import ScreenRule from '$lib/components/display/ScreenRule.svelte';
 	import ScreenIntro from '$lib/components/display/ScreenIntro.svelte';
 
@@ -29,17 +28,19 @@
 		questions = questionList.question;
 		fileNames = questionList.files;
 
-		unsub[0] = await pb.collection('display_status').subscribe('*', ({ action, record }) => {
-			if (action === 'update') {
-				screen = record.screen;
-				scr_slide = record.slide;
-				ques = record.ques;
-				if (displayQuestion !== record.displayQuestion) {
-					displayQuestion = true;
+		unsub = [
+			await pb.collection('display_status').subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
+				if (action === 'update') {
+					screen = record.screen;
+					scr_slide = record.slide;
+					ques = record.ques;
+					if (displayQuestion !== record.displayQuestion) {
+						displayQuestion = true;
+					}
+					// if (record.timer != -1) timer();
 				}
-				// if (record.timer != -1) timer();
-			}
-		});
+			})
+		];
 	});
 
 	onDestroy(() => {

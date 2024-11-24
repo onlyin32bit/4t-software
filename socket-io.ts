@@ -12,9 +12,9 @@ export function attachSocket(server: HttpServer) {
 
 		let userData: AuthModel = null;
 
+		console.log('%cThiết bị mới truy cập:', 'color: red');
 		console.log(
-			`Thiết bị mới truy cập: 
-	ID: ${socket.id}
+			`	ID: ${socket.id}
 	Địa chỉ: ${socket.handshake.address}
 	Platform: ${socket.handshake.headers['user-agent']}
 	Thời gian: ${socket.handshake.time}`

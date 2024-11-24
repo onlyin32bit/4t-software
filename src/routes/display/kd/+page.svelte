@@ -2,16 +2,16 @@
 	import { goto } from '$app/navigation';
 	import { pb } from '$lib/pocketBase';
 	import { onDestroy, onMount } from 'svelte';
-	import { fade, slide, scale, fly } from 'svelte/transition';
-	import logo from '$lib/image/4t.png';
-	import { typewriter, zoomIn } from '$lib/transitions';
-	import { getCurrentTime, sendSoundRequest } from '$lib/utils';
+	import { slide, scale, fly } from 'svelte/transition';
+	import { sendSoundRequest } from '$lib/utils';
+	import type { RecordModel } from 'pocketbase';
 	import ScreenStart from '$lib/components/display/ScreenStart.svelte';
 	import ScreenRule from '$lib/components/display/ScreenRule.svelte';
 	import ScreenIntro from '$lib/components/display/ScreenIntro.svelte';
+	import ScreenQuestionKD from '$lib/components/display/ScreenQuestionKD.svelte';
 
 	let generalQuestions: string[] = [];
-	let personalQuestions: string[][] = [[]];
+	let contestantQuestions: string[][] = [[]];
 
 	const contestantMap: Map<string, number> = new Map([
 		['ques_ts1', 0],
@@ -20,6 +20,7 @@
 		['ques_ts4', 3]
 	]);
 
+	let contestants: RecordModel[] = [];
 	let screen: string = 'kd';
 	let scr_slide: string = 'start';
 	let ques: number = 1;
@@ -30,6 +31,9 @@
 
 	let unsub: (() => void)[] = [];
 	onMount(async () => {
+		const userListRecord = await pb.collection('users').getFullList();
+		contestants = userListRecord;
+
 		const displayStatus = await pb.collection('display_status').getOne('4T-DISPLAYSTATE');
 		screen = displayStatus.screen;
 		scr_slide = displayStatus.slide;
@@ -38,26 +42,29 @@
 		const generalQuestionList = await pb.collection('kd').getOne('4T-QUESKD-CHUNG');
 		const personalQuestionList = await pb.collection('kd').getOne('4T-QUESTS-RIENG');
 		generalQuestions = generalQuestionList.question;
-		personalQuestions = personalQuestionList.question as string[][];
+		contestantQuestions = personalQuestionList.question as string[][];
 
-		unsub[0] = await pb.collection('display_status').subscribe('*', ({ action, record }) => {
-			if (action === 'update') {
-				screen = record.screen;
-				scr_slide = record.slide;
-				if (ques !== record.ques) ques = record.ques;
-				// if (displayQuestion !== record.displayQuestion) {
-				displayQuestion = record.displayQuestion;
-				if (record.timer !== -1) timer();
-				if (scr_slide === 'rule') sendSoundRequest('kd_start');
-				else if (scr_slide === 'intro') sendSoundRequest('kd_start_2');
-			}
-		});
-
-		unsub[1] = await pb.collection('users').subscribe('*', ({ action, record }) => {
-			if (action === 'update' && record.ring > 0 && bellRingedContestant !== '') {
-				bellRingedContestant = record.name;
-			}
-		});
+		unsub = [
+			await pb.collection('display_status').subscribe('*', ({ action, record }) => {
+				if (action === 'update') {
+					if (record.screen !== 'kd') goto('/display/' + record.screen);
+					if (scr_slide !== record.slide) scr_slide = record.slide;
+					if (ques !== record.ques) ques = record.ques;
+					displayQuestion = record.displayQuestion;
+					if (record.timer !== -1) timer();
+					// if (scr_slide === 'rule') sendSoundRequest('kd_start');
+					// else if (scr_slide === 'intro') sendSoundRequest('kd_start_2');
+				}
+			}),
+			await pb.collection('users').subscribe('*', ({ action, record }) => {
+				if (action === 'update') {
+					contestants = contestants.map((currentValue) =>
+						currentValue.id === record.id ? record : currentValue
+					);
+					// if (record.ring > 0) sendSoundRequest('bell_vd');
+				}
+			})
+		];
 	});
 
 	onDestroy(() => {
@@ -83,16 +90,16 @@
 		}, 1000);
 	}
 
-	$: {
-		ques;
-		// time = 3;
-		fontSize = 1;
-		displayQuestion = false;
-		setTimeout(() => {
-			displayQuestion = true;
-		}, 100);
-		bellRingedContestant = '';
-	}
+	// $: {
+	// 	ques;
+	// 	// time = 3;
+	// 	fontSize = 1;
+	// 	displayQuestion = false;
+	// 	setTimeout(() => {
+	// 		displayQuestion = true;
+	// 	}, 100);
+	// 	bellRingedContestant = '';
+	// }
 
 	function calcPercent(x: number, y: number): number {
 		return (x / y) * 100;
@@ -101,10 +108,10 @@
 	$: if (calcPercent(textHeight, containerHeight) < 40) {
 		fontSize += 1.5;
 	} else if (calcPercent(textHeight, containerHeight) > 65) {
-		fontSize -= 1;
+		fontSize -= 0.7;
 	}
 
-	$: if (screen != 'kd') goto('/display/' + screen);
+	// $: if (screen != 'k	d') goto('/display/' + screen);
 </script>
 
 <svelte:head>
@@ -119,9 +126,10 @@
 	{:else if scr_slide === 'intro'}
 		<ScreenIntro screen="kd" />
 	{:else if scr_slide === 'main_kd'}
-		<div class="fixed h-full w-full bg-bg-3 bg-cover bg-no-repeat"></div>
+		<!-- <div class="fixed h-full w-full bg-bg-3 bg-cover bg-no-repeat"></div> -->
 	{:else if scr_slide === 'ques_chung'}
-		<div class="fixed h-full w-full bg-bg-2 bg-cover bg-no-repeat px-[2vw]">
+		<!-- <div class="fixed h-full w-full bg-bg-2 bg-cover bg-no-repeat px-[2vw]">
+
 			<div
 				class="fixed bottom-[7vh] h-[84vh] w-[80vw] rounded-[1vh] bg-slate-950 bg-bg-kd bg-contain bg-center bg-no-repeat"
 				in:scale={{ duration: 7000 }}
@@ -167,9 +175,17 @@
 			>
 				{timeStatus ? time : ''}
 			</div>
-		</div>
+		</div> -->
+		<ScreenQuestionKD
+			questionNumber={ques}
+			questionContent={generalQuestions[ques - 1]}
+			needBell={true}
+			{displayQuestion}
+			{contestants}
+		/>
+		<!-- <div class="fixed text-[10vh]">{displayQuestion}</div> -->
 	{:else if scr_slide.startsWith('ques_ts')}
-		<div class="fixed h-full w-full bg-bg-2 bg-cover bg-no-repeat px-[2vw]">
+		<!-- <div class="fixed h-full w-full bg-bg-2 bg-cover bg-no-repeat px-[2vw]">
 			<div
 				class="fixed bottom-[7vh] h-[84vh] w-[80vw] rounded-[1vh] bg-slate-950 bg-bg-kd bg-contain bg-center bg-no-repeat"
 				in:scale={{ duration: 7000 }}
@@ -179,17 +195,18 @@
 					<img class="h-[11vh] scale-x-[130%]" src="/src/lib/image/quesFrame.png" alt="" />
 					<span
 						class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[56%] font-number-display text-[9vh] text-black"
-						>{ques}</span
 					>
+						{ques}
+					</span>
 				</div>
 				<div
 					class="absolute left-1/2 top-1/2 z-50 w-[70vw] -translate-x-1/2 -translate-y-1/2 text-center font-semibold"
 					style={`font-size: ${fontSize}vh;`}
 					bind:clientHeight={textHeight}
 				>
-					<div class:invisible={!displayQuestion}>
+					<p class:invisible={!displayQuestion}>
 						{personalQuestions[contestantMap.get(scr_slide) ?? 0][ques - 1]}
-					</div>
+					</p>
 				</div>
 			</div>
 			<div
@@ -198,32 +215,15 @@
 			>
 				{timeStatus ? time : ''}
 			</div>
-		</div>
+		</div> -->
+		<ScreenQuestionKD
+			questionNumber={ques}
+			questionContent={contestantQuestions[contestantMap.get(scr_slide) ?? 0][ques - 1]}
+			needBell={false}
+			{displayQuestion}
+			{contestants}
+		/>
 	{:else if scr_slide === 'end'}
 		<div></div>
 	{/if}
 </div>
-
-<!-- {:else if scr_slide === 'ques'}
-<div class="h-full w-screen bg-bg-2 bg-cover">
-	<div
-		class="relative flex h-[90vh] items-center justify-center bg-bg-kd bg-contain bg-no-repeat text-white"
-	>
-		<div class=" absolute left-[3.5rem] top-12 text-[5rem] text-black">
-			<h1
-				class="absolute -top-2 left-[85px] z-10 -translate-x-1/2 font-number-display font-semibold"
-			>
-				{ques}
-			</h1>
-		</div>
-		{#if displayQuestion}
-			<p
-				class="w-[80%] text-center text-2xl font-medium xl:text-[4rem] xl:leading-[5rem]"
-				in:fade={{ duration: 100 }}
-			>
-				{questions[ques - 1]}
-			</p>
-		{/if}
-	</div>
-	<h1 class="text-[7rem]">{time}</h1>
-</div> -->

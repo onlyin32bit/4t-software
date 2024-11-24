@@ -11,15 +11,11 @@
 	]);
 </script>
 
-<div
-	class="fixed h-full w-full bg-bg-3 bg-cover bg-no-repeat"
-	in:scale={{ duration: 4000 }}
-	out:fade
->
+<div class="fixed h-full w-full bg-bg-3 bg-cover bg-no-repeat" in:scale={{ duration: 4000 }}>
 	<h1
 		class="center-element fixed w-3/4 text-center font-game-display text-[15vh] font-semibold"
-		style={`-webkit-text-stroke: 2px #fff; color: #${nameMap.get(screen)?.color};`}
-		in:scale={{ duration: 5000 }}
+		style={`-webkit-text-stroke: 2px #fff; color: #${nameMap.get(screen)?.color}; ${screen === 'vd' ? '-webkit-box-reflect: below -9vh linear-gradient(to bottom, rgba(0,0,0,0.0), rgba(0,0,0,0.4));' : ''}`}
+		out:scale={{ duration: 5000 }}
 	>
 		{nameMap.get(screen)?.name}
 	</h1>

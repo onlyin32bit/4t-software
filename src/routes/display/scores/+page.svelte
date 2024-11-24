@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fly, fade, scale } from 'svelte/transition';
+	import { fade, scale } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { pb } from '$lib/pocketBase';
 	import { onDestroy, onMount } from 'svelte';
@@ -15,17 +15,18 @@
 		contestants = userList;
 		status = displayStatus.screen;
 
-		unsub[0] = await pb.collection('users').subscribe('*', ({ action, record }) => {
-			// console.log(record);
-			if (action === 'update') {
-				contestants = contestants.map((currentValue) =>
-					currentValue.id === record.id ? record : currentValue
-				);
-			}
-		});
-		unsub[1] = await pb.collection('display_status').subscribe('*', ({ action, record }) => {
-			if (action === 'update') status = record.screen;
-		});
+		unsub = [
+			await pb.collection('users').subscribe('*', ({ action, record }) => {
+				if (action === 'update') {
+					contestants = contestants.map((currentValue) =>
+						currentValue.id === record.id ? record : currentValue
+					);
+				}
+			}),
+			await pb.collection('display_status').subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
+				if (action === 'update') status = record.screen;
+			})
+		];
 	});
 
 	onDestroy(() => {

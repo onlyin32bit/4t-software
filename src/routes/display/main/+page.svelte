@@ -46,9 +46,7 @@
 		});
 	});
 
-	$: if (status != 'main') {
-		goto('/display/' + status);
-	}
+	$: if (status != 'main') goto('/display/' + status);
 </script>
 
 <div
@@ -60,7 +58,7 @@
 		src="/src/lib/image/logo-cbt.png"
 		alt="Logo THPT Chuyen Ben Tre"
 	/>
-	{#if settings.game !== ''}
+	{#if settings.game}
 		<h1 class="text-[14vh] font-semibold uppercase text-blue-100" in:scale>
 			{`${dictionary.get(settings.game) ?? '...'} ${settings.game === 'ck' ? '' : settings.game_number}`}
 		</h1>
@@ -76,9 +74,9 @@
 					{/if}
 					<tr class="h-[14vh] shadow-lg">
 						<td class="w-[45vw] bg-black text-center">{contestant.name.toUpperCase()}</td>
-						<td class="w-[31vw] bg-gradient-to-b from-red-600 to-red-800 pl-[2vw]"
-							>{contestant.class.toUpperCase()}</td
-						>
+						<td class="w-[31vw] bg-gradient-to-b from-red-600 to-red-800 pl-[2vw]">
+							{contestant.class.toUpperCase()}
+						</td>
 					</tr>
 				</div>
 			{/each}

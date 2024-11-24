@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="10.605 6.787 530.188 284.885" xmlns:bx="https://boxy-svg.com">
+  <defs>
+    <bx:grid x="0" y="0" width="27.53" height="27.53"/>
+    <radialGradient gradientUnits="userSpaceOnUse" cx="205.157" cy="166.179" r="124.61" id="gradient-2" gradientTransform="matrix(-1.451866, 0.532837, -0.429332, -0.924316, 625.641651, 113.111366)" spreadMethod="reflect">
+      <stop offset="0" style="stop-color: rgb(9, 50, 120);"/>
+      <stop offset="0.559" style="stop-color: rgb(6, 41, 88);"/>
+      <stop offset="1" style="stop-color: rgb(5, 35, 69);"/>
+    </radialGradient>
+    <bx:export>
+      <bx:file format="png" href="#object-0" excluded="true"/>
+      <bx:file format="png" path="Untitled 2.png" width="916" height="551" dpi="89"/>
+    </bx:export>
+    <radialGradient gradientUnits="userSpaceOnUse" cx="165.91" cy="195.892" r="124.61" id="gradient-0" gradientTransform="matrix(-1.371453, 0.419121, -0.365767, -0.945672, 557.998258, 184.133057)" spreadMethod="reflect">
+      <stop offset="0" style="stop-color: rgb(110, 176, 237);"/>
+      <stop offset="1" style="stop-color: rgb(177, 210, 226);"/>
+    </radialGradient>
+    <radialGradient gradientUnits="userSpaceOnUse" cx="205.157" cy="166.179" r="124.61" id="gradient-1" gradientTransform="matrix(-1.380101, 0.491372, -0.40811, -0.852385, 603.989288, 112.621063)" spreadMethod="reflect">
+      <stop offset="0" style="stop-color: rgb(9, 50, 120);"/>
+      <stop offset="0.559" style="stop-color: rgb(6, 41, 88);"/>
+      <stop offset="1" style="stop-color: rgb(5, 35, 69);"/>
+    </radialGradient>
+    <radialGradient gradientUnits="userSpaceOnUse" cx="214.445" cy="65.353" r="118.116" id="gradient-3" gradientTransform="matrix(-1.189327, 0.512764, -0.517079, -0.894727, 527.989062, 13.866301)">
+      <stop offset="0" style="stop-color: rgb(67.451% 67.059% 93.333%)"/>
+      <stop offset="1" style="stop-color: rgb(96, 97, 158); stop-opacity: 0.71;"/>
+    </radialGradient>
+  </defs>
+  <g style="" transform="matrix(1.767434, 0, 0, 1.8, -21.127473, -22.024011)">
+    <path style="fill: url(&quot;#gradient-2&quot;); stroke: url(&quot;#gradient-0&quot;); stroke-width: 2.24251px;" d="M 27.53 28.734 L 276.931 27.53 L 307.903 55.06 L 307.903 165.18 L 27.53 165.18 L 27.53 28.734 Z" id="object-0"/>
+    <path style="fill: url(&quot;#gradient-1&quot;); stroke-width: 1.12125px; stroke-opacity: 0.47; stroke: url(&quot;#gradient-3&quot;);" d="M 33.885 34.81 L 274.567 33.909 L 302.44 58.119 L 301.957 158.446 L 34.791 158.631 L 33.885 34.81 Z" id="path-1"/>
+  </g>
+</svg>

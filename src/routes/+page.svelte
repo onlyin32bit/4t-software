@@ -11,7 +11,7 @@
 
 <section class="h-screen w-screen overflow-hidden">
 	<h1 class="fixed left-8 top-8" in:fade={{ duration: 50 }}>
-		{$user ? 'Da dang nhap: ' + $user?.name : 'Chua dang nhap'}
+		{$user ? 'Da dang nhap: ' + $user.name : 'Chua dang nhap'}
 	</h1>
 	<div
 		class="flex h-screen flex-col items-center justify-center gap-6"

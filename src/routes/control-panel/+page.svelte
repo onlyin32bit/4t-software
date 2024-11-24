@@ -86,6 +86,7 @@
 		selectionSlideList = [
 			'start',
 			'rule',
+			'intro',
 			'main_vd',
 			'ques_ts1',
 			'ques_ts2',
@@ -299,6 +300,24 @@
 	async function clearContestantAnswer() {
 		contestants.forEach(async (currentValue) => {
 			await pb.collection('users').update(currentValue.id, { answer: null, time: 0 });
+		});
+	}
+
+	async function changeRowState(row: number, state: string) {
+		await pb.collection('display_status_vcnv').update('4T-DISPLAYSTATE', {
+			[row]: state
+		});
+	}
+
+	async function changeObstacleState(state: boolean) {
+		await pb.collection('display_status_vcnv').update('4T-DISPLAYSTATE', {
+			obstacle: state
+		});
+	}
+
+	async function changeObstacleDisplayState(state: boolean) {
+		await pb.collection('display_status_vcnv').update('4T-DISPLAYSTATE', {
+			start: state
 		});
 	}
 
@@ -617,8 +636,9 @@
 								class="btn"
 								class:btn-disabled={selected.screen !== current.screen ||
 									selected.slide === current.slide}
-								on:click={setSlide}>Jump To Slide</button
-							>
+								on:click={setSlide}
+								>Jump To Slide
+							</button>
 						</div>
 					{/if}
 					{#if selected.slide.startsWith('ques')}
@@ -692,14 +712,26 @@
 							>
 						</div>
 						<div class="grid grid-cols-3 gap-4">
-							<button class="btn">Đúng</button>
+							<button
+								class="btn"
+								on:click={() => {
+									selected.question += 1;
+									setQuestion();
+								}}>Đúng</button
+							>
 							<button
 								class="btn"
 								class:btn-disabled={elapsed > 0 || selected.screen !== current.screen}
 								on:click={() => startTimer(timerSettings.get(current.screen) ?? 0)}
 								>Start timer</button
 							>
-							<button class="btn">Sai</button>
+							<button
+								class="btn"
+								on:click={() => {
+									selected.question += 1;
+									setQuestion();
+								}}>Sai</button
+							>
 						</div>
 					{/if}
 
@@ -747,27 +779,61 @@
 
 					{#if selected.screen === 'vcnv'}
 						{#if selected.slide === 'main_vcnv'}
-							<div class="grid grid-cols-5">
+							<div class="grid grid-cols-4">
 								{#each [1, 2, 3, 4] as i}
-									<button class="btn">Select {i}</button>
+									<div class="flex">
+										<button class="btn" on:click={() => changeRowState(i, 'selected')}
+											>Select {i}</button
+										>
+										<button class="btn" on:click={() => changeRowState(i, '')}>Unselect {i}</button>
+									</div>
 								{/each}
 							</div>
 							<div class="grid grid-cols-5">
-								{#each [1, 2, 3, 4, 'center'] as i}
-									<button class="btn">Go to {i}</button>
+								{#each [1, 2, 3, 4, 5] as i}
+									<button
+										class="btn"
+										on:click={() => {
+											selected.slide = 'ques';
+											selected.question = i;
+											setSlide();
+										}}>Go to {i}</button
+									>
 								{/each}
 							</div>
-							<div class="grid grid-cols-5">
+							<div class="grid grid-cols-4">
 								{#each [1, 2, 3, 4] as i}
-									<button class="btn">Show {i}</button>
+									<div class="flex">
+										<button class="btn" on:click={() => changeRowState(i, 'correct')}
+											>Show {i}</button
+										>
+										<button class="btn" on:click={() => changeRowState(i, 'wrong')}
+											>Wrong {i}</button
+										>
+									</div>
 								{/each}
 							</div>
 							<div>
-								<button class="btn">Show Obstacle Hint</button>
+								<button
+									class="btn"
+									on:click={() => {
+										changeObstacleDisplayState(true);
+									}}>Start</button
+								>
 								<button class="btn">Go to image</button>
-								<button class="btn">Correct Obstacle</button>
-								<button class="btn">Wrong Obstacle</button>
-								<button class="btn">Start timer</button>
+								<button
+									class="btn"
+									on:click={() => {
+										changeObstacleState(true);
+									}}>Correct Obstacle</button
+								>
+								<button
+									class="btn"
+									on:click={() => {
+										changeObstacleState(false);
+									}}>Wrong Obstacle</button
+								>
+								<button class="btn" on:click={() => startTimer(15000)}>Start timer</button>
 							</div>
 						{/if}
 						{#if selected.slide === 'image_vcnv'}
