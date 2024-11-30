@@ -1,57 +1,63 @@
 <script lang="ts">
-	import { fly, fade } from 'svelte/transition';
+	import logo from '$lib/image/4t.png';
+	import { fly, fade, slide, scale } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { pb } from '$lib/pocketBase';
 	import { onDestroy, onMount } from 'svelte';
+	import type { RecordModel } from 'pocketbase';
+	import { sendSoundRequest } from '$lib/utils';
 
-	let contestants: any[] = [];
-	let status: string = 'answers';
+	let contestants: RecordModel[] = [];
+	let screen: string;
+
 	let unsub: (() => void)[] = [];
-
 	onMount(async () => {
 		const userList = await pb.collection('users').getFullList();
-		const displayStatus = await pb.collection('display_status').getOne('4T-DISPLAYSTATE');
-
 		contestants = userList;
-		status = displayStatus.screen;
+		contestants.sort((a, b) => (a.time > b.time ? 1 : -1));
 
-		unsub[0] = await pb.collection('users').subscribe('*', ({ action, record }) => {
-			// console.log(record);
-			if (action === 'update') {
-				contestants = contestants.map((currentValue) =>
-					currentValue.id === record.id ? record : currentValue
-				);
-			}
-		});
-		unsub[1] = await pb.collection('display_status').subscribe('*', ({ action, record }) => {
-			if (action === 'update') status = record.screen;
-		});
+		// const displayStatus = await pb.collection('display_status').getOne('4T-DISPLAYSTATE');
+		// screen = displayStatus.screen;
+		sendSoundRequest('tt_show_answer');
+
+		unsub = [
+			await pb.collection('users').subscribe('*', ({ action, record }) => {
+				if (action === 'update') {
+					contestants = contestants.map((currentValue) =>
+						currentValue.id === record.id ? record : currentValue
+					);
+				}
+			}),
+			await pb.collection('display_status').subscribe('*', ({ action, record }) => {
+				if (action === 'update' && record.screen !== 'answers') goto('/display/' + record.screen);
+			})
+		];
 	});
-
-	onDestroy(() => {
-		unsub.forEach((currentValue) => {
-			currentValue?.();
-		});
-	});
-
-	$: if (status != 'answers') goto('/display/' + status);
+	onDestroy(() => unsub.forEach((currentValue) => currentValue?.()));
 </script>
 
 <!-- main display -->
-<div
-	class="flex h-screen w-screen items-center justify-center bg-bg-1 bg-cover bg-no-repeat text-[8vh] text-white"
->
-	<div class="space-y-[3vh]">
+<div class="h-screen w-screen bg-bg-1 bg-cover bg-no-repeat text-[8vh] text-white">
+	<img class="center-element fixed h-[50vh] opacity-25" src={logo} alt="Logo 4T" />
+	<div
+		class="fixed left-[23vw] top-1/2 h-[110vh] w-[3vw] -translate-y-1/2 bg-white"
+		in:fly={{ y: -1000, duration: 1000 }}
+	></div>
+	<div class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 space-y-[3vh]">
 		{#each contestants as contestant, i}
 			<div
-				class="flex flex-col border-[0.7vh] bg-gradient-to-tr from-[#0F247D] to-[#26164D] px-[1.5vw]"
-				in:fly={{ x: 200, delay: i * 100 }}
+				class="flex min-w-[65vw] flex-col border-[0.7vh] bg-gradient-to-tr from-[#0F247D] to-[#26164D] px-[1.5vw]"
+				style={`filter: brightness(${contestant.time === 0 ? '0.65' : '1.1'});`}
+				in:fly={{ x: 200, delay: i * 305 }}
 			>
-				<h1 class="z-50 text-[6vh]">{contestant.name}</h1>
-				<div class="z-50 flex h-[9vh] min-w-[40vw] items-center" in:fade={{ duration: 1000 }}>
-					<p class="mr-[2vw] inline font-semibold tracking-tighter">
+				<h1 class="z-50 text-[5vh]">{contestant.name}</h1>
+				<div
+					class="z-50 flex h-[9vh] min-w-[40vw] items-center"
+					in:slide={{ delay: 1500, duration: 350 }}
+				>
+					<span class="mr-[2vw] text-[7vh] font-bold tracking-tighter">
 						{contestant.answer.toUpperCase()}
-					</p>
+					</span>
 					<span class="ml-auto font-medium tracking-tighter"
 						>{(contestant.time / 1000).toFixed(2)}</span
 					>

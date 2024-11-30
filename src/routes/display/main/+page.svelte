@@ -4,49 +4,29 @@
 	import { pb } from '$lib/pocketBase';
 	import { dictionary } from '$lib/utils';
 	import { onDestroy, onMount } from 'svelte';
+	import type { RecordModel } from 'pocketbase';
 
-	let contestants: any[] = [];
-	let status: string = 'main';
+	let contestants: RecordModel[] = [];
 	let settings: { game: string; game_number: number } = { game: '', game_number: -1 };
-	let unsub: (() => void)[] = [];
 
+	let unsub: (() => void)[] = [];
 	onMount(async () => {
 		const userList = await pb.collection('users').getFullList();
-		const displayStatus = await pb.collection('display_status').getOne('4T-DISPLAYSTATE');
-		const settingsRecord = await pb.collection('settings').getOne('GLOBAL-SETTINGS');
-
 		contestants = userList;
-		status = displayStatus.screen;
+
+		const settingsRecord = await pb.collection('settings').getOne('GLOBAL-SETTINGS');
 		settings = {
 			game: settingsRecord.field.game,
 			game_number: settingsRecord.field.game_number
 		};
-		// console.log(status);
 
-		// unsub[0] = await pb.collection('users').subscribe('*', ({ action, record }) => {
-		// 	// console.log(record);
-		// 	if (action === 'update') {
-		// 		contestants = contestants.map((currentValue) =>
-		// 			currentValue.id === record.id ? record : currentValue
-		// 		);
-		// 	}
-		// });
 		unsub = [
 			await pb.collection('display_status').subscribe('*', ({ action, record }) => {
-				if (action === 'update') {
-					status = record.screen;
-				}
+				if (action === 'update' && record.screen !== 'main') goto('/display/' + record.screen);
 			})
 		];
 	});
-
-	onDestroy(() => {
-		unsub.forEach((currentValue) => {
-			currentValue?.();
-		});
-	});
-
-	$: if (status != 'main') goto('/display/' + status);
+	onDestroy(() => unsub.forEach((currentValue) => currentValue?.()));
 </script>
 
 <div

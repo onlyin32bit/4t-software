@@ -14,7 +14,7 @@
 	} from '$lib/utils';
 	import { pb, user } from '$lib/pocketBase';
 	import { onMount, onDestroy, tick } from 'svelte';
-	import { fly, fade, scale } from 'svelte/transition';
+	import { fly, fade, scale, slide } from 'svelte/transition';
 	import { Toaster, toast } from 'svelte-sonner';
 	import type { RecordModel } from 'pocketbase';
 	import type { DisplayObject } from '$lib/types';
@@ -177,6 +177,7 @@
 		await pb.collection('display_status').update('4T-DISPLAYSTATE', {
 			timer: duration
 		});
+		stopTimer = false;
 		let last_time = window.performance.now();
 		let frame;
 		createLogMessage('system', 'TIMER', 'Bắt đầu đếm thời gian: ' + duration + 'ms');
@@ -271,7 +272,7 @@
 	}
 	async function setSlide() {
 		if (selected.slide !== current.slide) {
-			selected.question = 1;
+			// selected.question = 1;
 			await pb.collection('display_status').update('4T-DISPLAYSTATE', {
 				slide: selected.slide,
 				ques: selected.question
@@ -287,7 +288,7 @@
 			});
 			clearContestantAnswer();
 			stopTimer = true;
-			// setDisplayQuestion(false);
+			if (current.screen === 'tt') setDisplayQuestion(false);
 		}
 	}
 
@@ -306,6 +307,12 @@
 	async function changeRowState(row: number, state: string) {
 		await pb.collection('display_status_vcnv').update('4T-DISPLAYSTATE', {
 			[row]: state
+		});
+	}
+
+	async function changeImageState(image: string | number, state: boolean) {
+		await pb.collection('display_status_vcnv').update('4T-DISPLAYSTATE', {
+			[image === 5 ? 'center' : `h${image}`]: state
 		});
 	}
 
@@ -341,6 +348,15 @@
 			toast.success('Đã xóa Log');
 		}
 	}
+
+	async function setAll(state: string) {
+		for (let index = 0; index <= 24; index++) {
+			await pb.collection('display_status_vcnv').update('4T-DISPLAYSTATE', {
+				[index]: state
+			});
+		}
+	}
+	let num: number = 1;
 </script>
 
 <svelte:head>
@@ -476,7 +492,7 @@
 							</div>
 							{#each contestants as contestant, i (contestant.id)}
 								<div
-									class="flex items-center gap-1 border-b-2 px-3 text-xl font-semibold"
+									class="flex items-center gap-2 border-b-2 px-3 text-xl font-semibold"
 									title={`${contestant.name} - Lớp ${contestant.class} [Status: ${contestant.online ? 'ONLINE' : 'OFFLINE'}]`}
 								>
 									<svg viewBox="0 0 500 500" width="12px" height="12px"
@@ -489,8 +505,18 @@
 										></ellipse></svg
 									>
 									{contestant.name}
-
-									{contestant.ring > 0 ? 'bel' : ''}
+									{#if contestant.ring > 0}
+										<svg
+											class="h-5 animate-wiggle"
+											fill="#000"
+											viewBox="0 0 448 512"
+											transition:scale
+										>
+											<path
+												d="M224 0c-17.7 0-32 14.3-32 32l0 19.2C119 66 64 130.6 64 208l0 18.8c0 47-17.3 92.4-48.5 127.6l-7.4 8.3c-8.4 9.4-10.4 22.9-5.3 34.4S19.4 416 32 416l384 0c12.6 0 24-7.4 29.2-18.9s3.1-25-5.3-34.4l-7.4-8.3C401.3 319.2 384 273.9 384 226.8l0-18.8c0-77.4-55-142-128-156.8L256 32c0-17.7-14.3-32-32-32zm45.3 493.3c12-12 18.7-28.3 18.7-45.3l-64 0-64 0c0 17 6.7 33.3 18.7 45.3s28.3 18.7 45.3 18.7s33.3-6.7 45.3-18.7z"
+											/>
+										</svg>
+									{/if}
 								</div>
 								<div class="flex items-center border-b-2 px-3 text-lg">
 									{contestant.answer === '' ? 'Chưa có câu trả lời' : contestant.answer}
@@ -640,212 +666,316 @@
 								>Jump To Slide
 							</button>
 						</div>
-					{/if}
-					{#if selected.slide.startsWith('ques')}
-						<div class="grid grid-cols-[50px_1fr_50px_1fr] gap-4 xl:grid-cols-[75px_1fr_75px_1fr]">
-							<button
-								class="btn"
-								class:btn-disabled={selected.question <= 1 || selected.screen !== current.screen}
-								on:click={() => {
-									selected.question -= 1;
-									setQuestion();
-								}}>{'<'}</button
-							>
-							<div class="flex">
-								<input
-									class="input input-md input-bordered w-32 text-2xl [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-									type="number"
-									min="1"
-									max={current.numberOfQues}
-									bind:value={selected.question}
-								/>
-								<div class="flex w-8 flex-col">
-									<button
-										class="btn btn-xs"
-										class:btn-disabled={selected.question === selected.numberOfQues}
-										on:click={() => (selected.question += 1)}
-									>
-										+
-									</button>
-									<button
-										class="btn btn-xs"
-										class:btn-disabled={selected.question <= 1}
-										on:click={() => (selected.question -= 1)}
-									>
-										-
-									</button>
-								</div>
-							</div>
 
-							<button
-								class="btn"
-								class:btn-disabled={selected.question >= current.numberOfQues ||
-									selected.screen !== current.screen}
-								on:click={() => {
-									selected.question += 1;
-									setQuestion();
-								}}>{'>'}</button
+						{#if selected.slide.startsWith('ques')}
+							<div
+								class="grid grid-cols-[50px_1fr_50px_1fr] gap-4 xl:grid-cols-[75px_1fr_75px_1fr]"
 							>
-							<button
-								class="btn"
-								class:btn-disabled={selected.screen !== current.screen ||
-									selected.question === current.question}
-								on:click={setQuestion}>Jump To Question</button
-							>
-						</div>
-						<div class="grid grid-cols-4 gap-4">
-							<button
-								class="btn"
-								class:btn-disabled={selected.screen !== current.screen}
-								on:click={() => {
-									contestants.forEach(async (currentValue) => {
-										await pb.collection('users').update(currentValue.id, { ring: 0 });
-									});
-								}}>Play Animation (clr ring)</button
-							>
-							<button class="btn" on:click={() => setDisplayQuestion(true)}
-								>Display question
-							</button>
-
-							<span class="flex items-center justify-center font-mono text-2xl font-semibold"
-								>{formatTime2(elapsed)}s</span
-							>
-						</div>
-						<div class="grid grid-cols-3 gap-4">
-							<button
-								class="btn"
-								on:click={() => {
-									selected.question += 1;
-									setQuestion();
-								}}>Đúng</button
-							>
-							<button
-								class="btn"
-								class:btn-disabled={elapsed > 0 || selected.screen !== current.screen}
-								on:click={() => startTimer(timerSettings.get(current.screen) ?? 0)}
-								>Start timer</button
-							>
-							<button
-								class="btn"
-								on:click={() => {
-									selected.question += 1;
-									setQuestion();
-								}}>Sai</button
-							>
-						</div>
-					{/if}
-
-					{#if selected.slide === 'main_kd'}
-						<div class="grid grid-cols-2 gap-x-4">
-							<button
-								class="btn"
-								on:click={() => {
-									selected.slide = 'ques_ts1';
-									setSlide();
-								}}>TS 1</button
-							>
-							<button
-								class="btn"
-								on:click={() => {
-									selected.slide = 'ques_ts2';
-									setSlide();
-								}}>TS 2</button
-							>
-						</div>
-						<div class="grid grid-cols-2 gap-x-4">
-							<button
-								class="btn"
-								on:click={() => {
-									selected.slide = 'ques_ts3';
-									setSlide();
-								}}>TS 3</button
-							>
-							<button
-								class="btn"
-								on:click={() => {
-									selected.slide = 'ques_ts4';
-									setSlide();
-								}}>TS 4</button
-							>
-						</div>
-						<button
-							class="btn"
-							on:click={() => {
-								selected.slide = 'ques_chung';
-								setSlide();
-							}}>ques chung</button
-						>
-					{/if}
-
-					{#if selected.screen === 'vcnv'}
-						{#if selected.slide === 'main_vcnv'}
-							<div class="grid grid-cols-4">
-								{#each [1, 2, 3, 4] as i}
-									<div class="flex">
-										<button class="btn" on:click={() => changeRowState(i, 'selected')}
-											>Select {i}</button
+								<button
+									class="btn"
+									class:btn-disabled={selected.question <= 1 || selected.screen !== current.screen}
+									on:click={() => {
+										selected.question -= 1;
+										setQuestion();
+									}}>{'<'}</button
+								>
+								<div class="flex">
+									<input
+										class="input input-md input-bordered w-32 text-2xl [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+										type="number"
+										min="1"
+										max={current.numberOfQues}
+										bind:value={selected.question}
+									/>
+									<div class="flex w-8 flex-col">
+										<button
+											class="btn btn-xs"
+											class:btn-disabled={selected.question === selected.numberOfQues}
+											on:click={() => (selected.question += 1)}
 										>
-										<button class="btn" on:click={() => changeRowState(i, '')}>Unselect {i}</button>
+											+
+										</button>
+										<button
+											class="btn btn-xs"
+											class:btn-disabled={selected.question <= 1}
+											on:click={() => (selected.question -= 1)}
+										>
+											-
+										</button>
 									</div>
-								{/each}
+								</div>
+
+								<button
+									class="btn"
+									class:btn-disabled={selected.question >= current.numberOfQues ||
+										selected.screen !== current.screen}
+									on:click={() => {
+										selected.question += 1;
+										setQuestion();
+									}}>{'>'}</button
+								>
+								<button
+									class="btn"
+									class:btn-disabled={selected.screen !== current.screen ||
+										selected.question === current.question}
+									on:click={setQuestion}>Jump To Question</button
+								>
 							</div>
-							<div class="grid grid-cols-5">
-								{#each [1, 2, 3, 4, 5] as i}
+							<div class="grid grid-cols-4 gap-4">
+								<button
+									class="btn"
+									class:btn-disabled={selected.screen !== current.screen}
+									on:click={() => {
+										contestants.forEach(async (currentValue) => {
+											await pb.collection('users').update(currentValue.id, { ring: 0 });
+										});
+									}}>???????</button
+								>
+								<button
+									class="btn"
+									on:click={() => {
+										// sendSoundRequest('kd_time');
+										setDisplayQuestion(true);
+									}}
+									>Display question
+								</button>
+								<button
+									class="btn"
+									class:btn-disabled={selected.screen === 'tt'}
+									on:click={() => {
+										selected.slide = `main_${current.screen}`;
+										// setScreen();
+										setSlide();
+									}}
+									>Back to main
+								</button>
+
+								<span class="flex items-center justify-center font-mono text-2xl font-semibold"
+									>{formatTime2(elapsed)}s</span
+								>
+							</div>
+							<div class="grid grid-cols-4 gap-4">
+								<button
+									class="btn"
+									on:click={() => {
+										// selected.question += 1;
+										// setQuestion();
+										sendSoundRequest(current.screen + '_correct');
+									}}>Đúng</button
+								>
+								<button
+									class="btn"
+									class:btn-disabled={elapsed > 0 || selected.screen !== current.screen}
+									on:click={() => {
+										sendSoundRequest('kd_time_3');
+										startTimer(timerSettings.get(current.screen) ?? 0);
+									}}>Start timer</button
+								>
+								<button
+									class="btn"
+									on:click={() => {
+										// selected.question += 1;
+										// setQuestion();
+										sendSoundRequest(current.screen + '_wrong');
+									}}>Sai</button
+								>
+								<button
+									class="btn"
+									on:click={() => {
+										sendSoundRequest('space');
+									}}>Dấu ...</button
+								>
+							</div>
+						{/if}
+
+						{#if selected.slide === 'main_kd'}
+							<div class="grid grid-cols-2 gap-x-4">
+								<button
+									class="btn"
+									on:click={() => {
+										selected.slide = 'ques_ts1';
+										selected.question = 1;
+										setSlide();
+									}}>TS 1</button
+								>
+								<button
+									class="btn"
+									on:click={() => {
+										selected.slide = 'ques_ts2';
+										selected.question = 1;
+										setSlide();
+									}}>TS 2</button
+								>
+							</div>
+							<div class="grid grid-cols-2 gap-x-4">
+								<button
+									class="btn"
+									on:click={() => {
+										selected.slide = 'ques_ts3';
+										selected.question = 1;
+										setSlide();
+									}}>TS 3</button
+								>
+								<button
+									class="btn"
+									on:click={() => {
+										selected.slide = 'ques_ts4';
+										selected.question = 1;
+										setSlide();
+									}}>TS 4</button
+								>
+							</div>
+							<button
+								class="btn"
+								on:click={() => {
+									selected.slide = 'ques_chung';
+									selected.question = 1;
+									setSlide();
+								}}>ques chung</button
+							>
+						{/if}
+
+						{#if selected.screen === 'vcnv'}
+							{#if selected.slide === 'main_vcnv'}
+								<!-- <div class="grid grid-cols-4">
+									{#each [1, 2, 3, 4] as i}
+										<div class="flex">
+											<button
+												class="btn btn-primary"
+												on:click={() => {
+													changeRowState(i, 'selected');
+													sendSoundRequest('vcnv_select_row');
+												}}>Select {i}</button
+											>
+											<button class="btn" on:click={() => changeRowState(i, '')}
+												>Unselect {i}</button
+											>
+										</div>
+									{/each}
+								</div> -->
+								<!-- <div class="grid grid-cols-5">
+									{#each [1, 2, 3, 4, 5] as i}
+										<button
+											class="btn"
+											on:click={() => {
+												selected.slide = 'ques';
+												selected.question = i;
+												setSlide();
+											}}>Go to {i}</button
+										>
+									{/each}
+								</div> -->
+								<!-- <div class="grid grid-cols-4"> -->
+								<!-- {#each [1, 2, 3, 4] as i} -->
+								<div class="flex gap-7">
+									<input class="input input-md" type="number" bind:value={num} />
+									<button
+										class="btn btn-success"
+										on:click={() => {
+											// sendSoundRequest('vcnv_show_row');
+											changeRowState(num, 'correct');
+											sendSoundRequest('vcnv_display_picture');
+										}}>Show {num}</button
+									>
+									<button class="btn btn-error" on:click={() => changeRowState(num, 'wrong')}
+										>Wrong {num}</button
+									>
+									<button
+										class="btn btn-primary"
+										on:click={() => {
+											changeRowState(num, 'selected');
+											sendSoundRequest('vcnv_select_row');
+										}}>Select {num}</button
+									>
+									<button class="btn" on:click={() => changeRowState(num, '')}
+										>Unselect {num}</button
+									>
 									<button
 										class="btn"
 										on:click={() => {
-											selected.slide = 'ques';
-											selected.question = i;
-											setSlide();
-										}}>Go to {i}</button
+											selected.screen = 'kd';
+											selected.slide = `ques_ts1`;
+											setScreen();
+										}}>Go to ques</button
 									>
-								{/each}
-							</div>
-							<div class="grid grid-cols-4">
-								{#each [1, 2, 3, 4] as i}
-									<div class="flex">
-										<button class="btn" on:click={() => changeRowState(i, 'correct')}
-											>Show {i}</button
+								</div>
+								<!-- {/each} -->
+								<!-- </div> -->
+								<div>
+									<button
+										class="btn"
+										on:click={() => {
+											changeObstacleDisplayState(true);
+											sendSoundRequest('vcnv_display');
+										}}>Start</button
+									>
+									<button
+										class="btn"
+										on:click={() => {
+											changeObstacleDisplayState(false);
+										}}>UnStart</button
+									>
+									<!-- <button
+										class="btn"
+										on:click={() => {
+											selected.slide = 'image_vcnv';
+											setSlide();
+										}}>Go to image</button
+									> -->
+									<button
+										class="btn"
+										on:click={() => {
+											// setAll('correct');
+											changeObstacleState(true);
+											sendSoundRequest('vcnv_correct_obstacle');
+										}}>Correct Obstacle</button
+									>
+									<button
+										class="btn"
+										on:click={() => {
+											// setAll('');
+											changeObstacleState(false);
+											sendSoundRequest('vcnv_wrong');
+										}}>Wrong Obstacle</button
+									>
+									<button
+										class="btn"
+										on:click={() => {
+											startTimer(15000);
+											sendSoundRequest('vcnv_time');
+										}}>Start timer</button
+									>
+								</div>
+							{/if}
+							{#if selected.slide === 'image_vcnv'}
+								<div class="grid grid-cols-5">
+									{#each [1, 2, 3, 4, 5] as i}
+										<button
+											class="btn"
+											on:click={() => {
+												changeImageState(i, true);
+												sendSoundRequest('vcnv_display_picture');
+											}}>Show {i}</button
 										>
-										<button class="btn" on:click={() => changeRowState(i, 'wrong')}
-											>Wrong {i}</button
-										>
-									</div>
-								{/each}
-							</div>
-							<div>
+									{/each}
+								</div>
 								<button
 									class="btn"
 									on:click={() => {
-										changeObstacleDisplayState(true);
-									}}>Start</button
-								>
-								<button class="btn">Go to image</button>
-								<button
-									class="btn"
-									on:click={() => {
-										changeObstacleState(true);
-									}}>Correct Obstacle</button
-								>
-								<button
-									class="btn"
-									on:click={() => {
-										changeObstacleState(false);
-									}}>Wrong Obstacle</button
-								>
-								<button class="btn" on:click={() => startTimer(15000)}>Start timer</button>
-							</div>
+										selected.slide = `main_vcnv`;
+										setSlide();
+									}}
+									>Back to main
+								</button>
+							{/if}
 						{/if}
-						{#if selected.slide === 'image_vcnv'}
-							<div class="grid grid-cols-5">
-								{#each [1, 2, 3, 4, 'center'] as i}
-									<button class="btn">Show {i}</button>
-								{/each}
-							</div>
-						{/if}
+					{/if}
+					{#if selected.slide === 'answers'}
+						<div>ASD</div>
 					{/if}
 				</div>
 			</div>
+
 			<div class="col-span-2 flex items-center border-[3px] border-gray-400 pr-3">
 				<form class="h-full w-full" on:submit|preventDefault={createMessage}>
 					<input

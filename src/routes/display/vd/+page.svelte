@@ -34,11 +34,7 @@
 		];
 	});
 
-	onDestroy(() => {
-		unsub.forEach((currentValue) => {
-			currentValue?.();
-		});
-	});
+	onDestroy(() => unsub.forEach((currentValue) => currentValue?.()));
 
 	$: if (screen != 'vd') goto('/display/' + screen);
 </script>

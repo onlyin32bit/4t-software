@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { slide, scale, fade } from 'svelte/transition';
-	import { onMount, onDestroy } from 'svelte';
 	import { pb } from '$lib/pocketBase';
+	import { onMount, onDestroy } from 'svelte';
+	import { sendSoundRequest } from '$lib/utils';
 	import type { RecordModel } from 'pocketbase';
+	import { slide, scale, fade } from 'svelte/transition';
 
 	export let questionNumber: number;
 	export let questionContent: string;
@@ -10,20 +11,14 @@
 	export let displayQuestion: boolean = false;
 	export let contestants: RecordModel[] = [];
 
-	let unsub: (() => void)[] = [];
 	onMount(async () => {
-		unsub = [
-			await pb.collection('display_status').subscribe('*', ({ action, record }) => {
-				if (action === 'update' && record.timer !== -1) timer();
-			})
-		];
-	});
+		sendSoundRequest('kd_start_2');
 
-	onDestroy(() => {
-		unsub.forEach((currentValue) => {
-			currentValue?.();
+		await pb.collection('display_status').subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
+			if (action === 'update' && record.timer !== -1) timer();
 		});
 	});
+	onDestroy(() => pb.collection('display_status').unsubscribe('4T-DISPLAYSTATE'));
 
 	let time: number = 3;
 	let timeStatus: boolean = false;
@@ -36,6 +31,7 @@
 			if (time <= 0) {
 				clearInterval(countdown);
 				countdown = null;
+				time = 0;
 			}
 		}, 10);
 	}
@@ -64,12 +60,7 @@
 	}
 </script>
 
-<div class="fixed h-full w-full bg-bg-2 bg-cover bg-no-repeat">
-	<!-- <div class="fixed text-[10vh]">
-        DEBUG:
-		{containerHeight}
-		{textHeight} %: {calcPercent(textHeight, containerHeight)}
-	</div> -->
+<div class="fixed h-full w-full bg-bg-2 bg-cover bg-no-repeat" in:slide>
 	<div class="left-[1vw] top-[17vh] h-[65vh] w-[80vw]" bind:clientHeight={containerHeight}>
 		<img
 			class="absolute top-[-10vh] w-[80vw]"
@@ -86,11 +77,11 @@
 			{questionNumber}
 		</div>
 		<div
-			class="absolute left-1/2 top-1/2 z-50 w-[65vw] -translate-x-1/2 -translate-y-1/2 text-center font-semibold"
+			class="absolute left-1/2 top-1/2 z-50 w-[65vw] -translate-x-1/2 -translate-y-1/2 text-left font-semibold"
 			style={`font-size: ${fontSize}vh;`}
 			bind:clientHeight={textHeight}
 		>
-			<div class:invisible={!displayQuestion}>
+			<div class="whitespace-pre-line" class:invisible={!displayQuestion}>
 				{questionContent}
 			</div>
 		</div>
@@ -129,14 +120,14 @@
 	{/if}
 	<div
 		class="fixed bottom-[12.5vh] right-[2.5vw] h-[21.5vh] w-[17vw] rounded-[1vh] bg-cover bg-no-repeat backdrop-blur"
-		style={`border: 0.7vh solid #6EB0ED; filter: drop-shadow(8px 28px 32px #335); background: conic-gradient(red, ${1 - time / 3}turn, #fff, ${1 - time / 3}turn, rgba(256,256,256,0.2));`}
+		style={`border: 0.7vh solid #6EB0ED; filter: drop-shadow(8px 28px 32px #335); background: conic-gradient(red, ${1 - time / 3}turn, rgba(256,256,256,0.2), ${1.05 - time / 3 - (!time ? 0.05 : 0)}turn, rgba(256,256,256,0.2));`}
 		in:scale={{ duration: 6000 }}
 	>
 		<!-- <div class="center-element absolute h-[21vh] w-[17vw] rounded-[1vh] bg-black"></div> -->
 		<div
 			class="center-element absolute flex h-[18vh] w-[15vw] items-center justify-center rounded-[1vh] bg-gradient-to-tr from-[#093278] to-[#093278] text-[13vh] font-bold"
 		>
-			{timeStatus ? (time <= 0 ? 0 : time.toFixed(0)) : ''}
+			{timeStatus ? time.toFixed(0) : ''}
 		</div>
 	</div>
 </div>

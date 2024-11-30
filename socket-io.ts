@@ -11,15 +11,20 @@ export function attachSocket(server: HttpServer) {
 		socket.emit('message', 'Hello World from server!');
 
 		let userData: AuthModel = null;
+		const referer = socket.handshake.headers.referer;
 
 		console.log('%cThiết bị mới truy cập:', 'color: red');
 		console.log(
 			`	ID: ${socket.id}
 	Địa chỉ: ${socket.handshake.address}
 	Platform: ${socket.handshake.headers['user-agent']}
-	Thời gian: ${socket.handshake.time}`
+	Thời gian: ${socket.handshake.time}
+	Referer: ${referer}`
 		);
 
+		if (referer?.endsWith('sounds')) {
+			socket.join('sounds');
+		}
 		socket.on('knownUserAccessed', (user) => {
 			userData = user;
 			console.log('user recognized: ' + user.username);
@@ -39,6 +44,11 @@ export function attachSocket(server: HttpServer) {
 
 		socket.on('message', (message) => {
 			console.log(message);
+		});
+
+		socket.on('soundReq', (sound) => {
+			io.to('sounds').emit('sound', sound);
+			// socket.emit('sound', sound);
 		});
 
 		socket.on('disconnect', (disconnectReason) => {

@@ -1,5 +1,7 @@
 import { pb } from './pocketBase';
 import { Howl } from 'howler';
+import { socket } from './socket.io-client';
+import type { DisplayObject } from './types';
 
 export function getCurrentTime() {
 	const time = new Date();
@@ -22,13 +24,6 @@ export function getCurrentTime() {
 		time.getSeconds();
 	return currentTime;
 }
-
-type DisplayObject = {
-	screen: string;
-	slide: string;
-	question: number;
-	numberOfQues: number;
-};
 
 export function getScreenStats(e: DisplayObject) {
 	return (
@@ -62,8 +57,6 @@ export async function createLogMessage(from: string, type: string, content: stri
 	await pb.collection('logs').create(Message);
 }
 
-// export async function changeStatus(status) {}
-
 // async function getGlobalSettingsRecord(): Promise<{
 // 	season: number;
 // 	game: string;
@@ -86,9 +79,7 @@ export async function createLogMessage(from: string, type: string, content: stri
 // }
 
 export async function sendSoundRequest(sound: string) {
-	await pb.collection('display_status').update('4T-DISPLAYSTATE', {
-		sound: sound
-	});
+	socket.emit('soundReq', sound);
 }
 
 export function formatTime2(time: number) {
@@ -173,24 +164,38 @@ export const timerSettings: Map<string, number> = new Map([
 export const soundsCollection: Map<string, string> = new Map([
 	['tong_ket_diem', 'main/PointSummary.mp3'],
 	['space', 'main/Space.mp3'],
+
 	['kd_start', 'kd/StartRound.mp3'],
 	['kd_start_2', 'kd/StartTurn.mp3'],
 	['kd_start_question', 'kd/PreMainTime.mp3'],
-	['kd_correct', 'kd/CorrectAnswer.mp3'],
+	['kd_time', 'kd/MainTime.mp3'],
+	['kd_time_10', 'tt/10Seconds.mp3'],
+	['kd_correct', 'kd/CorrectAnswer.mpeg'],
 	['kd_wrong', 'kd/WrongAnswer.mp3'],
 	['kd_end', 'kd/FinishTurn.mp3'],
+	['bell_kd', 'kd/Bell.mpeg'],
+
 	['vcnv_start', 'vcnv/StartRound.mp3'],
 	['vcnv_display', 'vcnv/RowsShow.mp3'],
 	['vcnv_select_row', 'vcnv/RowChoose.mp3'],
+	['vcnv_row_question', 'vcnv/RowQuestShow.mp3'],
 	['vcnv_time', 'vcnv/15Seconds.mp3'],
-	['vcnv_display_row', ''],
+	['vcnv_show_row', 'vcnv/AnswersShowing.mp3'], //sai nhac
 	['vcnv_display_picture', 'vcnv/PictureReveal.mp3'],
 	['vcnv_end', 'vd/FinishRound.mp3'],
+	['vcnv_correct_obstacle', 'vcnv/CorrectObstacle.mp3'],
+	['vcnv_correct', 'vcnv/CorrectRow.mp3'],
+	['vcnv_wrong', 'vcnv/WrongRow.mp3'],
 	['bell_vcnv', 'vcnv/ObstacleGrant.mp3'],
+
 	['tt_start', 'tt/StartRound.mp3'],
 	['tt_start_question', 'tt/QuestionShowing.mp3'],
-	['tt_time', 'tt/???'],
+	['tt_time', 'tt/30Seconds.mp3'],
 	['tt_end', 'vd/FinishRound.mp3'],
+	['tt_show_answer', 'tt/AnswersShowing.ogg'],
+	['tt_correct', 'tt/Correct.mp3'],
+	['tt_wrong', 'tt/AnswersShowing.ogg'], //sai nhac
+
 	['vd_start', 'vd/StartRound.mp3'],
 	['vd_start_ts', 'vd/StartTurn.mp3'],
 	['vd_choose_package', 'vd/ChoiceChosen.mp3'],
@@ -199,5 +204,7 @@ export const soundsCollection: Map<string, string> = new Map([
 	['vd_time_20', 'vd/20Seconds.mp3'],
 	['vd_choose_star', 'vd/StarChoose.mp3'],
 	['vd_end', 'vd/FinishRound.mp3'],
+	['vd_correct', 'vd/CorrectFinish.mp3'],
+	['vd_wrong', 'vd/WrongFinish.mp3'],
 	['bell_vd', 'vd/Grant.mp3']
 ]);

@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { fade, slide, scale, fly } from 'svelte/transition';
 	import { typewriter } from '$lib/transitions';
+	import { onMount } from 'svelte';
+	import { sendSoundRequest } from '$lib/utils';
 
 	export let screen: 'kd' | 'tt' | 'vcnv' | 'vd';
 
@@ -58,6 +60,10 @@
 			}
 		]
 	]);
+
+	onMount(() => {
+		if (screen === 'kd') sendSoundRequest('kd_start');
+	});
 </script>
 
 <div
@@ -73,7 +79,7 @@
 		{`${rule.get(screen)?.fullname}`}
 	</h1>
 	<div
-		class="fixed left-1/2 top-[17vh] z-50 w-[72.5vw] -translate-x-1/2 text-left font-futuristic text-white"
+		class="fixed left-1/2 top-[17vh] z-50 w-[73vw] -translate-x-1/2 text-left font-futuristic text-white"
 		style={`font-size: ${rule.get(screen)?.fontSize}vh;`}
 	>
 		<p

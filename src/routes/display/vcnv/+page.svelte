@@ -15,26 +15,23 @@
 	let imageLink: string = pb.baseUrl + '/api/files/vcnv/4T-QUES-VCNV-BK/';
 	let rows: { keyword: string; question: string }[] = [];
 	let centerQuestion: string = '';
-	let screen: string = 'vcnv';
 	let scr_slide: string = 'start';
 	let ques: number = 1;
+	let start: boolean = false;
 	let displayed: {
-		start: boolean;
 		obstacle: boolean;
 		rows: Array<string>;
 		image: Array<boolean>;
 	} = {
-		start: false,
 		obstacle: false,
 		rows: ['', '', '', ''],
 		image: [false, false, false, false, false]
 	};
+	let time: number = 0;
 	let displayQuestion: boolean = false;
+	let contestantBell: string[] = [];
 
-	let bellRingedContestant: string[] = [];
-
-	let unsub: (() => void)[] = [];
-
+	// let unsub: (() => void)[] = [];
 	onMount(async () => {
 		const displayStatus = await pb.collection('display_status').getOne('4T-DISPLAYSTATE');
 		screen = displayStatus.screen;
@@ -42,8 +39,8 @@
 		ques = displayStatus.ques;
 
 		const displayStatusVcnv = await pb.collection('display_status_vcnv').getOne('4T-DISPLAYSTATE');
+		start = displayStatusVcnv.start;
 		displayed = {
-			start: displayStatusVcnv.start,
 			obstacle: displayStatusVcnv.obstacle,
 			rows: [
 				displayStatusVcnv[1],
@@ -67,51 +64,48 @@
 		rows = questionSet.rows ?? [];
 		centerQuestion = questionSet.center_ques;
 
-		unsub = [
-			await pb.collection('display_status').subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
-				if (action === 'update') {
-					screen = record.screen;
-					scr_slide = record.slide;
-					ques = record.ques;
-					displayQuestion = record.displayQuestion;
-					if (record.timer !== -1) timer();
-				}
-			}),
-			await pb
-				.collection('display_status_vcnv')
-				.subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
-					if (action === 'update') {
-						displayed = {
-							start: record.start,
-							obstacle: record.obstacle,
-							rows: [record[1], record[2], record[3], record[4]],
-							image: [record['h1'], record['h2'], record['h3'], record['h4']]
-						};
-					}
-				}),
-			await pb.collection('users').subscribe('*', ({ action, record }) => {
-				if (action === 'update' && record.ring > 0)
-					bellRingedContestant = [...bellRingedContestant, record.name];
-			})
-		];
-	});
-
-	onDestroy(() => {
-		unsub.forEach((currentValue) => {
-			currentValue?.();
+		// unsub = [
+		await pb.collection('display_status').subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
+			if (action === 'update') {
+				if (record.screen !== 'vcnv') goto('/display/' + record.screen);
+				if (scr_slide !== record.slide) scr_slide = record.slide;
+				if (ques !== record.ques) ques = record.ques;
+				displayQuestion = record.displayQuestion;
+				if (record.timer !== -1 && scr_slide === 'main_vcnv') timer();
+			}
 		});
+		await pb
+			.collection('display_status_vcnv')
+			.subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
+				if (action === 'update') {
+					if (start !== record.start) start = record.start;
+					displayed = {
+						obstacle: record.obstacle,
+						rows: [record[1], record[2], record[3], record[4]],
+						image: [record['h1'], record['h2'], record['h3'], record['h4'], record['center']]
+					};
+				}
+			});
+		await pb.collection('users').subscribe('*', ({ action, record }) => {
+			if (action === 'update' && record.ring > 0) contestantBell = [...contestantBell, record.name];
+		});
+		// ];
 	});
-
-	let time: number = 0;
+	onDestroy(() => {
+		pb.collection('display_status').unsubscribe('4T-DISPLAYSTATE');
+		pb.collection('display_status_vcnv').unsubscribe('4T-DISPLAYSTATE');
+		pb.collection('users').unsubscribe('*');
+	});
 
 	async function timer() {
 		let countdown: any = setInterval(() => {
-			time += 0.1;
+			time += 0.01;
 			if (time >= 15) {
 				clearInterval(countdown);
 				countdown = null;
+				time = 15;
 			}
-		}, 100);
+		}, 10);
 	}
 
 	function getRowBackgroundColor(state: string) {
@@ -119,8 +113,6 @@
 		if (state === 'wrong') return 'aaa';
 		return '05259f';
 	}
-
-	$: if (screen != 'vcnv') goto('/display/' + screen);
 </script>
 
 {#if scr_slide === 'start'}
@@ -145,7 +137,7 @@
 					alt=""
 				/>
 			</div>
-			{#if displayed.start === true}
+			{#if start}
 				<div
 					class="absolute left-2/3 top-[10vh] w-[75vw] -translate-x-3/4 bg-white text-center text-[8vh] font-bold text-black"
 					style="clip-path: polygon(98% 0, 100% 50%, 98% 99%, 2% 100%, 0 53%, 2% 0);"
@@ -198,9 +190,9 @@
 			></div>
 		</div>
 		<div class="fixed bottom-[2.5vh] left-[2.5vw] flex gap-[2vw] text-[6vh] font-bold">
-			{#each bellRingedContestant as contestant, i (i)}
+			{#each contestantBell as contestant, i (i)}
 				<div
-					class="flex items-center justify-center gap-[1vw] border-[0.7vh] bg-gradient-to-tr from-[#0F247D] to-[#26164D] px-[1vw]"
+					class="flex items-center justify-center gap-[1vw] rounded-[1vh] border-[0.7vh] bg-gradient-to-tr from-[#0F247D] to-[#26164D] px-[1vw]"
 					in:fly={{ x: 100 }}
 				>
 					<svg class="h-[5vh] animate-wiggle" fill="#fff" viewBox="0 0 448 512">
@@ -255,5 +247,7 @@
 	<ScreenQuestionVcnv
 		questionNumber={ques}
 		question={ques < 5 ? rows[ques - 1]?.question : centerQuestion}
+		{displayQuestion}
+		{contestantBell}
 	/>
 {/if}

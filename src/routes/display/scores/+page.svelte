@@ -3,39 +3,28 @@
 	import { goto } from '$app/navigation';
 	import { pb } from '$lib/pocketBase';
 	import { onDestroy, onMount } from 'svelte';
+	import type { RecordModel } from 'pocketbase';
 
-	let contestants: any[] = [];
-	let status: string = 'scores';
+	let contestants: RecordModel[] = [];
+
 	let unsub: (() => void)[] = [];
-
 	onMount(async () => {
 		const userList = await pb.collection('users').getFullList();
-		const displayStatus = await pb.collection('display_status').getOne('4T-DISPLAYSTATE');
-
 		contestants = userList;
-		status = displayStatus.screen;
 
 		unsub = [
 			await pb.collection('users').subscribe('*', ({ action, record }) => {
-				if (action === 'update') {
+				if (action === 'update')
 					contestants = contestants.map((currentValue) =>
 						currentValue.id === record.id ? record : currentValue
 					);
-				}
 			}),
 			await pb.collection('display_status').subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
-				if (action === 'update') status = record.screen;
+				if (action === 'update' && record.screen !== 'scores') goto('/display/' + record.screen);
 			})
 		];
 	});
-
-	onDestroy(() => {
-		unsub.forEach((currentValue) => {
-			currentValue?.();
-		});
-	});
-
-	$: if (status != 'scores') goto('/display/' + status);
+	onDestroy(() => unsub.forEach((currentValue) => currentValue?.()));
 </script>
 
 <!-- main display -->
