@@ -58,11 +58,19 @@
 
 	let prevScreen: string;
 
+	let displayQuestionStatus: boolean;
+
+	let playMediaSource: string;
+
 	let elapsed: number = 0;
 
 	let menu: string = 'main';
 
-	let settings: { season: number; game: string; game_number: number };
+	let settings: { season: number; game: string; game_number: number } = {
+		season: 8,
+		game: 'tk',
+		game_number: 1
+	};
 
 	let selectionSlideList = ['start', 'rule', 'ques', 'end'];
 	$: if (selected.screen === 'kd') {
@@ -76,6 +84,7 @@
 			'ques_ts2',
 			'ques_ts3',
 			'ques_ts4',
+			'end_ts',
 			'end'
 		];
 	} else if (selected.screen === 'tt') {
@@ -88,10 +97,15 @@
 			'rule',
 			'intro',
 			'main_vd',
+			'pre_ques_ts1',
 			'ques_ts1',
+			'pre_ques_ts2',
 			'ques_ts2',
+			'pre_ques_ts3',
 			'ques_ts3',
+			'pre_ques_ts4',
 			'ques_ts4',
+			'end_ts',
 			'end'
 		];
 	} else {
@@ -115,7 +129,7 @@
 		const userListRecord = await pb.collection('users').getFullList();
 		const logsRecord = await pb.collection('logs').getFullList();
 		const displayStatusRecord = await pb.collection('display_status').getOne('4T-DISPLAYSTATE');
-		const settingsRecord = await pb.collection('settings').getOne('GLOBAL-SETTINGS');
+		// const settingsRecord = await pb.collection('settings').getOne('GLOBAL-SETTINGS');
 
 		contestants = userListRecord;
 		logs = logsRecord;
@@ -126,11 +140,13 @@
 			numberOfQues: -1
 		};
 		selected = { ...current };
-		settings = {
-			season: settingsRecord.field.season,
-			game: settingsRecord.field.game,
-			game_number: settingsRecord.field.game_number
-		};
+		displayQuestionStatus = displayStatusRecord.displayQuestion;
+		// settings = {
+		// 	season: settingsRecord.field.season,
+		// 	game: settingsRecord.field.game,
+		// 	game_number: settingsRecord.field.game_number
+		// };
+
 		console.log(settings.season);
 
 		// riel time database setup
@@ -140,7 +156,6 @@
 					contestants = contestants.map((currentValue) =>
 						currentValue.id === record.id ? record : currentValue
 					);
-					// if (record.ring > 0) sendSoundRequest('bell_vd');
 				}
 			}),
 			await pb.collection('logs').subscribe('*', ({ action, record }) => {
@@ -155,25 +170,31 @@
 					if (current.screen !== record.screen) current.screen = record.screen;
 					if (current.slide !== record.slide) current.slide = record.slide;
 					if (current.question !== record.ques) current.question = record.ques;
+					if (displayQuestionStatus !== record.displayQuestion)
+						displayQuestionStatus = record.displayQuestion;
+					if (playMediaSource !== record.mediaToPlay) playMediaSource = record.mediaToPlay;
 				}
 			})
 		];
 	});
 	// chay khi component bi pha huy
-	onDestroy(() => {
-		// unsubscibe from riel time db
-		unsub.forEach((currentValue) => {
-			currentValue?.();
-		});
-	});
+	onDestroy(() => unsub.forEach((currentValue) => currentValue?.()));
+
+	const timePreset: { [key: string]: number } = {
+		20: 15,
+		30: 20
+	};
 
 	let logsElement: HTMLElement;
 	async function scrollLogToBottom() {
 		await tick();
 		logsElement.scrollTop = logsElement.scrollHeight;
 	}
-
 	async function startTimer(duration: number) {
+		if (elapsed > 0) {
+			stopTimer = true;
+			return;
+		}
 		await pb.collection('display_status').update('4T-DISPLAYSTATE', {
 			timer: duration
 		});
@@ -190,17 +211,16 @@
 			if (elapsed >= duration || stopTimer) {
 				cancelAnimationFrame(frame);
 				createLogMessage('system', 'TIMER', `Đã ${stopTimer ? 'ngưng' : 'hết'} thời gian`);
-				contestants.forEach(async (currentValue) => {
-					if (currentValue.time == -1) {
-						await pb.collection('users').update(currentValue.id, { time: -2 });
-					}
-				});
 				await pb.collection('display_status').update('4T-DISPLAYSTATE', {
 					timer: -1
 				});
-				// if (stopTimer) {
+				if (stopTimer) sendSoundRequest('stop_timer');
+				// contestants.forEach(async (currentValue) => {
+				// 	if (currentValue.time == -1) {
+				// 		await pb.collection('users').update(currentValue.id, { time: -2 });
+				// 	}
+				// });
 				stopTimer = false;
-				// }
 				elapsed = 0;
 			}
 		})();
@@ -216,7 +236,9 @@
 		}
 	}
 	async function setScore() {
-		if (JSON.stringify(selectedScore) !== '[0,0,0,0]') {
+		if (JSON.stringify(selectedScore) === '[0,0,0,0]') {
+			toast.warning('Chưa nhập điểm thí sinh');
+		} else {
 			let message: string = '';
 			contestants.forEach(async (currentValue, i) => {
 				message +=
@@ -234,8 +256,6 @@
 
 			createLogMessage('system', 'SCORE', message);
 			selectedScore = [0, 0, 0, 0];
-		} else {
-			toast.warning('Chưa nhập điểm thí sinh');
 		}
 	}
 	async function setContestantInfo() {
@@ -264,9 +284,11 @@
 			await pb.collection('display_status').update('4T-DISPLAYSTATE', {
 				screen: selected.screen,
 				slide: selected.slide,
-				ques: selected.question
+				ques: selected.question,
+				timer: -1
 			});
-			setDisplayQuestion(false);
+			if (elapsed > 0) sendSoundRequest('stop_timer');
+			if (displayQuestionStatus) setDisplayQuestionStatus(false);
 			stopTimer = true;
 		}
 	}
@@ -275,32 +297,64 @@
 			// selected.question = 1;
 			await pb.collection('display_status').update('4T-DISPLAYSTATE', {
 				slide: selected.slide,
-				ques: selected.question
+				ques: selected.question,
+				timer: -1
 			});
-			setDisplayQuestion(false);
+			if (elapsed > 0) sendSoundRequest('stop_timer');
+			if (selected.screen === 'vcnv' && selected.slide === 'intro') resetAllStateVCNV();
+			if (displayQuestionStatus) setDisplayQuestionStatus(false);
 			stopTimer = true;
 		}
 	}
 	async function setQuestion() {
 		if (selected.question !== current.question) {
 			await pb.collection('display_status').update('4T-DISPLAYSTATE', {
-				ques: selected.question
+				ques: selected.question,
+				timer: -1
 			});
 			clearContestantAnswer();
+			if (elapsed > 0) sendSoundRequest('stop_timer');
+			if (selected.question > current.numberOfQues) sendSoundRequest('stop_bg_music');
+			if (selected.screen === 'vd') {
+				setDisplayQuestionStatus(false);
+				changeStarState(false);
+			}
 			stopTimer = true;
-			if (current.screen === 'tt') setDisplayQuestion(false);
 		}
 	}
 
-	async function setDisplayQuestion(value: boolean) {
+	async function setDisplayQuestionStatus(value: boolean) {
 		await pb.collection('display_status').update('4T-DISPLAYSTATE', {
 			displayQuestion: value
 		});
 	}
 
-	async function clearContestantAnswer() {
+	async function clearContestantAnswer(log: boolean = false) {
 		contestants.forEach(async (currentValue) => {
 			await pb.collection('users').update(currentValue.id, { answer: null, time: 0 });
+		});
+		if (log) createLogMessage('system', 'INFO', 'Đã xóa đáp án thí sinh');
+	}
+
+	async function clearContestantBell() {
+		contestants.forEach(async (currentValue) => {
+			await pb.collection('users').update(currentValue.id, { ring: 0 });
+		});
+	}
+
+	async function resetAllStateVCNV() {
+		await pb.collection('display_status_vcnv').update('4T-DISPLAYSTATE', {
+			obstacle: false,
+			start: false,
+			1: '',
+			2: '',
+			3: '',
+			4: '',
+			h1: false,
+			h2: false,
+			h3: false,
+			h4: false,
+			hcenter: false
 		});
 	}
 
@@ -310,9 +364,9 @@
 		});
 	}
 
-	async function changeImageState(image: string | number, state: boolean) {
+	async function changeImageState(image: number | 'center', state: boolean) {
 		await pb.collection('display_status_vcnv').update('4T-DISPLAYSTATE', {
-			[image === 5 ? 'center' : `h${image}`]: state
+			[`h${image}`]: state
 		});
 	}
 
@@ -322,9 +376,25 @@
 		});
 	}
 
-	async function changeObstacleDisplayState(state: boolean) {
+	async function changeObstacleStartState(state: boolean) {
 		await pb.collection('display_status_vcnv').update('4T-DISPLAYSTATE', {
 			start: state
+		});
+	}
+
+	async function setQuestionSet(contestant: string) {
+		const question_set = selectedContestantQuestionSet;
+		const offset = selectedContestantQuestionSetOffset.map(
+			(currentValue, i) => currentValue - i - 1
+		);
+		await pb.collection('display_status_vd').update('4T-DISPLAYSTATE', {
+			[contestant]: { question_set, offset }
+		});
+	}
+
+	async function changeStarState(state: boolean) {
+		await pb.collection('display_status_vd').update('4T-DISPLAYSTATE', {
+			star: state
 		});
 	}
 
@@ -348,15 +418,10 @@
 			toast.success('Đã xóa Log');
 		}
 	}
-
-	async function setAll(state: string) {
-		for (let index = 0; index <= 24; index++) {
-			await pb.collection('display_status_vcnv').update('4T-DISPLAYSTATE', {
-				[index]: state
-			});
-		}
-	}
-	let num: number = 1;
+	let selectedObstacleRow: number = 1;
+	let selectedObstacleImage: number | 'center' = 1;
+	let selectedContestantQuestionSet: string[] = [];
+	let selectedContestantQuestionSetOffset: number[] = [1, 2, 3];
 </script>
 
 <svelte:head>
@@ -367,7 +432,10 @@
 
 <AuthCheck requiredBTC={true}>
 	<section class="h-screen w-screen overflow-hidden">
-		<div class="grid h-full grid-cols-2 grid-rows-[50px_1fr_1fr_50px] border-[3px] border-gray-400">
+		<div
+			class="grid h-full grid-cols-[1fr_1.3fr] grid-rows-[50px_1fr_1fr_50px] border-[3px] border-gray-400"
+		>
+			<!-- header -->
 			<div class="flex items-center justify-between border-[3px] border-gray-400 p-2">
 				<div class="flex items-center gap-4 text-xl font-semibold">
 					<a href="/"><img src="/src/lib/image/4t-blue.png" alt="Logo 4T" class="h-10" /></a>
@@ -377,11 +445,10 @@
 					<button class="transition-colors hover:text-gray-500" on:click={clearLog}
 						>CLEAR LOG</button
 					>
-					<button class="transition-colors hover:text-gray-500" on:click={saveLog}
-						>SAVE CURRENT LOG</button
-					>
+					<button class="transition-colors hover:text-gray-500" on:click={saveLog}>SAVE LOG</button>
 				</div>
 			</div>
+			<!-- status display -->
 			<div class="flex items-center justify-between border-[3px] border-gray-400 px-2">
 				<h1>
 					Current: {getScreenStats(current)}
@@ -389,16 +456,17 @@
 				<h1>Selected: {getScreenStats(selected)}</h1>
 				<h1>Previous: {dictionary.get(prevScreen)}</h1>
 			</div>
+			<!-- logs -->
 			<div class="row-span-2 flex flex-col border-[3px] border-gray-400">
 				<div class="mt-1 flex h-full flex-col-reverse overflow-auto" bind:this={logsElement}>
 					<table class="table table-pin-rows table-sm mb-auto">
 						<thead class="border-b-2">
 							<tr>
-								<th class="w-48">Thời gian</th>
+								<th class="w-44">Thời gian</th>
 								<th class="w-28">Đến từ</th>
 								<th class="w-20">Type</th>
 								<th>Nội dung</th>
-								<th class="w-4"></th>
+								<th class="w-2"></th>
 							</tr>
 						</thead>
 						<tbody>
@@ -414,9 +482,9 @@
 									>
 									<td>{log.type}</td>
 									<td>{log.content}</td>
-									<td class="border-x-2">
+									<td>
 										<button
-											class="hover:text-gray-500"
+											class="hover:text-red-500"
 											on:click={async () => {
 												if (confirm('Xoa tin nhan nay?')) {
 													await pb.collection('logs').delete(log.id);
@@ -568,7 +636,7 @@
 						</div>
 					{/if}
 				</div>
-				<div class="grid grid-cols-[1fr_1fr_1fr]">
+				<div class="grid grid-cols-[1.5fr_1fr_1fr_1fr_1fr]">
 					<select
 						class="border-[3px] border-gray-400 bg-white px-4 transition-colors hover:bg-gray-200"
 						bind:value={menu}
@@ -602,19 +670,32 @@
 							<span>Đặt lại các tham số</span>
 						</div>
 					{/if}
+					<button
+						class="btn"
+						on:click={() => {
+							clearContestantBell();
+						}}>CLEAR BELL</button
+					>
+					<button
+						class="btn"
+						on:click={() => {
+							if (confirm('Xoa dap an thi sinh?')) clearContestantAnswer(true);
+						}}>CLEAR ANSWER</button
+					>
 				</div>
 			</div>
+
+			<!-- dieu khien man hinh -->
 			<div class="select-none border-[3px] border-gray-400">
-				<!-- dieu khien man hinh -->
 				<div class="grid h-16 grid-flow-col border-b-2 text-xl">
-					{#each ['main', 'answers', 'scores', 'kd', 'vcnv', 'tt', 'vd', 'extra'] as screen}
+					{#each ['', 'main', 'answers_tt', 'answers_vcnv', 'scores', 'kd', 'vcnv', 'tt', 'vd', 'extra'] as screen}
 						<button
 							class={`transition-colors duration-300 ${current.screen === screen ? 'text-black' : 'text-gray-400 hover:text-gray-500'} ${selected.screen === screen ? 'bg-red-100' : 'hover:bg-gray-50'}`}
 							on:click={() => {
 								if (screen === current.screen) {
 									selected.slide = current.slide;
 									selected.question = current.question;
-								} else if (['kd', 'tt', 'vcnv', 'vd'].includes(screen) && prevScreen !== screen) {
+								} else if (['kd', 'tt', 'vcnv', 'vd'].includes(screen) && current.slide === 'end') {
 									selected.slide = 'start';
 									selected.question = 1;
 								}
@@ -679,40 +760,45 @@
 										setQuestion();
 									}}>{'<'}</button
 								>
-								<div class="flex">
-									<input
-										class="input input-md input-bordered w-32 text-2xl [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-										type="number"
-										min="1"
-										max={current.numberOfQues}
-										bind:value={selected.question}
-									/>
-									<div class="flex w-8 flex-col">
-										<button
-											class="btn btn-xs"
-											class:btn-disabled={selected.question === selected.numberOfQues}
-											on:click={() => (selected.question += 1)}
-										>
-											+
-										</button>
-										<button
-											class="btn btn-xs"
-											class:btn-disabled={selected.question <= 1}
-											on:click={() => (selected.question -= 1)}
-										>
-											-
-										</button>
+								{#if selected.question > selected.numberOfQues}
+									<div class="text-center text-4xl font-bold">ENDED</div>
+								{:else}
+									<div class="flex justify-center">
+										<input
+											class="input input-md input-bordered w-32 text-2xl [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+											type="number"
+											min="1"
+											max={current.numberOfQues}
+											bind:value={selected.question}
+										/>
+										<div class="flex w-8 flex-col">
+											<button
+												class="btn btn-xs"
+												class:btn-disabled={selected.question >= selected.numberOfQues}
+												on:click={() => (selected.question += 1)}
+											>
+												+
+											</button>
+											<button
+												class="btn btn-xs"
+												class:btn-disabled={selected.question <= 1}
+												on:click={() => (selected.question -= 1)}
+											>
+												-
+											</button>
+										</div>
 									</div>
-								</div>
+								{/if}
 
 								<button
 									class="btn"
-									class:btn-disabled={selected.question >= current.numberOfQues ||
+									class:btn-disabled={selected.question > current.numberOfQues ||
+										(selected.screen !== 'kd' && selected.question >= current.numberOfQues) ||
 										selected.screen !== current.screen}
 									on:click={() => {
 										selected.question += 1;
 										setQuestion();
-									}}>{'>'}</button
+									}}>{selected.question >= selected.numberOfQues ? 'END' : '>'}</button
 								>
 								<button
 									class="btn"
@@ -721,61 +807,105 @@
 									on:click={setQuestion}>Jump To Question</button
 								>
 							</div>
-							<div class="grid grid-cols-4 gap-4">
+							<div class="grid grid-cols-6 gap-4">
 								<button
 									class="btn"
-									class:btn-disabled={selected.screen !== current.screen}
+									class:btn-disabled={selected.screen !== 'vd'}
 									on:click={() => {
-										contestants.forEach(async (currentValue) => {
-											await pb.collection('users').update(currentValue.id, { ring: 0 });
-										});
-									}}>???????</button
+										if (confirm('Dat ngoi sao hi vong?')) {
+											changeStarState(true);
+											sendSoundRequest('vd_choose_star');
+										}
+									}}>NSHV</button
 								>
 								<button
 									class="btn"
 									on:click={() => {
-										// sendSoundRequest('kd_time');
-										setDisplayQuestion(true);
+										if (current.screen === 'kd') sendSoundRequest('kd_bg_music');
+										setDisplayQuestionStatus(true);
 									}}
 									>Display question
 								</button>
 								<button
 									class="btn"
+									on:click={() => {
+										sendSoundRequest(`media:${playMediaSource}`);
+									}}
+									>Play media
+								</button>
+								<button
+									class="btn"
 									class:btn-disabled={selected.screen === 'tt'}
 									on:click={() => {
-										selected.slide = `main_${current.screen}`;
-										// setScreen();
+										selected.slide = `main_${selected.screen}`;
 										setSlide();
 									}}
 									>Back to main
+								</button>
+								<button
+									class="btn"
+									class:btn-disabled={['vcnv', 'tt'].includes(selected.screen) ||
+										selected.question < selected.numberOfQues}
+									on:click={() => {
+										selected.slide = 'end_ts';
+										setSlide();
+									}}
+									>END SLIDE
 								</button>
 
 								<span class="flex items-center justify-center font-mono text-2xl font-semibold"
 									>{formatTime2(elapsed)}s</span
 								>
 							</div>
-							<div class="grid grid-cols-4 gap-4">
+							<div class="grid grid-cols-6 gap-4">
 								<button
 									class="btn"
+									class:btn-disabled={false}
 									on:click={() => {
-										// selected.question += 1;
-										// setQuestion();
-										sendSoundRequest(current.screen + '_correct');
+										if (current.screen === 'kd') {
+											clearContestantBell();
+											if (selected.question < current.numberOfQues) {
+												selected.question += 1;
+												setQuestion();
+											}
+										}
+										sendSoundRequest(selected.screen + '_correct');
 									}}>Đúng</button
 								>
 								<button
 									class="btn"
-									class:btn-disabled={elapsed > 0 || selected.screen !== current.screen}
+									class:btn-disabled={selected.screen !== current.screen}
 									on:click={() => {
-										sendSoundRequest('kd_time_3');
-										startTimer(timerSettings.get(current.screen) ?? 0);
-									}}>Start timer</button
+										if (current.screen === 'kd') sendSoundRequest('kd_time_3');
+										else
+											sendSoundRequest(
+												`${current.screen}_time${
+													selected.screen === 'vd'
+														? `_${timePreset[selectedContestantQuestionSet[selected.question - 1]]}`
+														: ''
+												}`
+											);
+
+										startTimer(
+											timerSettings.get(
+												current.screen +
+													(selected.screen === 'vd'
+														? `_${timePreset[selectedContestantQuestionSet[selected.question - 1]]}`
+														: '')
+											) ?? 0
+										);
+									}}>{elapsed > 0 ? 'Stop' : 'Start'} timer</button
 								>
 								<button
 									class="btn"
 									on:click={() => {
-										// selected.question += 1;
-										// setQuestion();
+										if (current.screen === 'kd') {
+											clearContestantBell();
+											if (selected.question < current.numberOfQues) {
+												selected.question += 1;
+												setQuestion();
+											}
+										}
 										sendSoundRequest(current.screen + '_wrong');
 									}}>Sai</button
 								>
@@ -785,46 +915,90 @@
 										sendSoundRequest('space');
 									}}>Dấu ...</button
 								>
+								<button
+									class="btn"
+									class:btn-disabled={!['vcnv', 'tt'].includes(selected.screen) ||
+										selected.screen !== current.screen}
+									on:click={() => {
+										selected.screen = `answers_` + selected.screen;
+										setScreen();
+									}}
+									>Go to answer
+								</button>
+								<button
+									class="btn"
+									class:btn-disabled={selected.screen !== 'vd'}
+									on:click={() => {
+										startTimer(5000);
+										sendSoundRequest('vd_time_5');
+									}}>5s Thi sinh con lai</button
+								>
 							</div>
 						{/if}
 
-						{#if selected.slide === 'main_kd'}
+						{#if selected.slide === 'main_kd' || selected.slide === 'main_vd'}
 							<div class="grid grid-cols-2 gap-x-4">
 								<button
 									class="btn"
 									on:click={() => {
-										selected.slide = 'ques_ts1';
+										if (selected.screen === 'vd') selected.slide = 'pre_ques_ts1';
+										else selected.slide = 'ques_ts1';
 										selected.question = 1;
 										setSlide();
-									}}>TS 1</button
+									}}>Thi sinh 1</button
 								>
 								<button
 									class="btn"
 									on:click={() => {
-										selected.slide = 'ques_ts2';
+										if (selected.screen === 'vd') selected.slide = 'pre_ques_ts2';
+										else selected.slide = 'ques_ts2';
 										selected.question = 1;
 										setSlide();
-									}}>TS 2</button
+									}}>Thi sinh 2</button
 								>
 							</div>
 							<div class="grid grid-cols-2 gap-x-4">
 								<button
 									class="btn"
 									on:click={() => {
-										selected.slide = 'ques_ts3';
+										if (selected.screen === 'vd') selected.slide = 'pre_ques_ts3';
+										else selected.slide = 'ques_ts3';
 										selected.question = 1;
 										setSlide();
-									}}>TS 3</button
+									}}>Thi sinh 3</button
 								>
 								<button
 									class="btn"
 									on:click={() => {
-										selected.slide = 'ques_ts4';
+										if (selected.screen === 'vd') selected.slide = 'pre_ques_ts4';
+										else selected.slide = 'ques_ts4';
 										selected.question = 1;
 										setSlide();
-									}}>TS 4</button
+									}}>Thi sinh 4</button
 								>
 							</div>
+							{#if selected.screen === 'kd'}
+								<button
+									class="btn"
+									on:click={() => {
+										selected.slide = 'test_bell';
+										setSlide();
+									}}
+									>Ques chung (Test chuong truoc)
+								</button>
+							{/if}
+						{/if}
+
+						{#if selected.slide === 'test_bell'}
+							<button
+								class="btn"
+								class:btn-disabled={selected.screen !== current.screen}
+								on:click={() => {
+									contestants.forEach(async (currentValue) => {
+										await pb.collection('users').update(currentValue.id, { ring: 0 });
+									});
+								}}>CLEAR CHUONG</button
+							>
 							<button
 								class="btn"
 								on:click={() => {
@@ -835,93 +1009,163 @@
 							>
 						{/if}
 
+						{#if selected.slide === 'end_ts'}
+							<button
+								class="btn"
+								class:btn-disabled={selected.screen === 'tt'}
+								on:click={() => {
+									selected.slide = `main_${current.screen}`;
+									// setScreen();
+									setSlide();
+								}}
+								>Back to main
+							</button>
+						{/if}
+
+						{#if selected.slide.startsWith('pre_ques')}
+							<div class="grid grid-cols-5 gap-4">
+								{#each [0, 1, 2] as questionInSet}
+									<div class="flex justify-between rounded-xl border px-4 py-2">
+										<span class="text-2xl font-black">{questionInSet + 1}</span>
+										{#each ['20', '30'] as questionPackage}
+											<label class="flex items-center gap-1">
+												<input
+													class="radio radio-lg"
+													type="radio"
+													name={`Ngo Bao Khang ${questionInSet}`}
+													value={questionPackage}
+													bind:group={selectedContestantQuestionSet[questionInSet]}
+												/>
+												<span class="text-2xl">{`${questionPackage}`}</span>
+											</label>
+										{/each}
+									</div>
+								{/each}
+								<button
+									class="btn"
+									on:click={() => {
+										setQuestionSet(selected.slide.slice(11));
+									}}>Set question set</button
+								>
+								<div class="flex items-center justify-center font-mono text-4xl">
+									{selectedContestantQuestionSet.join(' ')}
+								</div>
+							</div>
+							<div class="grid grid-cols-4 gap-4">
+								{#each [0, 1, 2] as questionOffset}
+									<div class="flex justify-between rounded-xl border px-4 py-2">
+										<span class="text-2xl font-black">{questionOffset + 1}</span>
+										{#each [1, 2, 3] as questionPackage}
+											<label class="flex items-center gap-1">
+												<input
+													class="radio"
+													type="radio"
+													name={`Ngo Bao Khang OFFSET ${questionOffset}`}
+													value={questionPackage}
+													bind:group={selectedContestantQuestionSetOffset[questionOffset]}
+												/>
+												<span class="text-2xl">{`${questionPackage}`}</span>
+											</label>
+										{/each}
+									</div>
+								{/each}
+								<div class="flex items-center justify-center font-mono text-4xl">
+									{selectedContestantQuestionSetOffset.join(' ')}
+								</div>
+							</div>
+							<button
+								class="btn"
+								on:click={() => {
+									selected.slide = selected.slide.slice(4);
+									selected.question = 1;
+									setSlide();
+								}}>To question set</button
+							>
+						{/if}
+
 						{#if selected.screen === 'vcnv'}
 							{#if selected.slide === 'main_vcnv'}
-								<!-- <div class="grid grid-cols-4">
-									{#each [1, 2, 3, 4] as i}
-										<div class="flex">
-											<button
-												class="btn btn-primary"
-												on:click={() => {
-													changeRowState(i, 'selected');
-													sendSoundRequest('vcnv_select_row');
-												}}>Select {i}</button
-											>
-											<button class="btn" on:click={() => changeRowState(i, '')}
-												>Unselect {i}</button
-											>
-										</div>
-									{/each}
-								</div> -->
-								<!-- <div class="grid grid-cols-5">
-									{#each [1, 2, 3, 4, 5] as i}
-										<button
-											class="btn"
-											on:click={() => {
-												selected.slide = 'ques';
-												selected.question = i;
-												setSlide();
-											}}>Go to {i}</button
-										>
-									{/each}
-								</div> -->
-								<!-- <div class="grid grid-cols-4"> -->
-								<!-- {#each [1, 2, 3, 4] as i} -->
-								<div class="flex gap-7">
-									<input class="input input-md" type="number" bind:value={num} />
+								<div class="grid grid-cols-7 gap-4">
+									<div class="col-span-2 flex gap-3">
+										{#each [1, 2, 3, 4] as item}
+											<label class="flex items-center gap-1">
+												<input
+													class="radio radio-lg"
+													type="radio"
+													name="Ngo Bao Khang"
+													value={item}
+													bind:group={selectedObstacleRow}
+												/>
+												<span class="text-2xl">{item}</span>
+											</label>
+										{/each}
+									</div>
 									<button
 										class="btn btn-success"
 										on:click={() => {
 											// sendSoundRequest('vcnv_show_row');
-											changeRowState(num, 'correct');
-											sendSoundRequest('vcnv_display_picture');
-										}}>Show {num}</button
+											if (confirm('ARE YOU SURE WANT TO SHOW THIS ANSWER?')) {
+												changeRowState(selectedObstacleRow, 'correct');
+												sendSoundRequest('vcnv_display_picture');
+											}
+										}}>Show {selectedObstacleRow}</button
 									>
-									<button class="btn btn-error" on:click={() => changeRowState(num, 'wrong')}
-										>Wrong {num}</button
+									<button
+										class="btn btn-error"
+										on:click={() => changeRowState(selectedObstacleRow, 'wrong')}
+										>Wrong {selectedObstacleRow}</button
 									>
 									<button
 										class="btn btn-primary"
 										on:click={() => {
-											changeRowState(num, 'selected');
+											changeRowState(selectedObstacleRow, 'selected');
 											sendSoundRequest('vcnv_select_row');
-										}}>Select {num}</button
+										}}>Select {selectedObstacleRow}</button
 									>
-									<button class="btn" on:click={() => changeRowState(num, '')}
-										>Unselect {num}</button
+									<button class="btn" on:click={() => changeRowState(selectedObstacleRow, '')}
+										>Unselect {selectedObstacleRow}</button
 									>
 									<button
 										class="btn"
 										on:click={() => {
-											selected.screen = 'kd';
-											selected.slide = `ques_ts1`;
-											setScreen();
-										}}>Go to ques</button
-									>
+											selected.slide = `ques`;
+											selected.question = selectedObstacleRow;
+											setSlide();
+										}}
+										>Go to ->
+									</button>
 								</div>
-								<!-- {/each} -->
-								<!-- </div> -->
-								<div>
+								<div class="grid grid-cols-4 gap-4">
 									<button
 										class="btn"
 										on:click={() => {
-											changeObstacleDisplayState(true);
+											changeObstacleStartState(true);
 											sendSoundRequest('vcnv_display');
 										}}>Start</button
 									>
 									<button
 										class="btn"
 										on:click={() => {
-											changeObstacleDisplayState(false);
+											changeObstacleStartState(false);
 										}}>UnStart</button
 									>
-									<!-- <button
+									<button
 										class="btn"
 										on:click={() => {
 											selected.slide = 'image_vcnv';
 											setSlide();
 										}}>Go to image</button
-									> -->
+									>
+									<button
+										class="btn"
+										on:click={() => {
+											selected.slide = `ques`;
+											selected.question = 5;
+											setSlide();
+										}}>Go to center ques</button
+									>
+								</div>
+								<div class="grid grid-cols-4 gap-4">
 									<button
 										class="btn"
 										on:click={() => {
@@ -942,22 +1186,45 @@
 										class="btn"
 										on:click={() => {
 											startTimer(15000);
-											sendSoundRequest('vcnv_time');
+											sendSoundRequest('vcnv_time_cnv');
 										}}>Start timer</button
+									>
+									<span class="flex items-center justify-center font-mono text-2xl font-semibold"
+										>{formatTime2(elapsed)}s</span
 									>
 								</div>
 							{/if}
 							{#if selected.slide === 'image_vcnv'}
-								<div class="grid grid-cols-5">
-									{#each [1, 2, 3, 4, 5] as i}
-										<button
-											class="btn"
-											on:click={() => {
-												changeImageState(i, true);
+								<div class="grid grid-cols-4">
+									<div class="col-span-2 flex gap-3">
+										{#each [1, 2, 3, 4, 'center'] as item}
+											<label class="flex items-center gap-1">
+												<input
+													class="radio radio-lg"
+													type="radio"
+													name="Ngo Bao Khang"
+													value={item}
+													bind:group={selectedObstacleImage}
+												/>
+												<span class="text-2xl">{item}</span>
+											</label>
+										{/each}
+									</div>
+									<button
+										class="btn"
+										on:click={() => {
+											if (confirm('ARE YOU SURE WANT TO OPEN THIS IMAGE CORNER?')) {
+												changeImageState(selectedObstacleImage, true);
 												sendSoundRequest('vcnv_display_picture');
-											}}>Show {i}</button
-										>
-									{/each}
+											}
+										}}>Show {selectedObstacleImage}</button
+									>
+									<button
+										class="btn"
+										on:click={() => {
+											changeImageState(selectedObstacleImage, false);
+										}}>Unshow {selectedObstacleImage}</button
+									>
 								</div>
 								<button
 									class="btn"
@@ -969,9 +1236,32 @@
 								</button>
 							{/if}
 						{/if}
-					{/if}
-					{#if selected.slide === 'answers'}
-						<div>ASD</div>
+					{:else if selected.screen.startsWith('answers')}
+						<div class="grid grid-cols-2 gap-4">
+							<button
+								class="btn"
+								on:click={() => {
+									sendSoundRequest(selected.screen.slice(8) + '_correct');
+								}}>Đúng</button
+							>
+							<button
+								class="btn"
+								on:click={() => {
+									sendSoundRequest(selected.screen.slice(8) + '_wrong');
+								}}>Sai</button
+							>
+						</div>
+						<button
+							class="btn"
+							class:btn-disabled={selected.screen !== current.screen}
+							on:click={() => {
+								if (selected.screen === 'answers_tt') selected.question++;
+								else selected.slide = 'main_vcnv';
+								selected.screen = selected.screen.slice(8);
+								setScreen();
+							}}
+							>Back to ques
+						</button>
 					{/if}
 				</div>
 			</div>

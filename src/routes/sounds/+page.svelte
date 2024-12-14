@@ -19,45 +19,52 @@
 	];
 	let selectedSound: string;
 
-	let sound: string = '';
+	// let sound: string = '';
 
-	let audio: Howl;
+	let timerAudioList: Howl[] = [];
+	let backgroundAudioSound: Howl;
 
-	let unsub: () => void;
 	onMount(() => {
-		// const displayStatus = await pb.collection('display_status').getOne('4T-DISPLAYSTATE');
-		// sound = displayStatus.sound;
-		// unsub = await pb
-		// 	.collection('display_status')
-		// 	.subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
-		// 		if (action === 'update') {
-		// 			if (sound !== '' || sound !== record.sound) {
-		// 				sound = record.sound;
-		// 				// playSound(record.sound);
-		// 				// audio.stop();
-		// 				audio = new Howl({
-		// 					src: ['src/lib/sound/' + (soundsCollection.get(sound) ?? '')],
-		// 					volume: 1
-		// 				});
-		// 				// audio.once('load', () => {
-		// 				audio.play();
-		// 				// });
-		// 				// audio.on('end', async () => {
-		// 				// 	await pb.collection('display_status').update('4T-DISPLAYSTATE', {
-		// 				// 		sound: ''
-		// 				// 	});
-		// 				// });
-		// 			}
-		// 		}
-		// 	});
-		socket.on('sound', (sound) => {
-			playSound(sound);
+		socket.on('sound', (sound: string) => {
+			if (sound === 'kd_bg_music') {
+				backgroundAudioSound = new Howl({
+					src: ['src/lib/sound/' + (soundsCollection.get(sound) ?? '')],
+					volume: 1,
+					loop: true
+				});
+				backgroundAudioSound.play();
+			} else if (sound.startsWith('stop')) {
+				if (sound.endsWith('bg_music')) {
+					backgroundAudioSound.fade(1, 0, 700);
+				} else if (sound.endsWith('timer')) {
+					timerAudioList.at(-1)?.stop();
+					timerAudioList.at(-2)?.stop();
+				}
+			} else if (sound.startsWith('media:')) {
+				const media = new Howl({
+					src: [sound.slice(6)],
+					volume: 1.5
+				});
+				media.play();
+			} else if (sound.includes('time')) {
+				timerAudioList = [
+					...timerAudioList,
+					new Howl({
+						src: ['src/lib/sound/' + (soundsCollection.get(sound) ?? '')],
+						volume: 1
+					})
+				];
+				timerAudioList.at(-1)?.play();
+				timerAudioList.at(-2)?.stop();
+				if (timerAudioList.length > 2) timerAudioList.splice(0, 1);
+			} else {
+				playSound(sound);
+			}
+			console.log(sound);
 		});
 	});
 
-	onDestroy(() => {
-		unsub?.();
-	});
+	onDestroy(() => {});
 </script>
 
 {#if !soundAllowed}
@@ -66,6 +73,8 @@
 			class="btn"
 			on:click={() => {
 				soundAllowed = true;
+				socket.emit('message', 'joinSound');
+				console.log('JOINED SOUND ROOM');
 			}}>CLICK TO ALLOW SOUNDS</button
 		>
 	</div>

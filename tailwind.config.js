@@ -15,7 +15,8 @@ export default {
 				'header-text': ['SVN-HEAD'],
 				'number-display': ['SVN-TV'],
 				'game-display': ['HANZEL'],
-				futuristic: ['Tektur', 'sans-serif']
+				futuristic: ['Tektur', 'sans-serif'],
+				header: ['Inter', 'sans-serif']
 			},
 			animation: {
 				wiggle: 'wiggle 0.5s ease-in-out infinite'

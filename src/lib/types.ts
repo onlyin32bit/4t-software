@@ -4,3 +4,8 @@ export type DisplayObject = {
 	question: number;
 	numberOfQues: number;
 };
+
+export type QuestionObject = {
+	content: string;
+	type: 'text' | 'audio' | 'image';
+};

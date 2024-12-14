@@ -78,8 +78,12 @@ export async function createLogMessage(from: string, type: string, content: stri
 // 	return undefined;
 // }
 
-export async function sendSoundRequest(sound: string) {
+export function sendSoundRequest(sound: string) {
 	socket.emit('soundReq', sound);
+}
+
+export function sendTimerRequest(time: number) {
+	socket.emit('timeReq', time);
 }
 
 export function formatTime2(time: number) {
@@ -105,13 +109,15 @@ export const dictionary = new Map([
 	['tk', 'Tứ Kết'],
 	['bk', 'Bán Kết'],
 	['ck', 'Chung Kết'],
-	['main', 'Màn hình chính'],
+	['', 'Idle'],
+	['main', 'Main'],
 	['kd', 'Khởi động'],
 	['tt', 'Tăng tốc'],
 	['vcnv', 'VCNV'],
 	['vd', 'Về đích'],
-	['answers', 'Đáp án thí sinh'],
-	['scores', 'Điểm thí sinh'],
+	['answers_tt', 'Ans TT'],
+	['answers_vcnv', 'Ans VCNV'],
+	['scores', 'Điểm TS'],
 	['extra', 'Bổ sung'],
 	['start', 'Bắt đầu'],
 	['rule', 'Luật chơi'],
@@ -125,9 +131,14 @@ export const dictionary = new Map([
 	['ques_chung', 'Cau hoi chung'],
 	['ques_extra', 'Cau hoi phu'],
 	['ques_ts1', 'Thi sinh 1'],
+	['pre_ques_ts1', 'Chon goi cau hoi tsinh 1'],
 	['ques_ts2', 'Thi sinh 2'],
+	['pre_ques_ts2', 'Chon goi cau hoi tsinh 2'],
 	['ques_ts3', 'Thi sinh 3'],
+	['pre_ques_ts3', 'Chon goi cau hoi tsinh 3'],
 	['ques_ts4', 'Thi sinh 4'],
+	['pre_ques_ts4', 'Chon goi cau hoi tsinh 4'],
+	['end_ts', 'Kết thúc phần thi của tsinh'],
 	['end', 'Kết thúc'],
 	[undefined, 'Loading'],
 	[null, 'Loading']
@@ -164,12 +175,14 @@ export const timerSettings: Map<string, number> = new Map([
 export const soundsCollection: Map<string, string> = new Map([
 	['tong_ket_diem', 'main/PointSummary.mp3'],
 	['space', 'main/Space.mp3'],
+	['start', 'main/Start.mp3'],
 
 	['kd_start', 'kd/StartRound.mp3'],
 	['kd_start_2', 'kd/StartTurn.mp3'],
 	['kd_start_question', 'kd/PreMainTime.mp3'],
-	['kd_time', 'kd/MainTime.mp3'],
+	['kd_bg_music', 'kd/MainTime.mp3'],
 	['kd_time_10', 'tt/10Seconds.mp3'],
+	['kd_time_3', 'kd/3Seconds.m4a'],
 	['kd_correct', 'kd/CorrectAnswer.mpeg'],
 	['kd_wrong', 'kd/WrongAnswer.mp3'],
 	['kd_end', 'kd/FinishTurn.mp3'],
@@ -180,7 +193,7 @@ export const soundsCollection: Map<string, string> = new Map([
 	['vcnv_select_row', 'vcnv/RowChoose.mp3'],
 	['vcnv_row_question', 'vcnv/RowQuestShow.mp3'],
 	['vcnv_time', 'vcnv/15Seconds.mp3'],
-	['vcnv_show_row', 'vcnv/AnswersShowing.mp3'], //sai nhac
+	['vcnv_show_answer', 'vcnv/AnswersShowing.ogg'], //sai nhac
 	['vcnv_display_picture', 'vcnv/PictureReveal.mp3'],
 	['vcnv_end', 'vd/FinishRound.mp3'],
 	['vcnv_correct_obstacle', 'vcnv/CorrectObstacle.mp3'],
@@ -194,11 +207,13 @@ export const soundsCollection: Map<string, string> = new Map([
 	['tt_end', 'vd/FinishRound.mp3'],
 	['tt_show_answer', 'tt/AnswersShowing.ogg'],
 	['tt_correct', 'tt/Correct.mp3'],
-	['tt_wrong', 'tt/AnswersShowing.ogg'], //sai nhac
+	['tt_wrong', 'tt/Wrong.mp3'], //sai nhac
 
 	['vd_start', 'vd/StartRound.mp3'],
 	['vd_start_ts', 'vd/StartTurn.mp3'],
-	['vd_choose_package', 'vd/ChoiceChosen.mp3'],
+	['vd_show_package', 'vd/PackageShow.mp3'],
+	['vd_choose_choice', 'vd/ChoiceChosen.mp3'],
+	['vd_choose_package', 'vd/PackageChoose.mp3'],
 	['vd_time_5', 'vd/5Seconds.mp3'],
 	['vd_time_15', 'vd/15Seconds.mp3'],
 	['vd_time_20', 'vd/20Seconds.mp3'],

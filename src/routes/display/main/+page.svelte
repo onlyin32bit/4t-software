@@ -39,11 +39,11 @@
 		alt="Logo THPT Chuyen Ben Tre"
 	/>
 	{#if settings.game}
-		<h1 class="text-[14vh] font-semibold uppercase text-blue-100" in:scale>
+		<h1 class="text-[14vh] font-bold uppercase text-blue-100" in:scale>
 			{`${dictionary.get(settings.game) ?? '...'} ${settings.game === 'ck' ? '' : settings.game_number}`}
 		</h1>
 	{/if}
-	<table class="scale-95">
+	<table class="scale-95 font-medium">
 		<tbody>
 			{#each contestants as contestant, i}
 				<div in:fade={{ delay: (i + 1) * 100 }}>

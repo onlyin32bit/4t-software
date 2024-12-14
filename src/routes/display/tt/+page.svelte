@@ -11,7 +11,7 @@
 	let questions: string[] = [];
 	let questionFile: string[] = [];
 
-	let scr_slide: string = 'start';
+	let scr_slide: string = '';
 	let ques: number = 1;
 	let displayQuestion: boolean = false;
 
@@ -30,41 +30,42 @@
 			pb.files.getUrl(data, data[4])
 		];
 
-		unsub = [
-			await pb.collection('display_status').subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
-				if (action === 'update') {
-					if (record.screen !== 'tt') goto('/display/' + record.screen);
+		// unsub = [
+		await pb.collection('display_status').subscribe('*', ({ action, record }) => {
+			if (action === 'update') {
+				if (record.screen !== 'tt') goto('/display/' + record.screen);
+				else {
 					if (scr_slide !== record.slide) scr_slide = record.slide;
 					if (ques !== record.ques) ques = record.ques;
-					displayQuestion = record.displayQuestion;
+					if (displayQuestion !== record.displayQuestion) displayQuestion = record.displayQuestion;
 				}
-			})
-		];
+				console.log('ASDSAFAGEGAVDSADFASD');
+			}
+		});
+		// ];
 	});
-	onDestroy(() => unsub.forEach((currentValue) => currentValue?.()));
+	onDestroy(() => pb.collection('display_status').unsubscribe('*'));
 </script>
 
 <svelte:head>
 	<title>tt/{scr_slide}/{ques}</title>
 </svelte:head>
 
-<div class="pointer-events-none h-screen w-screen select-none bg-black text-white">
-	{#if scr_slide === 'start'}
-		<ScreenStart />
-	{:else if scr_slide === 'rule'}
-		<ScreenRule screen="tt" />
-	{:else if scr_slide === 'intro'}
-		<ScreenIntro screen="tt" />
-	{:else if scr_slide === 'ques'}
-		<ScreenQuestionTT
-			questionNumber={ques}
-			questionContent={questions[ques - 1]}
-			questionFile={questionFile[ques - 1]}
-			{displayQuestion}
-		/>
-		<div class="fixed text-[10vh]">{scr_slide} {ques}</div>
-	{:else if scr_slide === 'end'}
-		<ScreenEnd />
-	{/if}
-</div>
+{#if scr_slide === 'start'}
+	<ScreenStart screen="tt" />
+{:else if scr_slide === 'rule'}
+	<ScreenRule screen="tt" />
+{:else if scr_slide === 'intro'}
+	<ScreenIntro screen="tt" />
+{:else if scr_slide === 'ques'}
+	<ScreenQuestionTT
+		questionNumber={ques}
+		questionContent={questions[ques - 1]}
+		questionFile={questionFile[ques - 1]}
+		{displayQuestion}
+	/>
+	<div class="fixed">{questionFile[ques - 1]} {scr_slide}</div>
+{:else if scr_slide === 'end'}
+	<ScreenEnd />
+{/if}
 ``

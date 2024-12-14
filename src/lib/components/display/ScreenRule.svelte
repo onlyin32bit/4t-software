@@ -62,7 +62,7 @@
 	]);
 
 	onMount(() => {
-		if (screen === 'kd') sendSoundRequest('kd_start');
+		// if (screen === 'kd') sendSoundRequest('kd_start');
 	});
 </script>
 
@@ -73,13 +73,13 @@
 >
 	<h1
 		class="fixed left-0 top-0 z-50 w-screen text-center font-header-text text-[8vh] text-yellow-300"
-		in:typewriter={{ delay: 1000, speed: 1 }}
+		in:fly={{ delay: 1000, y: -100 }}
 		out:scale={{ duration: 1000 }}
 	>
 		{`${rule.get(screen)?.fullname}`}
 	</h1>
 	<div
-		class="fixed left-1/2 top-[17vh] z-50 w-[73vw] -translate-x-1/2 text-left font-futuristic text-white"
+		class="fixed left-1/2 top-[17vh] z-50 w-[73vw] -translate-x-1/2 text-left font-medium text-white"
 		style={`font-size: ${rule.get(screen)?.fontSize}vh;`}
 	>
 		<p

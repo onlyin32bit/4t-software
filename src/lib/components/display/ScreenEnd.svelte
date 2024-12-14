@@ -1,11 +1,14 @@
 <script lang="ts">
-	import { scale } from 'svelte/transition';
+	import { scale, slide } from 'svelte/transition';
 	import logo from '$lib/image/4t.png';
 	import { sendSoundRequest } from '$lib/utils';
 	import { onMount } from 'svelte';
 
+	export let isContestantEnd: boolean = false;
+
 	onMount(() => {
-		sendSoundRequest('vd_end');
+		if (isContestantEnd) sendSoundRequest('kd_end');
+		else sendSoundRequest('vd_end');
 	});
 </script>
 
@@ -14,6 +17,6 @@
 		class="center-element fixed h-[50vh]"
 		src={logo}
 		alt="Logo 4T"
-		in:scale={{ duration: 2000 }}
+		in:slide={{ duration: 4000 }}
 	/>
 </div>

@@ -29,15 +29,21 @@
 
 <!-- main display -->
 <div class="h-screen w-screen bg-bg-1 bg-cover bg-no-repeat text-[6vh] text-white">
-	<h1 class="fixed left-1/2 top-[15vh] -translate-x-1/2 text-[12vh] font-extrabold">BẢNG ĐIỂM</h1>
+	<img class="fixed left-[5vw] top-[12vh] h-[15vh]" src="/src/lib/image/4t.png" alt="Logo 4T" />
+	<img
+		class="fixed right-[5vw] top-[12vh] h-[18vh]"
+		src="/src/lib/image/logo-cbt.png"
+		alt="Logo THPT Chuyen Ben Tre"
+	/>
+	<h1 class="fixed left-1/2 top-[12vh] -translate-x-1/2 text-[12vh] font-extrabold">BẢNG ĐIỂM</h1>
 	<div class="fixed left-1/2 top-[42vh] flex -translate-x-1/2 gap-[3vw]">
 		{#each contestants as contestant, i}
 			<div
-				class="flex w-[22vw] flex-col items-center justify-center border-[0.8vh] border-orange-400 bg-white text-blue-800"
+				class="flex w-[22vw] flex-col items-center justify-center border-[0.8vh] border-orange-400 bg-white text-[5.5vh] text-blue-800"
 				in:scale={{ delay: i * 100 }}
 			>
-				<h1 class="w-full bg-yellow-300 text-center font-semibold">{contestant.name}</h1>
-				<div class="text-[18vh] font-bold" in:fade={{ duration: 1000 }}>
+				<h1 class="w-full bg-yellow-300 text-center font-bold">{contestant.name}</h1>
+				<div class="text-[18vh] font-black" in:fade={{ duration: 1000 }}>
 					{contestant.score}
 				</div>
 			</div>
