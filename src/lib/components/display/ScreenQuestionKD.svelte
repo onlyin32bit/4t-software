@@ -18,13 +18,15 @@
 		sendSoundRequest('kd_start_2');
 		setTimeout(() => {
 			sendSoundRequest('kd_start_question');
-		}, 6500);
+		}, 4500);
 
 		await pb.collection('display_status').subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
 			if (action === 'update') {
 				if (record.timer === -1) {
-					time.set(0, { duration: 0 });
-					timeStatus = false;
+					if ($time !== 3) {
+						time.set(0, { duration: 0 });
+						timeStatus = false;
+					}
 				} else {
 					time.set(0, { duration: 0 });
 					timeStatus = true;
@@ -48,23 +50,23 @@
 		displayQuestion = false;
 		setTimeout(() => {
 			displayQuestion = true;
-		}, 200);
+		}, 500);
 		timeStatus = false;
 		time.set(0, { duration: 0 });
-		fontSize = 3;
+		fontSize = 6;
 	}
 
 	let containerHeight: number;
 	let textHeight: number;
-	let fontSize: number = 3;
+	let fontSize: number = 6;
 
 	function calcPercent(x: number, y: number): number {
 		return (x / y) * 100;
 	}
 
-	$: if (calcPercent(textHeight, containerHeight) < 45) {
-		fontSize += 1.2;
-	} else if (calcPercent(textHeight, containerHeight) > 65) {
+	$: if (calcPercent(textHeight, containerHeight) < 50) {
+		fontSize += 0.2;
+	} else if (calcPercent(textHeight, containerHeight) > 80) {
 		fontSize -= 0.5;
 	}
 </script>
@@ -84,7 +86,7 @@
 		<div
 			class="absolute left-[4vw] top-[-1vh] flex h-[10vh] w-[8vw] items-center justify-center bg-white font-number-display text-[8vh] font-extrabold text-black"
 			style="clip-path: polygon(100% 0, 100% 70%, 80% 100%, 0 100%, 0 0);"
-			in:slide|local={{ delay: 6500, duration: 1200 }}
+			in:slide|local={{ delay: 4500, duration: 1200 }}
 			class:invisible={!questionContent}
 		>
 			{questionNumber}
@@ -126,15 +128,15 @@
 		{/each}
 	</div>
 	<div
-		class="fixed bottom-[12.5vh] right-[2.5vw] h-[21.5vh] w-[17vw] rounded-[1vh] bg-cover bg-no-repeat backdrop-blur"
+		class="fixed bottom-[12.5vh] right-[2vw] h-[21.5vh] w-[18vw] rounded-[1vh] bg-cover bg-no-repeat backdrop-blur"
 		style={`border: 0.7vh solid #6EB0ED; filter: drop-shadow(8px 28px 32px #335); background: conic-gradient(red, ${$time / 3}turn, rgba(256,256,256,0.2), ${$time / 3 + 0.05}turn, rgba(256,256,256,0.2));`}
 		in:scale={{ duration: 3000 }}
 	>
 		<div
-			class="center-element absolute flex h-[18vh] w-[15vw] items-center justify-center rounded-[1vh] bg-gradient-to-tr from-[#093278] to-[#093278] text-[13vh] font-bold"
+			class="center-element absolute flex h-[18vh] w-[16vw] items-center justify-center rounded-[1vh] bg-gradient-to-tr from-[#093278] to-[#093278] text-[13vh] font-bold"
 		>
 			{timeStatus ? (3 - $time).toFixed(0) : ''}
 		</div>
 	</div>
-	<div class="fixed left-0 top-0 text-4xl font-black">{questionFile}</div>
+	<!-- <div class="fixed left-0 top-0 text-4xl font-black">{questionFile}</div> -->
 </div>

@@ -15,6 +15,7 @@
 	export let starStatus: boolean = false;
 	export let contestants: RecordModel[] = [];
 	export let currentContestantTurn: number = -1;
+	export let currentRingedContestant: number = -1;
 
 	const timePreset: { [key: string]: number } = {
 		20: 15,
@@ -24,26 +25,48 @@
 	onMount(async () => {
 		sendSoundRequest('vd_choose_package');
 
-		await pb.collection('display_status').subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
-			if (action === 'update') {
-				if (record.timer === -1) {
-					time.set(0, { duration: 0 });
-					timeStatus = false;
-				} else if (record.timer === 5000) {
-					time.set(0, { duration: 0 });
-					timer(5);
-				} else {
-					time.set(0, { duration: 0 });
-					timeStatus = true;
-					timer(timePreset[questionScore]);
+		await pb
+			.collection('display_status')
+			.subscribe('4T-DISPLAYSTATE', async ({ action, record }) => {
+				if (action === 'update') {
+					if (record.timer === -1) {
+						if (!displayQuestion) {
+							timeStatus = false;
+							time.set(0, { duration: 0 });
+						}
+					} else if (record.timer === 5) {
+						for (let time = 0; time < 2; time++) {
+							for (let index = 0; index < 4; index++) {
+								if (currentContestantTurn !== index) {
+									if (currentRingedContestant > -1) {
+										currentHightlight = currentRingedContestant;
+										await new Promise((resolve) => setTimeout(resolve, 1500));
+										console.log('asdadsdads');
+
+										currentHightlight = -1;
+										break;
+									} else {
+										currentHightlight = index;
+										await new Promise((resolve) => setTimeout(resolve, 833));
+									}
+								}
+							}
+							currentHightlight = -1;
+						}
+					} else {
+						time.set(0, { duration: 0 });
+						timeStatus = true;
+						timer(timePreset[questionScore]);
+					}
 				}
-			}
-		});
+			});
 	});
 	onDestroy(() => pb.collection('display_status').unsubscribe('4T-DISPLAYSTATE'));
 
 	let time = tweened(0, { duration: 0 });
 	let timeStatus: boolean = false;
+	// let fiveSecStatus: boolean = false;
+	let currentHightlight: number = -1;
 
 	async function timer(settedTime: number) {
 		time.set(settedTime, { duration: settedTime * 1000 });
@@ -52,6 +75,8 @@
 	$: if (questionNumber > 1) {
 		displayQuestion = false;
 		timeStatus = false;
+		// fiveSecStatus = false;
+		fontSize = 6;
 		time.set(0, { duration: 0 });
 	}
 
@@ -62,16 +87,16 @@
 
 	let containerHeight: number;
 	let textHeight: number;
-	let fontSize: number = 3;
+	let fontSize: number = 6;
 
 	function calcPercent(x: number, y: number): number {
 		return (x / y) * 100;
 	}
 
 	$: if (calcPercent(textHeight, containerHeight) < 50) {
-		fontSize += 0.1;
-	} else if (calcPercent(textHeight, containerHeight) > 90) {
-		fontSize -= 0.1;
+		fontSize += 0.2;
+	} else if (calcPercent(textHeight, containerHeight) > 80) {
+		fontSize -= 0.5;
 	}
 </script>
 
@@ -104,25 +129,29 @@
 	</div>
 
 	<div
-		class="fixed right-[2vw] top-[28vh] space-y-[3vh] text-[4vh] font-medium"
+		class="fixed right-[2vw] top-[26vh] space-y-[3vh] text-[4vh] font-semibold"
 		in:fade={{ duration: 1000 }}
 	>
-		{#each contestants as contestant, i}
-			{#if i !== currentContestantTurn}
+		{#each contestants as { name, ring }, contestantIndex}
+			{#if contestantIndex !== currentContestantTurn}
 				<div
-					class="flex w-[18vw] items-center justify-between bg-gradient-to-tr from-[#093278] to-[#093278] px-[1vw]"
-					style={`border: 0.5vh solid #6EB0ED; filter: drop-shadow(8px 8px 17px #335) brightness(${contestant.ring > 0 || i === currentContestantTurn ? '1.0' : '0.4'});`}
+					style={`filter: drop-shadow(8px 8px 17px #335); ${currentHightlight === contestantIndex ? 'outline: 0.7vh solid #fff; box-shadow: 0 0 1vh 1vh #fff' : ''}`}
 				>
-					<div>{contestant.name}</div>
+					<div
+						class="flex w-[18vw] items-center justify-between bg-gradient-to-tr from-[#093278] to-[#093278] px-[1vw]"
+						style={`border: 0.6vh solid #6EB0ED; filter: brightness(${ring > 0 || contestantIndex === currentContestantTurn ? '1.0' : '0.3'}); `}
+					>
+						<div>{name}</div>
+					</div>
 				</div>
 			{/if}
 		{/each}
 	</div>
 
-	<div class="fixed bottom-[12.5vh] right-[2vw] space-y-[1vh]" in:scale={{ duration: 3000 }}>
+	<div class="fixed bottom-[12.5vh] right-[2vw] space-y-[2vh]" in:scale={{ duration: 3000 }}>
 		<div
-			class="flex h-[8vh] w-[18vw] items-center justify-center rounded-[1vh] bg-gradient-to-tr from-[#093278] to-[#093278] text-[4.5vh] font-bold"
-			style={`border: 0.7vh solid #${starStatus ? 'ff0' : '6EB0ED'}; filter: drop-shadow(8px 28px 32px #335);`}
+			class="flex h-[8vh] w-[18vw] items-center justify-center rounded-[1vh] bg-gradient-to-tr from-[#093278] to-[#093278] text-[4.5vh] font-bold transition-colors duration-500"
+			style={`border: 0.7vh solid #${starStatus ? 'ff5' : '6EB0ED'}; filter: drop-shadow(8px 28px 32px #335);`}
 		>
 			{`Câu ${questionScore} điểm`}
 		</div>
@@ -133,17 +162,26 @@
 			<div
 				class="center-element absolute flex h-[18vh] w-[16vw] items-center justify-center rounded-[1vh] bg-gradient-to-tr from-[#093278] to-[#093278] text-[14vh] font-bold"
 			>
-				{timeStatus ? (timePreset[questionScore] - $time).toFixed(0) : displayQuestion ? '0' : ''}
+				{timeStatus
+					? (timePreset[questionScore] - $time).toFixed(0)
+					: displayQuestion
+						? timePreset[questionScore]
+						: ''}
 			</div>
-			<!-- <div
-				class="center-element absolute flex h-[18vh] w-[16vw] items-center justify-center rounded-[1vh] bg-gradient-to-tr from-[#093278] to-[#093278] text-[13vh] font-bold"
-			>
-				{timeStatus ? (timePreset[questionScore] - $time).toFixed(0) : ''}
-			</div> -->
 		</div>
 	</div>
 	{#if starStatus}
-		<div class="fixed h-[10vh] w-[10vh] bg-yellow-300"></div>
+		<img
+			class="fixed right-[18vw] top-[-5vh] h-[47vh]"
+			src="/src/lib/image/stars/Star_4T_1.gif"
+			alt="Star"
+			in:scale
+		/>
 	{/if}
-	<div class="fixed left-0 top-0 text-4xl font-black">{questionFile}</div>
+	<!-- <div class="fixed left-0 top-0 text-4xl font-black">
+		{questionFile}
+		{timeStatus}
+		{displayQuestion}
+		{currentRingedContestant}
+	</div> -->
 </div>

@@ -14,7 +14,7 @@
 				content: `	Phần thi được chia thành 2 lượt: lượt riêng và lượt chung.
 	Trong lượt riêng, mỗi thí sinh trả lời 10 câu hỏi. Thời gian trả lời cho mỗi câu hỏi là 3 giây từ lúc MC đọc xong câu hỏi. Mỗi câu trả lời đúng được 10 điểm, trả lời sai không bị trừ điểm.
 	Trong lượt chung, các thí sinh trả lời 12 câu hỏi trong thời gian không giới hạn. Thí sinh giành quyền trả lời bằng cách bấm chuông. Thí sinh có tối đa 3 giây tính từ lúc giành được quyền trả lời để đưa ra đáp án. Mỗi câu trả lời đúng được 10 điểm, trả lời sai hoặc bấm chuông mà không có câu trả lời trong 3 giây sẽ bị trừ 5 điểm. Sau 3 giây tính từ thời điểm MC đọc xong câu hỏi, nếu không có thí sinh nào giành quyền trả lời, câu hỏi đó sẽ bị bỏ qua.`,
-				fontSize: 4.12
+				fontSize: 4.3
 			}
 		],
 		[
@@ -27,8 +27,9 @@
 • Thí sinh trả lời đúng và nhanh thứ 3 được 20 điểm.
 • Thí sinh trả lời đúng và nhanh thứ 4 được 10 điểm.
 		Phần thi sẽ có 4 câu hỏi:
+• 1 câu hỏi suy luận, tư duy nhanh.
 • 1 câu hỏi IQ-Logic bao gồm các dạng: Tìm số thích hợp điền vào chỗ trống, tìm hình khác nhất, tìm hình còn thiếu, giải mật mã,…
-• 2 câu hỏi dữ kiện: các dữ kiện sẽ lần lượt xuất hiện với độ khó giảm dần. Dựa vào đó, thí sinh sẽ trả lời các câu hỏi như: Đây là ai? Đây là địa danh nào? Đây là gì?...
+• 1 câu hỏi dữ kiện: các dữ kiện sẽ lần lượt xuất hiện với độ khó giảm dần. Thí sinh sẽ trả lời các câu hỏi như: Đây là ai? Đây là gì?...
 • 1 câu hỏi sắp xếp bao gồm ghép nối các dữ kiện theo từng cặp hoặc sắp xếp theo một thứ tự nhất định.`,
 				fontSize: 3.6
 			}
@@ -46,7 +47,7 @@
 		•  Trả lời đúng CNV trong 4 từ hàng ngang được 30 điểm.
 		•  Trả lời đúng CNV ở câu hỏi gắn với ô trung tâm được 20 điểm.
 	Nếu trả lời sai CNV thí sinh sẽ bị loại khỏi phần chơi này.`,
-				fontSize: 3.2
+				fontSize: 3.28
 			}
 		],
 		[
@@ -72,14 +73,14 @@
 	out:scale={{ duration: 1000 }}
 >
 	<h1
-		class="fixed left-0 top-0 z-50 w-screen text-center font-header-text text-[8vh] text-yellow-300"
+		class="fixed left-0 top-0 z-50 w-screen text-center font-header-text text-[8vh] text-white"
 		in:fly={{ delay: 1000, y: -100 }}
 		out:scale={{ duration: 1000 }}
 	>
 		{`${rule.get(screen)?.fullname}`}
 	</h1>
 	<div
-		class="fixed left-1/2 top-[17vh] z-50 w-[73vw] -translate-x-1/2 text-left font-medium text-white"
+		class="fixed left-1/2 top-[17vh] z-50 w-[73vw] -translate-x-1/2 text-left font-header font-medium text-white"
 		style={`font-size: ${rule.get(screen)?.fontSize}vh;`}
 	>
 		<p

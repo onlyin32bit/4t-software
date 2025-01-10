@@ -28,13 +28,16 @@ export function getCurrentTime() {
 export function getScreenStats(e: DisplayObject) {
 	return (
 		dictionary.get(e.screen) +
-		(e.screen === 'answers' || e.screen === 'main' || e.screen === 'scores'
+		(e.screen.startsWith('answers') ||
+		e.screen === 'main' ||
+		e.screen === 'scores' ||
+		e.screen === 'logo'
 			? ''
 			: ' / ' + dictionary.get(e.slide)) +
-		(e.screen === 'answers' || e.screen === 'main' || e.screen === 'scores'
+		(e.screen.startsWith('answers') || e.screen === 'main' || e.screen === 'scores'
 			? ''
 			: e.slide.startsWith('ques')
-				? ' / Câu số ' + e.question + '/' + e.numberOfQues
+				? ' / Câu số ' + e.question + '/' + e.numberOfQuestion
 				: '')
 	);
 }
@@ -56,27 +59,6 @@ export async function createLogMessage(from: string, type: string, content: stri
 	};
 	await pb.collection('logs').create(Message);
 }
-
-// async function getGlobalSettingsRecord(): Promise<{
-// 	season: number;
-// 	game: string;
-// 	game_number: number;
-// }> {
-// 	const settingsRecord = await pb.collection('settings').getOne('4t-settings-all');
-// 	const field = settingsRecord.field;
-// 	return field as { season: number; game: string; game_number: number };
-// }
-
-// export function getGlobalSettings():
-// 	| { season: number; game: string; game_number: number }
-// 	| undefined {
-// 	getGlobalSettingsRecord()
-// 		.then((value) => {
-// 			return value;
-// 		})
-// 		.catch(() => {});
-// 	return undefined;
-// }
 
 export function sendSoundRequest(sound: string) {
 	socket.emit('soundReq', sound);
@@ -111,6 +93,7 @@ export const dictionary = new Map([
 	['ck', 'Chung Kết'],
 	['', 'Idle'],
 	['main', 'Main'],
+	['logo', '4T'],
 	['kd', 'Khởi động'],
 	['tt', 'Tăng tốc'],
 	['vcnv', 'VCNV'],
@@ -172,6 +155,12 @@ export const timerSettings: Map<string, number> = new Map([
 	['vd_20', 20000]
 ]);
 
+export function getTimerSettings(time: string): number {
+	return timerSettings.get(time) ?? 0;
+}
+
+// export function
+
 export const soundsCollection: Map<string, string> = new Map([
 	['tong_ket_diem', 'main/PointSummary.mp3'],
 	['space', 'main/Space.mp3'],
@@ -193,7 +182,8 @@ export const soundsCollection: Map<string, string> = new Map([
 	['vcnv_select_row', 'vcnv/RowChoose.mp3'],
 	['vcnv_row_question', 'vcnv/RowQuestShow.mp3'],
 	['vcnv_time', 'vcnv/15Seconds.mp3'],
-	['vcnv_show_answer', 'vcnv/AnswersShowing.ogg'], //sai nhac
+	['vcnv_time_cnv', 'bonus/Thinking.mp3'],
+	['vcnv_show_answer', 'vcnv/AnswersShowing.ogg'],
 	['vcnv_display_picture', 'vcnv/PictureReveal.mp3'],
 	['vcnv_end', 'vd/FinishRound.mp3'],
 	['vcnv_correct_obstacle', 'vcnv/CorrectObstacle.mp3'],
@@ -207,7 +197,7 @@ export const soundsCollection: Map<string, string> = new Map([
 	['tt_end', 'vd/FinishRound.mp3'],
 	['tt_show_answer', 'tt/AnswersShowing.ogg'],
 	['tt_correct', 'tt/Correct.mp3'],
-	['tt_wrong', 'tt/Wrong.mp3'], //sai nhac
+	['tt_wrong', 'vcnv/WrongRow.mp3'], //sai nhac
 
 	['vd_start', 'vd/StartRound.mp3'],
 	['vd_start_ts', 'vd/StartTurn.mp3'],

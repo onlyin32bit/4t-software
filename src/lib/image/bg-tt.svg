@@ -1,2 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 478.575 372.225" xmlns:bx="https://boxy-svg.com" width="478.575px" height="372.225px"><defs><radialGradient gradientUnits="userSpaceOnUse" cx="205.157" cy="166.179" r="124.61" id="gradient-2" gradientTransform="matrix(-1.290547, 0.532837, -0.381628, -0.924316, 559.184628, 113.111368)" spreadMethod="reflect"><stop offset="0" style="stop-color: rgb(9, 50, 120);"/><stop offset="0.559" style="stop-color: rgb(6, 41, 88);"/><stop offset="1" style="stop-color: rgb(5, 35, 69);"/></radialGradient><radialGradient gradientUnits="userSpaceOnUse" cx="165.91" cy="195.892" r="124.61" id="gradient-0" gradientTransform="matrix(-1.219069, 0.419121, -0.325126, -0.945672, 499.057187, 184.133059)" spreadMethod="reflect"><stop offset="0" style="stop-color: rgb(110, 176, 237);"/><stop offset="1" style="stop-color: rgb(177, 210, 226);"/></radialGradient><radialGradient gradientUnits="userSpaceOnUse" cx="205.157" cy="166.179" r="124.61" id="gradient-1" gradientTransform="matrix(-1.21399, 0.491372, -0.358989, -0.852385, 535.370735, 112.621063)" spreadMethod="reflect"><stop offset="0" style="stop-color: rgb(9, 50, 120);"/><stop offset="0.559" style="stop-color: rgb(6, 41, 88);"/><stop offset="1" style="stop-color: rgb(5, 35, 69);"/></radialGradient><radialGradient gradientUnits="userSpaceOnUse" cx="214.445" cy="65.353" r="118.116" id="gradient-3" gradientTransform="matrix(-1.046178, 0.512764, -0.454843, -0.894727, 468.518043, 13.866301)"><stop offset="0" style="stop-color: rgb(67.451% 67.059% 93.333%)"/><stop offset="1" style="stop-color: rgb(96, 97, 158); stop-opacity: 0.71;"/></radialGradient><bx:guide x="12.067" y="105.484" angle="0"/><radialGradient gradientUnits="userSpaceOnUse" cx="205.157" cy="166.179" r="124.61" id="gradient-4" gradientTransform="matrix(-1.290547, 0.532837, -0.381628, -0.924316, 604.76005, 114.756612)" spreadMethod="reflect"><stop offset="0" style="stop-color: rgb(9, 50, 120);"/><stop offset="0.559" style="stop-color: rgb(6, 41, 88);"/><stop offset="1" style="stop-color: rgb(5, 35, 69);"/></radialGradient><radialGradient gradientUnits="userSpaceOnUse" cx="165.91" cy="195.892" r="124.61" id="gradient-5" gradientTransform="matrix(-1.219069, 0.419121, -0.325126, -0.945672, 544.632609, 185.778303)" spreadMethod="reflect"><stop offset="0" style="stop-color: rgb(110, 176, 237);"/><stop offset="1" style="stop-color: rgb(177, 210, 226);"/></radialGradient><radialGradient gradientUnits="userSpaceOnUse" cx="205.157" cy="166.179" r="124.61" id="gradient-6" gradientTransform="matrix(-1.21399, 0.491372, -0.358989, -0.852385, 580.275892, 115.253483)" spreadMethod="reflect"><stop offset="0" style="stop-color: rgb(9, 50, 120);"/><stop offset="0.559" style="stop-color: rgb(6, 41, 88);"/><stop offset="1" style="stop-color: rgb(5, 35, 69);"/></radialGradient><radialGradient gradientUnits="userSpaceOnUse" cx="214.445" cy="65.353" r="118.116" id="gradient-7" gradientTransform="matrix(-1.046178, 0.512764, -0.454843, -0.894727, 513.423201, 16.49872)"><stop offset="0" style="stop-color: rgb(67.451% 67.059% 93.333%)"/><stop offset="1" style="stop-color: rgb(96, 97, 158); stop-opacity: 0.71;"/></radialGradient><bx:guide x="453.65220773552363" y="133.38759805171824" angle="0"/><bx:guide x="293.1414137222044" y="125.68781622246155" angle="90"/><bx:grid x="0" y="0" width="17.725" height="17.725"/><bx:guide x="96.745" y="345.624" angle="90"/><bx:export><bx:file format="svg"/></bx:export></defs><g style="" transform="matrix(1.767434, 0, 0, 1.8, -30.932458, -33.924001)"><path style="fill: url(&quot;#gradient-2&quot;); stroke: url(&quot;#gradient-0&quot;); stroke-width: 2.24251px;" d="M 27.53 28.734 L 268.218 28.694 L 278.247 38.541 L 277.662 62.685 L 27.28 62.685 L 27.53 28.734 Z" id="object-0"/><path style="fill: url(&quot;#gradient-1&quot;); stroke-width: 1.12125px; stroke-opacity: 0.47; stroke: url(&quot;#gradient-3&quot;);" d="M 33.885 34.81 L 264.98 34.702 L 272.095 42.177 L 271.717 58.236 L 32.78 58.02 L 33.885 34.81 Z" id="path-1"/></g><g style="" transform="matrix(1.767434, 0, 0, 1.8, -110.022329, 58.81655)"><path style="stroke-width: 2.24251px; fill: url(&quot;#gradient-4&quot;); stroke: url(&quot;#gradient-5&quot;);" d="M 72.278 14.35 L 322.168 14.727 L 322.995 164.269 L 72.278 164.269 L 72.278 14.35 Z" id="path-2"/><path style="stroke-width: 1.12125px; stroke-opacity: 0.47; fill: url(&quot;#gradient-6&quot;); stroke: url(&quot;#gradient-7&quot;);" d="M 78.684 20.226 L 316.704 20.226 L 317.768 159.096 L 78.866 158.148 L 78.684 20.226 Z" id="path-3"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 478.575 372.225" xmlns:bx="https://boxy-svg.com" width="478.575px" height="372.225px">
+  <defs>
+    <radialGradient gradientUnits="userSpaceOnUse" cx="205.157" cy="166.179" r="124.61" id="gradient-2" gradientTransform="matrix(-1.290547, 0.532837, -0.381628, -0.924316, 559.184628, 113.111368)" spreadMethod="reflect">
+      <stop offset="0" style="stop-color: rgb(9, 50, 120);"/>
+      <stop offset="0.559" style="stop-color: rgb(6, 41, 88);"/>
+      <stop offset="1" style="stop-color: rgb(5, 35, 69);"/>
+    </radialGradient>
+    <radialGradient gradientUnits="userSpaceOnUse" cx="165.91" cy="195.892" r="124.61" id="gradient-0" gradientTransform="matrix(-1.219069, 0.419121, -0.325126, -0.945672, 499.057187, 184.133059)" spreadMethod="reflect">
+      <stop offset="0" style="stop-color: rgb(110, 176, 237);"/>
+      <stop offset="1" style="stop-color: rgb(177, 210, 226);"/>
+    </radialGradient>
+    <radialGradient gradientUnits="userSpaceOnUse" cx="205.157" cy="166.179" r="124.61" id="gradient-1" gradientTransform="matrix(-1.21399, 0.491372, -0.358989, -0.852385, 535.370735, 112.621063)" spreadMethod="reflect">
+      <stop offset="0" style="stop-color: rgb(9, 50, 120);"/>
+      <stop offset="0.559" style="stop-color: rgb(6, 41, 88);"/>
+      <stop offset="1" style="stop-color: rgb(5, 35, 69);"/>
+    </radialGradient>
+    <radialGradient gradientUnits="userSpaceOnUse" cx="214.445" cy="65.353" r="118.116" id="gradient-3" gradientTransform="matrix(-1.046178, 0.512764, -0.454843, -0.894727, 468.518043, 13.866301)">
+      <stop offset="0" style="stop-color: rgb(67.451% 67.059% 93.333%)"/>
+      <stop offset="1" style="stop-color: rgb(96, 97, 158); stop-opacity: 0.71;"/>
+    </radialGradient>
+    <bx:guide x="12.067" y="105.484" angle="0"/>
+    <radialGradient gradientUnits="userSpaceOnUse" cx="205.157" cy="166.179" r="124.61" id="gradient-4" gradientTransform="matrix(-1.290547, 0.532837, -0.381628, -0.924316, 604.76005, 114.756612)" spreadMethod="reflect">
+      <stop offset="0" style="stop-color: rgb(9, 50, 120);"/>
+      <stop offset="0.559" style="stop-color: rgb(6, 41, 88);"/>
+      <stop offset="1" style="stop-color: rgb(5, 35, 69);"/>
+    </radialGradient>
+    <radialGradient gradientUnits="userSpaceOnUse" cx="165.91" cy="195.892" r="124.61" id="gradient-5" gradientTransform="matrix(-1.219069, 0.419121, -0.325126, -0.945672, 544.632609, 185.778303)" spreadMethod="reflect">
+      <stop offset="0" style="stop-color: rgb(110, 176, 237);"/>
+      <stop offset="1" style="stop-color: rgb(177, 210, 226);"/>
+    </radialGradient>
+    <radialGradient gradientUnits="userSpaceOnUse" cx="205.157" cy="166.179" r="124.61" id="gradient-6" gradientTransform="matrix(-1.21399, 0.491372, -0.358989, -0.852385, 580.275892, 115.253483)" spreadMethod="reflect">
+      <stop offset="0" style="stop-color: rgb(9, 50, 120);"/>
+      <stop offset="0.559" style="stop-color: rgb(6, 41, 88);"/>
+      <stop offset="1" style="stop-color: rgb(5, 35, 69);"/>
+    </radialGradient>
+    <radialGradient gradientUnits="userSpaceOnUse" cx="214.445" cy="65.353" r="118.116" id="gradient-7" gradientTransform="matrix(-1.046178, 0.512764, -0.454843, -0.894727, 513.423201, 16.49872)">
+      <stop offset="0" style="stop-color: rgb(67.451% 67.059% 93.333%)"/>
+      <stop offset="1" style="stop-color: rgb(96, 97, 158); stop-opacity: 0.71;"/>
+    </radialGradient>
+    <bx:guide x="453.65220773552363" y="133.38759805171824" angle="0"/>
+    <bx:guide x="293.1414137222044" y="125.68781622246155" angle="90"/>
+    <bx:grid x="0" y="0" width="17.725" height="17.725"/>
+    <bx:guide x="96.745" y="345.624" angle="90"/>
+    <bx:export>
+      <bx:file format="svg"/>
+    </bx:export>
+  </defs>
+  <g style="" transform="matrix(1.767434, 0, 0, 1.8, -30.932458, -33.924001)">
+    <path style="fill: url(&quot;#gradient-2&quot;); stroke: url(&quot;#gradient-0&quot;); stroke-width: 2.24251px;" d="M 27.53 28.734 L 267.756 28.694 L 277.692 38.45 L 277.662 62.685 L 27.28 62.685 L 27.53 28.734 Z" id="object-0"/>
+    <path style="fill: url(&quot;#gradient-1&quot;); stroke-width: 1.12125px; stroke-opacity: 0.47; stroke: url(&quot;#gradient-3&quot;);" d="M 33.885 34.81 L 264.98 34.702 L 271.818 41.859 L 271.717 58.236 L 33.8 58.02 L 33.885 34.81 Z" id="path-1"/>
+  </g>
+  <g style="" transform="matrix(1.767434, 0, 0, 1.8, -110.022329, 58.81655)">
+    <path style="stroke-width: 2.24251px; fill: url(&quot;#gradient-4&quot;); stroke: url(&quot;#gradient-5&quot;);" d="M 72.278 14.35 L 322.307 14.727 L 322.858 164.133 L 72.278 164.269 L 72.278 14.35 Z" id="path-2"/>
+    <path style="stroke-width: 1.12125px; stroke-opacity: 0.47; fill: url(&quot;#gradient-6&quot;); stroke: url(&quot;#gradient-7&quot;);" d="M 78.816 20.743 L 316.178 20.871 L 316.584 158.838 L 78.866 158.148 L 78.816 20.743 Z" id="path-3"/>
+  </g>
+</svg>

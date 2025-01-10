@@ -119,7 +119,7 @@
 			</div>
 			<div class="row-span-2 h-full border-[3px] border-gray-400">
 				<div
-					class=" grid h-full grid-cols-[1fr_2fr_10rem_10rem] grid-rows-[40px_1fr_1fr_1fr_1fr] text-3xl"
+					class=" grid h-full grid-cols-[1fr_2fr_10rem_10rem] grid-rows-[40px_1fr_1fr_1fr_1fr] text-4xl"
 				>
 					<div class="flex items-center border-b-2 px-3 py-1 text-lg font-bold text-gray-400">
 						TÊN THÍ SINH
@@ -163,7 +163,7 @@
 						<div class="flex items-center border-b-2 px-3">
 							{contestant.answer === '' ? '_' : contestant.answer}
 						</div>
-						<div class="flex items-center justify-center border-b-2 font-mono text-5xl">
+						<div class="font-mono flex items-center justify-center border-b-2 text-5xl">
 							{contestant.time === -2
 								? 'ended'
 								: contestant.time === -1
@@ -171,7 +171,7 @@
 									: formatTime2(contestant.time)}
 						</div>
 						<div class="flex items-center justify-center border-b-2">
-							<div class="flex items-center justify-center font-mono text-6xl">
+							<div class="font-mono flex items-center justify-center text-6xl">
 								{#key contestant.score}
 									<span class="font-bold" in:fly={{ y: 20 }} out:fly={{ y: -20 }}
 										>{contestant.score}</span

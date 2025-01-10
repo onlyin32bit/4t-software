@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { scale, slide } from 'svelte/transition';
+	import { scale, slide, fade } from 'svelte/transition';
 	import logo from '$lib/image/4t.png';
 	import { sendSoundRequest } from '$lib/utils';
 	import { onMount } from 'svelte';

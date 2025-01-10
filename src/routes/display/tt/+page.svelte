@@ -6,16 +6,17 @@
 	import ScreenRule from '$lib/components/display/ScreenRule.svelte';
 	import ScreenIntro from '$lib/components/display/ScreenIntro.svelte';
 	import ScreenQuestionTT from '$lib/components/display/ScreenQuestionTT.svelte';
+	import ScreenSolvedTT from '$lib/components/display/ScreenSolvedTT.svelte';
 	import ScreenEnd from '$lib/components/display/ScreenEnd.svelte';
 
 	let questions: string[] = [];
 	let questionFile: string[] = [];
+	let questionFileSolved: string[] = [];
 
 	let scr_slide: string = '';
 	let ques: number = 1;
 	let displayQuestion: boolean = false;
 
-	let unsub: (() => void)[] = [];
 	onMount(async () => {
 		const displayStatus = await pb.collection('display_status').getOne('4T-DISPLAYSTATE');
 		scr_slide = displayStatus.slide;
@@ -64,7 +65,13 @@
 		questionFile={questionFile[ques - 1]}
 		{displayQuestion}
 	/>
-	<div class="fixed">{questionFile[ques - 1]} {scr_slide}</div>
+	<!-- <div class="fixed">{questionFile[ques - 1]} {scr_slide}</div> -->
+{:else if scr_slide === 'solve'}
+	<ScreenSolvedTT
+		questionNumber={ques}
+		questionContent={questions[ques - 1]}
+		questionFile={questionFileSolved[ques - 1]}
+	/>
 {:else if scr_slide === 'end'}
 	<ScreenEnd />
 {/if}

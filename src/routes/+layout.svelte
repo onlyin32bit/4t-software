@@ -2,17 +2,21 @@
 	import { socket } from '$lib/socket.io-client';
 	import { onMount } from 'svelte';
 	import { pb, user } from '$lib/pocketBase';
+	import { getCurrentTime } from '$lib/utils';
 	import '../app.css';
 
 	onMount(() => {
 		socket.on('message', (message) => {
 			console.log(message);
 		});
+		socket.io.on('ping', () => {
+			console.log('connection alive ' + getCurrentTime());
+		});
 	});
 
-	if ($user !== null) socket.emit('knownUserAccessed', $user);
+	$: if ($user !== null) socket.emit('knownUserAccessed', $user);
 </script>
 
-<main>
+<div class="font-sans">
 	<slot />
-</main>
+</div>

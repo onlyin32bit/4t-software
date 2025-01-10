@@ -3,12 +3,13 @@
 	import { pb } from '$lib/pocketBase';
 	import type { RecordModel } from 'pocketbase';
 	import { sendSoundRequest } from '$lib/utils';
-	import { fly } from 'svelte/transition';
+	import { fly, scale, slide, fade } from 'svelte/transition';
 	import { onMount, onDestroy } from 'svelte';
-	import { scale, fade, slide } from 'svelte/transition';
 
 	export let questionNumber: number = 0;
-	export let question = '';
+	export let questionContent: string = '';
+	export let questionType: string = '';
+	export let questionFile: string = '';
 	export let displayQuestion: boolean = false;
 	export let contestants: RecordModel[] = [];
 
@@ -18,9 +19,13 @@
 		sendSoundRequest('vcnv_row_question');
 
 		await pb.collection('display_status').subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
-			if (action === 'update' && record.timer !== -1) {
-				time.set(0, { duration: 0 });
-				timer();
+			if (action === 'update') {
+				if (record.timer === -1) {
+					if ($time !== 15) time.set(0, { duration: 0 });
+				} else if ($time <= 0) {
+					time.set(0, { duration: 0 });
+					timer();
+				}
 			}
 		});
 	});
@@ -29,42 +34,75 @@
 	function timer() {
 		$time = 15;
 	}
+
+	$: if (questionNumber) {
+		time.set(0, { duration: 0 });
+		fontSize = 3;
+	}
+
+	let containerHeight: number = 0;
+	let textHeight: number = 0;
+	let fontSize: number = 3;
+
+	function calcPercent(x: number, y: number): number {
+		return (x / y) * 100;
+	}
+
+	$: if (questionNumber && calcPercent(textHeight, containerHeight) < 60) {
+		fontSize += 0.2;
+	}
 </script>
 
 <div class="fixed h-full w-full bg-bg-2 bg-cover bg-no-repeat">
 	<img
-		class="absolute left-1/2 top-[2vh] h-[90vh] w-[90vw] -translate-x-1/2"
+		class="absolute left-[45vw] top-[2vh] h-[90vh] w-[90vw] -translate-x-1/2"
 		style={`filter: drop-shadow(8px 28px 32px #335);`}
 		src="/src/lib/image/bg-ques.svg"
 		alt="BG"
-		in:scale={{ duration: 900 }}
+		in:scale={{ duration: 750 }}
 	/>
 	<div
-		class="absolute left-[11.5vw] top-[11vh] flex h-[10vh] w-[8vw] items-center justify-center bg-white font-number-display text-[9vh] font-extrabold text-black"
+		class="absolute left-[6.7vw] top-[11.4vh] flex h-[10vh] w-[8vw] items-center justify-center bg-white font-number-display text-[9vh] font-extrabold text-black"
 		class:invisible={questionNumber > 5}
 		style="clip-path: polygon(100% 0, 100% 70%, 80% 100%, 0 100%, 0 0);"
-		in:slide={{ delay: 940, duration: 600 }}
+		in:slide={{ delay: 750, duration: 600 }}
 	>
 		{questionNumber == 5 ? 'TT' : questionNumber}
 	</div>
-	{#if displayQuestion}
-		<div class="center-element absolute w-[70vw] text-center text-[5vh] font-medium" in:fade>
-			{question}
-		</div>
-	{/if}
-	<div in:fade={{ delay: 1000 }}>
+	<div
+		class="absolute left-[5vw] top-[17vh] h-[60vh] w-[70vw] font-semibold"
+		bind:clientHeight={containerHeight}
+	>
 		<div
-			class="absolute bottom-[13.6vh] right-[81vw] h-[5vh] w-[2.92vw] bg-[#88badf]"
+			class="absolute left-[40vw] top-1/2 z-50 w-[70vw] -translate-x-1/2 -translate-y-1/2 text-left"
+			style={`font-size: ${fontSize}vh;`}
+			bind:clientHeight={textHeight}
+		>
+			<div class="whitespace-pre-line" class:invisible={!displayQuestion}>
+				{questionContent}
+			</div>
+		</div>
+	</div>
+	<div in:fade={{ delay: 800 }}>
+		<div
+			class="absolute bottom-[13.6vh] right-[86vw] h-[5vh] w-[2.92vw] bg-gradient-to-b from-slate-200 to-sky-200"
 			style={`clip-path: polygon(0 0, 100% 0, 100% 100%, 93% 100%);`}
 		></div>
 		<div
-			class="absolute bottom-[13.6vh] right-[10.8vw] h-[5vh] w-[70.4vw] bg-white"
-			style={`border: 1vh solid #88badf;`}
+			class="absolute bottom-[13.6vh] right-[15.9vw] flex h-[5vh] w-[70.2vw] items-center bg-gradient-to-br from-slate-200 via-sky-200 to-slate-300"
 		>
-			<div
-				class="absolute left-0 h-full w-full"
-				style={`background: linear-gradient(to right, #f00 ${($time / 15) * 100 - ($time === 15 ? 0 : 5)}%, rgba(0,0,0,0) ${($time / 15) * 100}%);`}
-			></div>
+			{#if $time > 0}
+				<div
+					class=" h-1/2 w-full rounded-[2vh] bg-red-500"
+					style={`box-shadow: 0 0 1vh 0.1vh rgba(256,0,0,0.5); width: ${($time * 100) / 15}%;`}
+					in:scale={{ delay: 200 }}
+				></div>
+				<div
+					class="animate-shadowPulse size-[3.5vh] -translate-x-[1.5vh] rounded-full bg-red-600"
+					style={`//box-shadow: 0 0 1.5vh 1vh rgba(256,0,0,0.5);`}
+					in:scale={{ duration: 200, opacity: 1 }}
+				></div>
+			{/if}
 		</div>
 	</div>
 

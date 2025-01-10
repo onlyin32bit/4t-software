@@ -28,23 +28,36 @@
 </script>
 
 <!-- main display -->
-<div class="h-screen w-screen bg-bg-1 bg-cover bg-no-repeat text-[6vh] text-white">
-	<img class="fixed left-[5vw] top-[12vh] h-[15vh]" src="/src/lib/image/4t.png" alt="Logo 4T" />
+<div class="h-screen w-screen bg-bg-2 bg-cover bg-no-repeat text-[6vh] text-white">
+	<img class="fixed right-[9vw] top-[3vh] h-[10vh]" src="/src/lib/image/4t.png" alt="Logo 4T" />
 	<img
-		class="fixed right-[5vw] top-[12vh] h-[18vh]"
+		class="fixed right-[2vw] top-[3vh] h-[10.5vh]"
 		src="/src/lib/image/logo-cbt.png"
 		alt="Logo THPT Chuyen Ben Tre"
 	/>
-	<h1 class="fixed left-1/2 top-[12vh] -translate-x-1/2 text-[12vh] font-extrabold">BẢNG ĐIỂM</h1>
-	<div class="fixed left-1/2 top-[42vh] flex -translate-x-1/2 gap-[3vw]">
+	<h1
+		class="fixed top-[11vh] w-screen text-center text-[18vh] font-extrabold"
+		style={`text-shadow: 0.1vh 0.5vh 1vh rgba(103, 103, 140, 1);`}
+	>
+		BẢNG ĐIỂM
+	</h1>
+	<div class="fixed left-1/2 top-[40vh] flex -translate-x-1/2 gap-[2.5vw] font-header">
 		{#each contestants as contestant, i}
 			<div
-				class="flex w-[22vw] flex-col items-center justify-center border-[0.8vh] border-orange-400 bg-white text-[5.5vh] text-blue-800"
+				class="w-[22vw] border-[0.8vh] border-slate-100 text-[4.9vh]"
+				style={`filter: drop-shadow(8px 28px 32px #335);`}
 				in:scale={{ delay: i * 100 }}
 			>
-				<h1 class="w-full bg-yellow-300 text-center font-bold">{contestant.name}</h1>
-				<div class="text-[18vh] font-black" in:fade={{ duration: 1000 }}>
-					{contestant.score}
+				<div
+					class="left-1/2 flex h-[8vh] items-center justify-center bg-gradient-to-l from-[#00bfff] via-[#00fdff] to-[#00bfff] font-black text-[#2632b1]"
+				>
+					{contestant.name.toUpperCase()}
+				</div>
+				<div
+					class="flex h-[25vh] items-center justify-center text-[15vh] font-black"
+					style={`background: radial-gradient(circle, rgba(18,32,177,1) 0%, rgba(31,31,83,1) 100%);`}
+				>
+					<div in:fade={{ duration: 1000 }}>{contestant.score}</div>
 				</div>
 			</div>
 		{/each}

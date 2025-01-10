@@ -21,6 +21,7 @@
 			<a href="/ts">Trang thí sinh</a>
 			<a href="/mc">Trang MC</a>
 			<a href="/display">Màn hình</a>
+			<a href="/static-score">Điểm (static)</a>
 			<a href="/sounds">Âm thanh</a>
 			<a href="/control-panel">Control Panel</a>
 			<a href="/settings">Global Settings</a>

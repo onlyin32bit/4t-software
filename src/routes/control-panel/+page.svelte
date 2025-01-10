@@ -18,8 +18,10 @@
 	import { Toaster, toast } from 'svelte-sonner';
 	import type { RecordModel } from 'pocketbase';
 	import type { DisplayObject } from '$lib/types';
+	import { socket } from '$lib/socket.io-client';
 
 	let contestants: RecordModel[] = [];
+	let otherUsers: RecordModel[] = [];
 	let logs: RecordModel[] = [];
 	let messageContent: string = '';
 
@@ -27,32 +29,27 @@
 		screen: '',
 		slide: '',
 		question: -1,
-		numberOfQues: -1
+		numberOfQuestion: -1
 	};
 
 	let selected: DisplayObject = { ...current };
-	$: selected.numberOfQues =
-		numberOfQues.get(
-			selected.screen +
-				(selected.screen === 'kd'
-					? selected.slide === 'ques_chung'
-						? '_chung'
-						: selected.slide.startsWith('ques_ts')
-							? '_rieng'
-							: ''
-					: '')
-		) ?? 0;
-	$: current.numberOfQues =
-		numberOfQues.get(
-			current.screen +
-				(current.screen === 'kd'
-					? current.slide === 'ques_chung'
-						? '_chung'
-						: current.slide.startsWith('ques_ts')
-							? '_rieng'
-							: ''
-					: '')
-		) ?? 0;
+	$: selected.numberOfQuestion = getNumberOfQuestion(selected);
+	$: current.numberOfQuestion = getNumberOfQuestion(current);
+
+	function getNumberOfQuestion(displayState: DisplayObject): number {
+		return (
+			numberOfQues.get(
+				displayState.screen +
+					(displayState.screen === 'kd'
+						? displayState.slide === 'ques_chung'
+							? '_chung'
+							: displayState.slide.startsWith('ques_ts')
+								? '_rieng'
+								: ''
+						: '')
+			) ?? 0
+		);
+	}
 
 	let selectedScore: number[] = [0, 0, 0, 0];
 
@@ -61,6 +58,8 @@
 	let displayQuestionStatus: boolean;
 
 	let playMediaSource: string;
+
+	let bellAllowed: boolean = false;
 
 	let elapsed: number = 0;
 
@@ -72,7 +71,7 @@
 		game_number: 1
 	};
 
-	let selectionSlideList = ['start', 'rule', 'ques', 'end'];
+	let selectionSlideList: string[] = ['start', 'rule', 'ques', 'end'];
 	$: if (selected.screen === 'kd') {
 		selectionSlideList = [
 			'start',
@@ -88,7 +87,7 @@
 			'end'
 		];
 	} else if (selected.screen === 'tt') {
-		selectionSlideList = ['start', 'rule', 'intro', 'ques', 'end'];
+		selectionSlideList = ['start', 'rule', 'intro', 'ques', 'solve', 'end'];
 	} else if (selected.screen === 'vcnv') {
 		selectionSlideList = ['start', 'rule', 'intro', 'main_vcnv', 'image_vcnv', 'ques', 'end'];
 	} else if (selected.screen === 'vd') {
@@ -127,20 +126,23 @@
 	onMount(async () => {
 		// fetch data
 		const userListRecord = await pb.collection('users').getFullList();
+		const otherUserListRecord = await pb.collection('btc').getFullList();
 		const logsRecord = await pb.collection('logs').getFullList();
 		const displayStatusRecord = await pb.collection('display_status').getOne('4T-DISPLAYSTATE');
 		// const settingsRecord = await pb.collection('settings').getOne('GLOBAL-SETTINGS');
 
 		contestants = userListRecord;
+		otherUsers = otherUserListRecord;
 		logs = logsRecord;
 		current = {
 			screen: displayStatusRecord.screen,
 			slide: displayStatusRecord.slide,
 			question: displayStatusRecord.ques,
-			numberOfQues: -1
+			numberOfQuestion: -1
 		};
 		selected = { ...current };
 		displayQuestionStatus = displayStatusRecord.displayQuestion;
+		bellAllowed = displayStatusRecord.bellAllowed;
 		// settings = {
 		// 	season: settingsRecord.field.season,
 		// 	game: settingsRecord.field.game,
@@ -162,14 +164,15 @@
 				if (action === 'create') {
 					logs = [...logs, record];
 					scrollLogToBottom();
-				} else if (action === 'delete')
-					logs = logs.filter((currentValue) => currentValue.id !== record.id);
+				} else if (action === 'delete') logs = logs.filter(({ id }) => id !== record.id);
 			}),
 			await pb.collection('display_status').subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
 				if (action === 'update') {
 					if (current.screen !== record.screen) current.screen = record.screen;
 					if (current.slide !== record.slide) current.slide = record.slide;
 					if (current.question !== record.ques) current.question = record.ques;
+
+					if (bellAllowed !== record.bellAllowed) bellAllowed = record.bellAllowed;
 					if (displayQuestionStatus !== record.displayQuestion)
 						displayQuestionStatus = record.displayQuestion;
 					if (playMediaSource !== record.mediaToPlay) playMediaSource = record.mediaToPlay;
@@ -287,7 +290,6 @@
 				ques: selected.question,
 				timer: -1
 			});
-			if (elapsed > 0) sendSoundRequest('stop_timer');
 			if (displayQuestionStatus) setDisplayQuestionStatus(false);
 			stopTimer = true;
 		}
@@ -300,9 +302,9 @@
 				ques: selected.question,
 				timer: -1
 			});
-			if (elapsed > 0) sendSoundRequest('stop_timer');
 			if (selected.screen === 'vcnv' && selected.slide === 'intro') resetAllStateVCNV();
 			if (displayQuestionStatus) setDisplayQuestionStatus(false);
+			changeStarState(false);
 			stopTimer = true;
 		}
 	}
@@ -312,9 +314,11 @@
 				ques: selected.question,
 				timer: -1
 			});
-			clearContestantAnswer();
-			if (elapsed > 0) sendSoundRequest('stop_timer');
-			if (selected.question > current.numberOfQues) sendSoundRequest('stop_bg_music');
+			if (selected.screen === 'kd' && selected.slide === 'ques_chung') {
+				clearContestantBell();
+				setBellAllow(true);
+			}
+			if (selected.question > current.numberOfQuestion) sendSoundRequest('stop_bg_music');
 			if (selected.screen === 'vd') {
 				setDisplayQuestionStatus(false);
 				changeStarState(false);
@@ -329,16 +333,39 @@
 		});
 	}
 
+	async function setBellAllow(value: boolean) {
+		if (bellAllowed === value) return;
+		await pb.collection('display_status').update('4T-DISPLAYSTATE', {
+			bellAllowed: value
+		});
+		createLogMessage('system', 'INFO', `Đã ${value ? 'mở' : 'đóng'} chuông`);
+	}
+
 	async function clearContestantAnswer(log: boolean = false) {
-		contestants.forEach(async (currentValue) => {
-			await pb.collection('users').update(currentValue.id, { answer: null, time: 0 });
+		contestants.forEach(async ({ id }) => {
+			await pb.collection('users').update(id, { answer: null, time: 0 });
 		});
 		if (log) createLogMessage('system', 'INFO', 'Đã xóa đáp án thí sinh');
 	}
 
 	async function clearContestantBell() {
-		contestants.forEach(async (currentValue) => {
-			await pb.collection('users').update(currentValue.id, { ring: 0 });
+		if (contestants.findIndex(({ ring }) => ring > 0) === -1) return;
+		contestants.forEach(async ({ id }) => {
+			await pb.collection('users').update(id, { ring: 0 });
+		});
+		socket.emit('bell', 'clear');
+		createLogMessage('system', 'INFO', 'Đã xóa chuông thí sinh');
+	}
+
+	function setContestantWrongState() {
+		selectedContestantsWrongState.forEach(async (currentValue) => {
+			await pb.collection('users').update(currentValue, { wrong: true });
+		});
+	}
+
+	function clearContestantWrongState() {
+		contestants.forEach(async ({ id }) => {
+			await pb.collection('users').update(id, { wrong: false });
 		});
 	}
 
@@ -358,10 +385,12 @@
 		});
 	}
 
-	async function changeRowState(row: number, state: string) {
+	async function changeRowState(rowIndex: number, state: string) {
 		await pb.collection('display_status_vcnv').update('4T-DISPLAYSTATE', {
-			[row]: state
+			[rowIndex]: state
 		});
+		if (state === 'correct')
+			createLogMessage('system', 'INFO', `Đã mở hàng ngang thứ ${rowIndex} VCNV`);
 	}
 
 	async function changeImageState(image: number | 'center', state: boolean) {
@@ -392,6 +421,14 @@
 		});
 	}
 
+	async function resetContestantQuestionSet() {
+		for (let contestant = 1; contestant <= 4; contestant++) {
+			await pb.collection('display_status_vd').update('4T-DISPLAYSTATE', {
+				[contestant]: { offset: [0, 0, 0], question_set: [] }
+			});
+		}
+	}
+
 	async function changeStarState(state: boolean) {
 		await pb.collection('display_status_vd').update('4T-DISPLAYSTATE', {
 			star: state
@@ -401,18 +438,18 @@
 	function saveLog() {
 		let logContent = '#START LOG';
 		logs.forEach(
-			(currentValue) =>
-				(logContent += `\n${currentValue.time}: <${currentValue.from}> [${currentValue.type}]: ${currentValue.content}`)
+			({ time, from, type, content }) =>
+				(logContent += `\n${time}: <${from}> [${type}]: ${content}`)
 		);
 		download(
 			`4TMua${settings.season}-LOG-${settings.game.toUpperCase()}${settings.game === 'ck' ? '' : '-' + settings.game_number}`,
-			logContent + '\n#END LOG'
+			`${logContent}\n#END LOG`
 		);
 	}
 	function clearLog() {
 		if (confirm('Confirm?')) {
-			logs.forEach(async (currentValue) => {
-				await pb.collection('logs').delete(currentValue.id);
+			logs.forEach(async ({ id }) => {
+				await pb.collection('logs').delete(id);
 			});
 			logs = [];
 			toast.success('Đã xóa Log');
@@ -422,6 +459,7 @@
 	let selectedObstacleImage: number | 'center' = 1;
 	let selectedContestantQuestionSet: string[] = [];
 	let selectedContestantQuestionSetOffset: number[] = [1, 2, 3];
+	let selectedContestantsWrongState: string[] = [];
 </script>
 
 <svelte:head>
@@ -439,7 +477,7 @@
 			<div class="flex items-center justify-between border-[3px] border-gray-400 p-2">
 				<div class="flex items-center gap-4 text-xl font-semibold">
 					<a href="/"><img src="/src/lib/image/4t-blue.png" alt="Logo 4T" class="h-10" /></a>
-					<h1>CONTROL PANEL - THÁCH THỨC TRÍ TUỆ MÙA 8</h1>
+					<h1>CONTROL PANEL - THÁCH THỨC TRÍ TUỆ MÙA {settings.season}</h1>
 				</div>
 				<div class="flex items-center gap-4">
 					<button class="transition-colors hover:text-gray-500" on:click={clearLog}
@@ -462,7 +500,7 @@
 					<table class="table table-pin-rows table-sm mb-auto">
 						<thead class="border-b-2">
 							<tr>
-								<th class="w-44">Thời gian</th>
+								<th class="w-32">Thời gian</th>
 								<th class="w-28">Đến từ</th>
 								<th class="w-20">Type</th>
 								<th>Nội dung</th>
@@ -538,6 +576,12 @@
 						</table>
 					{:else if menu === 'settings'}
 						<div>hi</div>
+					{:else if menu === 'other-accounts'}
+						<div>
+							{#each otherUsers as { name, online }}
+								<div>{name}: {online}</div>
+							{/each}
+						</div>
 					{:else}
 						<div
 							class="grid h-full grid-cols-[12rem_1fr_7rem_3rem_1fr_3rem] grid-rows-[30px_1fr_1fr_1fr_1fr]"
@@ -558,7 +602,7 @@
 							>
 								ĐIỂM
 							</div>
-							{#each contestants as contestant, i (contestant.id)}
+							{#each contestants as contestant, contestantIndex (contestant.id)}
 								<div
 									class="flex items-center gap-2 border-b-2 px-3 text-xl font-semibold"
 									title={`${contestant.name} - Lớp ${contestant.class} [Status: ${contestant.online ? 'ONLINE' : 'OFFLINE'}]`}
@@ -589,7 +633,7 @@
 								<div class="flex items-center border-b-2 px-3 text-lg">
 									{contestant.answer === '' ? 'Chưa có câu trả lời' : contestant.answer}
 								</div>
-								<div class="flex items-center justify-center border-b-2 font-mono text-xl">
+								<div class="font-mono flex items-center justify-center border-b-2 text-xl">
 									{contestant.time === -2
 										? 'ended'
 										: contestant.time === -1
@@ -599,11 +643,11 @@
 								<button
 									class="h-full w-full bg-slate-100 text-3xl font-light text-gray-400 transition-colors hover:bg-blue-100"
 									on:click={() => {
-										selectedScore[i] -= 5;
+										selectedScore[contestantIndex] -= 5;
 									}}>-</button
 								>
 								<div class="flex items-center justify-center border-b-2">
-									<div class="flex translate-x-6 font-mono text-3xl">
+									<div class="font-mono flex translate-x-6 text-3xl">
 										{#key contestant.score}
 											<div class="relative">
 												<span
@@ -615,13 +659,13 @@
 										{/key}
 										<div class="ml-3 flex items-baseline">
 											<span class="font-thin text-gray-400">
-												{selectedScore[i] >= 0 ? '+' : ''}
+												{selectedScore[contestantIndex] >= 0 ? '+' : ''}
 											</span>
 											<input
 												class="rounded-sm text-gray-400 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-												style={`width: ${String(selectedScore[i]).length}ch`}
+												style={`width: ${String(selectedScore[contestantIndex]).length}ch`}
 												type="number"
-												bind:value={selectedScore[i]}
+												bind:value={selectedScore[contestantIndex]}
 											/>
 										</div>
 									</div>
@@ -629,14 +673,14 @@
 								<button
 									class="h-full w-full bg-slate-100 text-3xl font-light text-gray-400 transition-colors hover:bg-blue-100"
 									on:click={() => {
-										selectedScore[i] += 10;
+										selectedScore[contestantIndex] += 10;
 									}}>+</button
 								>
 							{/each}
 						</div>
 					{/if}
 				</div>
-				<div class="grid grid-cols-[1.5fr_1fr_1fr_1fr_1fr]">
+				<div class="grid grid-cols-[1.5fr_1fr_1fr_1fr_1fr_1.3fr]">
 					<select
 						class="border-[3px] border-gray-400 bg-white px-4 transition-colors hover:bg-gray-200"
 						bind:value={menu}
@@ -682,13 +726,32 @@
 							if (confirm('Xoa dap an thi sinh?')) clearContestantAnswer(true);
 						}}>CLEAR ANSWER</button
 					>
+					<button
+						class="btn"
+						on:click={() => {
+							setBellAllow(bellAllowed ? false : true);
+						}}
+						>{#if bellAllowed}
+							<svg class="h-5" viewBox="0 0 640 512"
+								><path
+									d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7l-90.2-70.7c.2-.4 .4-.9 .6-1.3c5.2-11.5 3.1-25-5.3-34.4l-7.4-8.3C497.3 319.2 480 273.9 480 226.8l0-18.8c0-77.4-55-142-128-156.8L352 32c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 19.2c-42.6 8.6-79 34.2-102 69.3L38.8 5.1zM406.2 416L160 222.1l0 4.8c0 47-17.3 92.4-48.5 127.6l-7.4 8.3c-8.4 9.4-10.4 22.9-5.3 34.4S115.4 416 128 416l278.2 0zm-40.9 77.3c12-12 18.7-28.3 18.7-45.3l-64 0-64 0c0 17 6.7 33.3 18.7 45.3s28.3 18.7 45.3 18.7s33.3-6.7 45.3-18.7z"
+								/></svg
+							>
+						{:else}
+							<svg class="h-5" fill="#000" viewBox="0 0 448 512">
+								<path
+									d="M224 0c-17.7 0-32 14.3-32 32l0 19.2C119 66 64 130.6 64 208l0 18.8c0 47-17.3 92.4-48.5 127.6l-7.4 8.3c-8.4 9.4-10.4 22.9-5.3 34.4S19.4 416 32 416l384 0c12.6 0 24-7.4 29.2-18.9s3.1-25-5.3-34.4l-7.4-8.3C401.3 319.2 384 273.9 384 226.8l0-18.8c0-77.4-55-142-128-156.8L256 32c0-17.7-14.3-32-32-32zm45.3 493.3c12-12 18.7-28.3 18.7-45.3l-64 0-64 0c0 17 6.7 33.3 18.7 45.3s28.3 18.7 45.3 18.7s33.3-6.7 45.3-18.7z"
+								/>
+							</svg>
+						{/if}{bellAllowed ? 'DIS' : ''}ALLOW BELL</button
+					>
 				</div>
 			</div>
 
 			<!-- dieu khien man hinh -->
 			<div class="select-none border-[3px] border-gray-400">
 				<div class="grid h-16 grid-flow-col border-b-2 text-xl">
-					{#each ['', 'main', 'answers_tt', 'answers_vcnv', 'scores', 'kd', 'vcnv', 'tt', 'vd', 'extra'] as screen}
+					{#each ['', 'main', 'logo', 'answers_tt', 'answers_vcnv', 'scores', 'kd', 'vcnv', 'tt', 'vd', 'extra'] as screen}
 						<button
 							class={`transition-colors duration-300 ${current.screen === screen ? 'text-black' : 'text-gray-400 hover:text-gray-500'} ${selected.screen === screen ? 'bg-red-100' : 'hover:bg-gray-50'}`}
 							on:click={() => {
@@ -744,6 +807,10 @@
 								class:btn-disabled={selected.screen !== current.screen ||
 									selected.slide === current.slide}
 								on:click={setSlide}
+								><svg class="h-5" viewBox="0 0 512 512"
+									><path
+										d="M352 0c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9L370.7 96 201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L416 141.3l41.4 41.4c9.2 9.2 22.9 11.9 34.9 6.9s19.8-16.6 19.8-29.6l0-128c0-17.7-14.3-32-32-32L352 0zM80 32C35.8 32 0 67.8 0 112L0 432c0 44.2 35.8 80 80 80l320 0c44.2 0 80-35.8 80-80l0-112c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 112c0 8.8-7.2 16-16 16L80 448c-8.8 0-16-7.2-16-16l0-320c0-8.8 7.2-16 16-16l112 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L80 32z"
+									/></svg
 								>Jump To Slide
 							</button>
 						</div>
@@ -760,7 +827,7 @@
 										setQuestion();
 									}}>{'<'}</button
 								>
-								{#if selected.question > selected.numberOfQues}
+								{#if selected.question > selected.numberOfQuestion}
 									<div class="text-center text-4xl font-bold">ENDED</div>
 								{:else}
 									<div class="flex justify-center">
@@ -768,13 +835,13 @@
 											class="input input-md input-bordered w-32 text-2xl [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
 											type="number"
 											min="1"
-											max={current.numberOfQues}
+											max={current.numberOfQuestion}
 											bind:value={selected.question}
 										/>
 										<div class="flex w-8 flex-col">
 											<button
 												class="btn btn-xs"
-												class:btn-disabled={selected.question >= selected.numberOfQues}
+												class:btn-disabled={selected.question >= selected.numberOfQuestion}
 												on:click={() => (selected.question += 1)}
 											>
 												+
@@ -792,19 +859,24 @@
 
 								<button
 									class="btn"
-									class:btn-disabled={selected.question > current.numberOfQues ||
-										(selected.screen !== 'kd' && selected.question >= current.numberOfQues) ||
+									class:btn-disabled={selected.question > current.numberOfQuestion ||
+										(selected.screen !== 'kd' && selected.question >= current.numberOfQuestion) ||
 										selected.screen !== current.screen}
 									on:click={() => {
 										selected.question += 1;
 										setQuestion();
-									}}>{selected.question >= selected.numberOfQues ? 'END' : '>'}</button
+									}}>{selected.question >= selected.numberOfQuestion ? 'END' : '>'}</button
 								>
 								<button
 									class="btn"
 									class:btn-disabled={selected.screen !== current.screen ||
 										selected.question === current.question}
-									on:click={setQuestion}>Jump To Question</button
+									on:click={setQuestion}
+									><svg class="h-5" viewBox="0 0 512 512"
+										><path
+											d="M352 0c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9L370.7 96 201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L416 141.3l41.4 41.4c9.2 9.2 22.9 11.9 34.9 6.9s19.8-16.6 19.8-29.6l0-128c0-17.7-14.3-32-32-32L352 0zM80 32C35.8 32 0 67.8 0 112L0 432c0 44.2 35.8 80 80 80l320 0c44.2 0 80-35.8 80-80l0-112c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 112c0 8.8-7.2 16-16 16L80 448c-8.8 0-16-7.2-16-16l0-320c0-8.8 7.2-16 16-16l112 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L80 32z"
+										/></svg
+									>Jump To Question</button
 								>
 							</div>
 							<div class="grid grid-cols-6 gap-4">
@@ -816,7 +888,12 @@
 											changeStarState(true);
 											sendSoundRequest('vd_choose_star');
 										}
-									}}>NSHV</button
+									}}
+									><svg class="h-5" viewBox="0 0 576 512"
+										><path
+											d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"
+										/></svg
+									>NSHV</button
 								>
 								<button
 									class="btn"
@@ -831,6 +908,10 @@
 									on:click={() => {
 										sendSoundRequest(`media:${playMediaSource}`);
 									}}
+									><svg class="h-5" viewBox="0 0 384 512"
+										><path
+											d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80L0 432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"
+										/></svg
 									>Play media
 								</button>
 								<button
@@ -845,7 +926,7 @@
 								<button
 									class="btn"
 									class:btn-disabled={['vcnv', 'tt'].includes(selected.screen) ||
-										selected.question < selected.numberOfQues}
+										selected.question < selected.numberOfQuestion}
 									on:click={() => {
 										selected.slide = 'end_ts';
 										setSlide();
@@ -853,7 +934,7 @@
 									>END SLIDE
 								</button>
 
-								<span class="flex items-center justify-center font-mono text-2xl font-semibold"
+								<span class="font-mono flex items-center justify-center text-2xl font-semibold"
 									>{formatTime2(elapsed)}s</span
 								>
 							</div>
@@ -863,14 +944,19 @@
 									class:btn-disabled={false}
 									on:click={() => {
 										if (current.screen === 'kd') {
-											clearContestantBell();
-											if (selected.question < current.numberOfQues) {
+											// clearContestantBell();
+											if (selected.question < current.numberOfQuestion) {
 												selected.question += 1;
 												setQuestion();
 											}
 										}
 										sendSoundRequest(selected.screen + '_correct');
-									}}>Đúng</button
+									}}
+									><svg class="h-5" viewBox="0 0 448 512"
+										><path
+											d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"
+										/></svg
+									>Đúng</button
 								>
 								<button
 									class="btn"
@@ -894,20 +980,30 @@
 														: '')
 											) ?? 0
 										);
-									}}>{elapsed > 0 ? 'Stop' : 'Start'} timer</button
+									}}
+									><svg class="h-5" viewBox="0 0 384 512"
+										><path
+											d="M32 0C14.3 0 0 14.3 0 32S14.3 64 32 64l0 11c0 42.4 16.9 83.1 46.9 113.1L146.7 256 78.9 323.9C48.9 353.9 32 394.6 32 437l0 11c-17.7 0-32 14.3-32 32s14.3 32 32 32l32 0 256 0 32 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l0-11c0-42.4-16.9-83.1-46.9-113.1L237.3 256l67.9-67.9c30-30 46.9-70.7 46.9-113.1l0-11c17.7 0 32-14.3 32-32s-14.3-32-32-32L320 0 64 0 32 0zM96 75l0-11 192 0 0 11c0 19-5.6 37.4-16 53L112 128c-10.3-15.6-16-34-16-53zm16 309c3.5-5.3 7.6-10.3 12.1-14.9L192 301.3l67.9 67.9c4.6 4.6 8.6 9.6 12.1 14.9L112 384z"
+										/></svg
+									>{elapsed > 0 ? 'Stop' : 'Start'} timer</button
 								>
 								<button
 									class="btn"
 									on:click={() => {
 										if (current.screen === 'kd') {
-											clearContestantBell();
-											if (selected.question < current.numberOfQues) {
+											// clearContestantBell();
+											if (selected.question < current.numberOfQuestion) {
 												selected.question += 1;
 												setQuestion();
 											}
 										}
 										sendSoundRequest(current.screen + '_wrong');
-									}}>Sai</button
+									}}
+									><svg class="h-5" viewBox="0 0 384 512"
+										><path
+											d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"
+										/></svg
+									>Sai</button
 								>
 								<button
 									class="btn"
@@ -917,10 +1013,11 @@
 								>
 								<button
 									class="btn"
-									class:btn-disabled={!['vcnv', 'tt'].includes(selected.screen) ||
+									class:btn-disabled={['kd', 'vd'].includes(selected.screen) ||
 										selected.screen !== current.screen}
 									on:click={() => {
 										selected.screen = `answers_` + selected.screen;
+										selectedContestantsWrongState = [];
 										setScreen();
 									}}
 									>Go to answer
@@ -929,8 +1026,12 @@
 									class="btn"
 									class:btn-disabled={selected.screen !== 'vd'}
 									on:click={() => {
-										startTimer(5000);
+										startTimer(5);
 										sendSoundRequest('vd_time_5');
+										setBellAllow(true);
+										setTimeout(() => {
+											setBellAllow(false);
+										}, 5000);
 									}}>5s Thi sinh con lai</button
 								>
 							</div>
@@ -981,10 +1082,19 @@
 								<button
 									class="btn"
 									on:click={() => {
+										setBellAllow(true);
 										selected.slide = 'test_bell';
 										setSlide();
 									}}
 									>Ques chung (Test chuong truoc)
+								</button>
+							{:else}
+								<button
+									class="btn"
+									on:click={() => {
+										resetContestantQuestionSet();
+									}}
+									>CLEAR QUES SET
 								</button>
 							{/if}
 						{/if}
@@ -1043,11 +1153,17 @@
 								{/each}
 								<button
 									class="btn"
-									on:click={() => {
+									on:click={async () => {
 										setQuestionSet(selected.slide.slice(11));
+										for (let i = 0; i < 3; i++) {
+											// setTimeout(() => {
+											sendSoundRequest('vd_choose_choice');
+											// }, i * 500);
+											await new Promise((resolve) => setTimeout(resolve, 500));
+										}
 									}}>Set question set</button
 								>
-								<div class="flex items-center justify-center font-mono text-4xl">
+								<div class="font-mono flex items-center justify-center text-4xl">
 									{selectedContestantQuestionSet.join(' ')}
 								</div>
 							</div>
@@ -1069,7 +1185,7 @@
 										{/each}
 									</div>
 								{/each}
-								<div class="flex items-center justify-center font-mono text-4xl">
+								<div class="font-mono flex items-center justify-center text-4xl">
 									{selectedContestantQuestionSetOffset.join(' ')}
 								</div>
 							</div>
@@ -1106,7 +1222,7 @@
 											// sendSoundRequest('vcnv_show_row');
 											if (confirm('ARE YOU SURE WANT TO SHOW THIS ANSWER?')) {
 												changeRowState(selectedObstacleRow, 'correct');
-												sendSoundRequest('vcnv_display_picture');
+												// sendSoundRequest('vcnv_display_picture');
 											}
 										}}>Show {selectedObstacleRow}</button
 									>
@@ -1189,7 +1305,7 @@
 											sendSoundRequest('vcnv_time_cnv');
 										}}>Start timer</button
 									>
-									<span class="flex items-center justify-center font-mono text-2xl font-semibold"
+									<span class="font-mono flex items-center justify-center text-2xl font-semibold"
 										>{formatTime2(elapsed)}s</span
 									>
 								</div>
@@ -1251,16 +1367,49 @@
 								}}>Sai</button
 							>
 						</div>
+						<div class="grid grid-cols-[3fr_1fr]">
+							<div class="grid grid-cols-4">
+								{#each contestants as { name, id }}
+									<label class="flex gap-2">
+										<input
+											type="checkbox"
+											class="checkbox checkbox-lg"
+											value={id}
+											bind:group={selectedContestantsWrongState}
+										/>
+										<span class="text-lg 2xl:text-2xl">{name}</span>
+									</label>
+								{/each}
+							</div>
+							<button
+								class="btn"
+								on:click={() => {
+									setContestantWrongState();
+								}}>Set dap an thi sinh sai</button
+							>
+						</div>
 						<button
 							class="btn"
 							class:btn-disabled={selected.screen !== current.screen}
 							on:click={() => {
-								if (selected.screen === 'answers_tt') selected.question++;
-								else selected.slide = 'main_vcnv';
-								selected.screen = selected.screen.slice(8);
-								setScreen();
+								if (confirm('Quay lai?')) {
+									if (selected.screen === 'answers_tt') selected.question++;
+									else selected.slide = 'main_vcnv';
+									selected.screen = selected.screen.slice(8);
+									setScreen();
+									// clearContestantWrongState();
+									clearContestantAnswer();
+								}
 							}}
-							>Back to ques
+							>Back to ques & clear answer
+						</button>
+					{:else if selected.screen === 'scores'}
+						<button
+							class="btn"
+							on:click={() => {
+								sendSoundRequest('tong_ket_diem');
+							}}
+							>Nhac tong ket diem
 						</button>
 					{/if}
 				</div>

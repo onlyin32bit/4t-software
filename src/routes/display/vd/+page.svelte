@@ -24,6 +24,7 @@
 		{ '20': [], '30': [] }
 	];
 	let contestantQuestionSets: { offset: number[]; question_set: string[] }[] = [];
+	let currentRingedContestant: number = -1;
 	let starStatus: boolean;
 
 	const contestantIndex: {
@@ -37,7 +38,7 @@
 
 	let contestants: RecordModel[] = [];
 	let scr_slide: string = '';
-	let ques: number = 1;
+	let question: number = 1;
 	let displayQuestion: boolean = false;
 
 	let unsub: (() => void)[] = [];
@@ -47,7 +48,7 @@
 
 		const displayStatus = await pb.collection('display_status').getOne('4T-DISPLAYSTATE');
 		scr_slide = displayStatus.slide;
-		ques = displayStatus.ques;
+		question = displayStatus.ques;
 
 		const displayStatusVd = await pb.collection('display_status_vd').getOne('4T-DISPLAYSTATE');
 		contestantQuestionSets = [
@@ -90,7 +91,7 @@
 						if (scr_slide !== record.slide) {
 							scr_slide = record.slide;
 						}
-						if (ques !== record.ques) ques = record.ques;
+						if (question !== record.ques) question = record.ques;
 						displayQuestion = record.displayQuestion;
 					}
 				}
@@ -104,15 +105,29 @@
 					}
 				}),
 			await pb.collection('users').subscribe('*', ({ action, record }) => {
-				if (action === 'update')
+				if (action === 'update') {
 					contestants = contestants.map((currentValue) =>
 						currentValue.id === record.id ? record : currentValue
 					);
+					if (record.ring > 0) {
+						currentRingedContestant = contestants.findIndex(({ id }) => id === record.id);
+					} else {
+						currentRingedContestant = -1;
+					}
+				}
 			})
 		];
 	});
 
 	onDestroy(() => unsub.forEach((currentValue) => currentValue?.()));
+
+	function getCurrentContestantIndex(s: string): number {
+		if (s.startsWith('pre_ques')) return contestantIndex[s.slice(4)];
+		else if (s.startsWith('ques_ts')) return contestantIndex[s];
+		return -1;
+	}
+
+	$: currentContestantIndex = getCurrentContestantIndex(scr_slide);
 </script>
 
 {#if scr_slide === 'start'}
@@ -125,26 +140,29 @@
 	<div class="fixed h-full w-full bg-bg-3 bg-cover bg-no-repeat"></div>
 {:else if scr_slide.startsWith('pre_ques')}
 	<ScreenPreQuestionVD
-		currentContestantName={contestants[contestantIndex[scr_slide.slice(4)]].name}
-		chosenQuestionSet={contestantQuestionSets[contestantIndex[scr_slide.slice(4)]].question_set}
+		currentContestantName={contestants[currentContestantIndex].name}
+		chosenQuestionSet={contestantQuestionSets[currentContestantIndex].question_set}
 	/>
 {:else if scr_slide.startsWith('ques_ts')}
 	<ScreenQuestionVD
-		questionNumber={ques}
-		questionScore={contestantQuestionSets[contestantIndex[scr_slide]].question_set[ques - 1] ?? ''}
-		questionContent={questions[contestantIndex[scr_slide]][
-			contestantQuestionSets[contestantIndex[scr_slide]].question_set[ques - 1]
-		][ques - 1 - contestantQuestionSets[contestantIndex[scr_slide]].offset[ques - 1]].content ?? ''}
-		questionType={questions[contestantIndex[scr_slide]][
-			contestantQuestionSets[contestantIndex[scr_slide]].question_set[ques - 1]
-		][ques - 1 - contestantQuestionSets[contestantIndex[scr_slide]].offset[ques - 1]].type ?? ''}
-		questionFile={questionsFile[contestantIndex[scr_slide]][
-			contestantQuestionSets[contestantIndex[scr_slide]].question_set[ques - 1]
-		][ques - 1] ?? ''}
+		questionNumber={question}
+		questionScore={contestantQuestionSets[currentContestantIndex]?.question_set[question - 1] ?? ''}
+		questionContent={questions[currentContestantIndex][
+			contestantQuestionSets[currentContestantIndex]?.question_set[question - 1]
+		][question - 1 + contestantQuestionSets[currentContestantIndex]?.offset[question - 1]]
+			.content ?? ''}
+		questionType={questions[currentContestantIndex][
+			contestantQuestionSets[currentContestantIndex]?.question_set[question - 1]
+		][question - 1 + contestantQuestionSets[currentContestantIndex]?.offset[question - 1]].type ??
+			''}
+		questionFile={questionsFile[currentContestantIndex][
+			contestantQuestionSets[currentContestantIndex]?.question_set[question - 1]
+		][question - 1] ?? ''}
 		{displayQuestion}
 		{starStatus}
 		{contestants}
-		currentContestantTurn={contestantIndex[scr_slide]}
+		{currentRingedContestant}
+		currentContestantTurn={currentContestantIndex}
 	/>
 {:else if scr_slide === 'end_ts'}
 	<ScreenEnd isContestantEnd={true} />

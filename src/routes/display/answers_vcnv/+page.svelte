@@ -8,7 +8,6 @@
 	import { sendSoundRequest } from '$lib/utils';
 
 	let contestants: RecordModel[] = [];
-	let screen: string;
 
 	let unsub: (() => void)[] = [];
 	onMount(async () => {
@@ -31,6 +30,9 @@
 					goto('/display/' + record.screen);
 			})
 		];
+		contestants.forEach(async ({ id }) => {
+			await pb.collection('users').update(id, { wrong: false });
+		});
 	});
 	onDestroy(() => unsub.forEach((currentValue) => currentValue?.()));
 </script>
@@ -42,36 +44,56 @@
 		class="fixed left-1/2 top-1/2 h-[110vh] w-[2vw] -translate-x-1/2 -translate-y-1/2 bg-white"
 		in:fly={{ y: -1300, delay: 200, duration: 900 }}
 	></div>
-	{#each contestants as contestant, i}
-		{#if i % 2 === 0}
-			<div class="fixed" style={`left: 52vw; top: ${20 * (i + 0.5)}vh`}>
+	{#each contestants as { name, wrong, answer }, index}
+		{#if index % 2 === 0}
+			<div
+				class="fixed"
+				style={`left: 52vw; top: ${20 * (index + 0.5)}vh; filter: brightness(${wrong ? '0.65' : '1.1'});`}
+			>
 				<div
-					class="flex min-w-[38vw] flex-col border-[0.7vh] bg-gradient-to-tr from-[#0F247D] to-[#26164D] px-[1.5vw]"
-					in:fly|global={{ x: -100, y: -50, delay: i * 200, duration: 500 }}
+					class="flex min-w-[40vw] flex-col border-[0.7vh] bg-gradient-to-tr from-[#0F247D] to-[#26164D]"
+					in:fly|global={{ x: -100, y: -50, delay: index * 200, duration: 500 }}
 				>
-					<h1 class="text-[5vh] font-semibold">{contestant.name}</h1>
+					<h1 class="text-[5vh] font-black text-black">
+						<div
+							class="w-[25vw] bg-white px-[2vw]"
+							style={`clip-path: polygon(100% 0, 100% 65%, 92% 100%, 0 100%, 0 0);`}
+						>
+							{name}
+						</div>
+					</h1>
 					<div
-						class="flex h-[9vh] min-w-[40vw] items-center text-[7vh] font-bold tracking-tighter"
+						class="flex h-[9vh] min-w-[40vw] items-center px-[2vw] text-[7vh] font-bold tracking-tighter"
 						in:slide={{ delay: 1500, duration: 600 }}
 					>
 						<!-- <span > -->
-						{contestant.answer.toUpperCase()}
+						{answer.toUpperCase()}
 						<!-- </span> -->
 					</div>
 				</div>
 			</div>
 		{:else}
-			<div class="fixed" style={`right: 52vw; top: ${20 * (i + 0.5)}vh;`}>
+			<div
+				class="fixed"
+				style={`right: 52vw; top: ${20 * (index + 0.5)}vh; filter: brightness(${wrong ? '0.65' : '1.1'}) drop-shadow(8px 28px 32px #335);`}
+			>
 				<div
-					class="flex min-w-[38vw] flex-col items-end border-[0.7vh] bg-gradient-to-tr from-[#0F247D] to-[#26164D] px-[1.5vw]"
-					in:fly|global={{ x: 100, y: -50, delay: i * 180, duration: 500 }}
+					class="flex min-w-[40vw] flex-col items-end border-[0.7vh] bg-gradient-to-tr from-[#0F247D] to-[#26164D]"
+					in:fly|global={{ x: 100, y: -50, delay: index * 180, duration: 500 }}
 				>
-					<h1 class="text-[5vh] font-semibold">{contestant.name}</h1>
+					<h1 class="text-right text-[5vh] font-black text-black">
+						<div
+							class="w-[25vw] bg-white px-[2vw]"
+							style={`clip-path: polygon(100% 0, 100% 100%, 8% 100%, 0 65%, 0 0);`}
+						>
+							{name}
+						</div>
+					</h1>
 					<div
-						class="flex h-[9vh] min-w-[40vw] items-center justify-end text-[7vh] font-bold tracking-tighter"
+						class="flex h-[9vh] min-w-[40vw] items-center justify-end px-[2vw] text-[7vh] font-bold tracking-tighter"
 						in:slide={{ delay: 1500, duration: 600 }}
 					>
-						{contestant.answer.toUpperCase()}
+						{answer.toUpperCase()}
 					</div>
 				</div>
 			</div>
