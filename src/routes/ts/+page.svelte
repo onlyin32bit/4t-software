@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { preventDefault } from 'svelte/legacy';
+
 	import {
 		dictionary,
 		timerSettings,
@@ -15,19 +17,19 @@
 	import AuthCheck from '$lib/components/AuthCheck.svelte';
 	import { socket } from '$lib/socket.io-client';
 
-	let thisContestant: RecordModel = {
+	let thisContestant: RecordModel = $state({
 		collectionId: '',
 		collectionName: '',
 		id: '',
 		created: '',
 		updated: ''
-	};
-	let contestants: RecordModel[] = [];
-	let answer: string;
-	let answerInputElement: HTMLElement;
+	});
+	let contestants: RecordModel[] = $state([]);
+	let answer: string = $state('');
+	let answerInputElement = $state() as HTMLElement;
 
-	let elapsed: number = 0;
-	let bellAllowed: boolean = false;
+	let elapsed: number = $state(0);
+	let bellAllowed: boolean = $state(false);
 	let stopTimer: boolean = false;
 
 	let current: {
@@ -35,12 +37,12 @@
 		slide: string;
 		question: number;
 		numberOfQues: number;
-	} = {
+	} = $state({
 		screen: '',
 		slide: '',
 		question: -1,
 		numberOfQues: -1
-	};
+	});
 
 	let unsub: (() => void)[] = [];
 	onMount(async () => {
@@ -196,7 +198,7 @@
 					{:else}
 						<div>
 							{#key contestant.score}
-								<span class="font-mono font-bold" out:fly={{ y: -20 }}>
+								<span class="font-mono font-bold" in:fly={{ y: 20 }} out:fly={{ y: -20 }}>
 									{contestant.score}
 								</span>
 							{/key}
@@ -208,7 +210,7 @@
 		{#if (current.screen === 'kd' && (current.slide === 'ques_chung' || current.slide === 'test_bell')) || current.screen === 'vd'}
 			<button
 				class=" font-mono select-none border-[3px] border-gray-400 text-center text-6xl hover:bg-red-100"
-				on:click|preventDefault={ringBell}
+				onclick={preventDefault(ringBell)}
 				><div class="flex flex-col items-center gap-4">
 					<svg class="w-10" viewBox="0 0 448 512"
 						><path
@@ -226,7 +228,7 @@
 					</div>
 					<div class="grid grid-cols-[1fr_12rem] grid-rows-[2rem_1fr] border-[3px] border-gray-400">
 						<div class="px-4 text-2xl">Câu trả lời đã gửi:</div>
-						<div class="font-mono row-span-2 flex items-center justify-center font-bold">
+						<div class="flex items-center justify-center row-span-2 font-mono font-bold">
 							{formatTime2(thisContestant.time)}
 						</div>
 						<div class="flex items-center px-4 text-5xl font-semibold">{thisContestant.answer}</div>
@@ -238,7 +240,7 @@
 					>
 						<span class="text-xl">Thời gian:</span>
 						{#if elapsed === 0}
-							<span class="text-center text-5xl font-medium">Đã hết thời gian</span>
+							<span class="text-5xl font-medium text-center">Đã hết thời gian</span>
 						{:else}
 							<span>{(elapsed / 1000).toFixed(2)}s</span>
 						{/if}
@@ -246,8 +248,8 @@
 					<div class="select-none border-[3px] border-gray-400">
 						{#if ['main_vcnv', 'image_vcnv', 'ques'].includes(current.slide) && current.screen !== 'tt'}
 							<button
-								class="font-mono h-full text-center text-6xl hover:bg-red-100"
-								on:click|preventDefault={ringBell}
+								class="h-full font-mono text-6xl text-center hover:bg-red-100"
+								onclick={preventDefault(ringBell)}
 								><div class="flex flex-col items-center gap-4">
 									<svg class="w-10" viewBox="0 0 448 512"
 										><path
@@ -262,9 +264,9 @@
 				</div>
 			</div>
 			<div class="border-[3px] border-gray-400">
-				<form on:submit|preventDefault={createAnswer} class="h-full">
+				<form onsubmit={preventDefault(createAnswer)} class="h-full">
 					<input
-						class="h-full w-full px-4 text-6xl uppercase"
+						class="w-full h-full px-4 text-6xl uppercase"
 						type="text"
 						placeholder="Nhập câu trả lời của bạn, ENTER để gửi"
 						bind:value={answer}

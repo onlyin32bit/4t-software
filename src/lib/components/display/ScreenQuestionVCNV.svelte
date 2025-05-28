@@ -8,8 +8,6 @@
 
 	export let questionNumber: number = 0;
 	export let questionContent: string = '';
-	export let questionType: string = '';
-	export let questionFile: string = '';
 	export let displayQuestion: boolean = false;
 	export let contestants: RecordModel[] = [];
 
@@ -53,7 +51,7 @@
 	}
 </script>
 
-<div class="fixed h-full w-full bg-bg-2 bg-cover bg-no-repeat">
+<div class="fixed w-full h-full bg-no-repeat bg-cover bg-bg-2">
 	<img
 		class="absolute left-[45vw] top-[2vh] h-[90vh] w-[90vw] -translate-x-1/2"
 		style={`filter: drop-shadow(8px 28px 32px #335);`}

@@ -469,7 +469,7 @@
 <Toaster closeButton richColors position="top-right" />
 
 <AuthCheck requiredBTC={true}>
-	<section class="h-screen w-screen overflow-hidden">
+	<section class="w-screen h-screen overflow-hidden">
 		<div
 			class="grid h-full grid-cols-[1fr_1.3fr] grid-rows-[50px_1fr_1fr_50px] border-[3px] border-gray-400"
 		>
@@ -496,8 +496,8 @@
 			</div>
 			<!-- logs -->
 			<div class="row-span-2 flex flex-col border-[3px] border-gray-400">
-				<div class="mt-1 flex h-full flex-col-reverse overflow-auto" bind:this={logsElement}>
-					<table class="table table-pin-rows table-sm mb-auto">
+				<div class="flex flex-col-reverse h-full mt-1 overflow-auto" bind:this={logsElement}>
+					<table class="table mb-auto table-pin-rows table-sm">
 						<thead class="border-b-2">
 							<tr>
 								<th class="w-32">Thời gian</th>
@@ -540,7 +540,7 @@
 			<div class="grid grid-rows-[1fr_50px]">
 				<div class="h-full border-[3px] border-gray-400">
 					{#if menu === 'info'}
-						<table class="table table-zebra table-md w-full">
+						<table class="table w-full table-zebra table-md">
 							<thead>
 								<tr>
 									<th>STT</th>
@@ -586,25 +586,25 @@
 						<div
 							class="grid h-full grid-cols-[12rem_1fr_7rem_3rem_1fr_3rem] grid-rows-[30px_1fr_1fr_1fr_1fr]"
 						>
-							<div class="flex items-center border-b-2 px-3 py-1 text-xs font-bold text-gray-400">
+							<div class="flex items-center px-3 py-1 text-xs font-bold text-gray-400 border-b-2">
 								TÊN THÍ SINH
 							</div>
-							<div class="flex items-center border-b-2 px-3 py-1 text-xs font-bold text-gray-400">
+							<div class="flex items-center px-3 py-1 text-xs font-bold text-gray-400 border-b-2">
 								CÂU TRẢ LỜI
 							</div>
 							<div
-								class="flex items-center justify-center border-b-2 px-3 py-1 text-xs font-bold text-gray-400"
+								class="flex items-center justify-center px-3 py-1 text-xs font-bold text-gray-400 border-b-2"
 							>
 								THỜI GIAN
 							</div>
 							<div
-								class="col-span-3 flex items-center justify-center border-b-2 px-3 py-1 text-xs font-bold text-gray-400"
+								class="flex items-center justify-center col-span-3 px-3 py-1 text-xs font-bold text-gray-400 border-b-2"
 							>
 								ĐIỂM
 							</div>
 							{#each contestants as contestant, contestantIndex (contestant.id)}
 								<div
-									class="flex items-center gap-2 border-b-2 px-3 text-xl font-semibold"
+									class="flex items-center gap-2 px-3 text-xl font-semibold border-b-2"
 									title={`${contestant.name} - Lớp ${contestant.class} [Status: ${contestant.online ? 'ONLINE' : 'OFFLINE'}]`}
 								>
 									<svg viewBox="0 0 500 500" width="12px" height="12px"
@@ -630,10 +630,10 @@
 										</svg>
 									{/if}
 								</div>
-								<div class="flex items-center border-b-2 px-3 text-lg">
+								<div class="flex items-center px-3 text-lg border-b-2">
 									{contestant.answer === '' ? 'Chưa có câu trả lời' : contestant.answer}
 								</div>
-								<div class="font-mono flex items-center justify-center border-b-2 text-xl">
+								<div class="flex items-center justify-center font-mono text-xl border-b-2">
 									{contestant.time === -2
 										? 'ended'
 										: contestant.time === -1
@@ -641,13 +641,13 @@
 											: formatTime2(contestant.time)}
 								</div>
 								<button
-									class="h-full w-full bg-slate-100 text-3xl font-light text-gray-400 transition-colors hover:bg-blue-100"
+									class="w-full h-full text-3xl font-light text-gray-400 transition-colors bg-slate-100 hover:bg-blue-100"
 									on:click={() => {
 										selectedScore[contestantIndex] -= 5;
 									}}>-</button
 								>
 								<div class="flex items-center justify-center border-b-2">
-									<div class="font-mono flex translate-x-6 text-3xl">
+									<div class="flex font-mono text-3xl translate-x-6">
 										{#key contestant.score}
 											<div class="relative">
 												<span
@@ -657,7 +657,7 @@
 												>
 											</div>
 										{/key}
-										<div class="ml-3 flex items-baseline">
+										<div class="flex items-baseline ml-3">
 											<span class="font-thin text-gray-400">
 												{selectedScore[contestantIndex] >= 0 ? '+' : ''}
 											</span>
@@ -671,7 +671,7 @@
 									</div>
 								</div>
 								<button
-									class="h-full w-full bg-slate-100 text-3xl font-light text-gray-400 transition-colors hover:bg-blue-100"
+									class="w-full h-full text-3xl font-light text-gray-400 transition-colors bg-slate-100 hover:bg-blue-100"
 									on:click={() => {
 										selectedScore[contestantIndex] += 10;
 									}}>+</button
@@ -750,7 +750,7 @@
 
 			<!-- dieu khien man hinh -->
 			<div class="select-none border-[3px] border-gray-400">
-				<div class="grid h-16 grid-flow-col border-b-2 text-xl">
+				<div class="grid h-16 grid-flow-col text-xl border-b-2">
 					{#each ['', 'main', 'logo', 'answers_tt', 'answers_vcnv', 'scores', 'kd', 'vcnv', 'tt', 'vd', 'extra'] as screen}
 						<button
 							class={`transition-colors duration-300 ${current.screen === screen ? 'text-black' : 'text-gray-400 hover:text-gray-500'} ${selected.screen === screen ? 'bg-red-100' : 'hover:bg-gray-50'}`}
@@ -787,7 +787,7 @@
 								}}
 								>{'<'}
 							</button>
-							<select class="select select-bordered select-md text-xl" bind:value={selected.slide}>
+							<select class="text-xl select select-bordered select-md" bind:value={selected.slide}>
 								{#each selectionSlideList as value}
 									<option {value}>{dictionary.get(value)}</option>
 								{/each}
@@ -828,7 +828,7 @@
 									}}>{'<'}</button
 								>
 								{#if selected.question > selected.numberOfQuestion}
-									<div class="text-center text-4xl font-bold">ENDED</div>
+									<div class="text-4xl font-bold text-center">ENDED</div>
 								{:else}
 									<div class="flex justify-center">
 										<input
@@ -838,7 +838,7 @@
 											max={current.numberOfQuestion}
 											bind:value={selected.question}
 										/>
-										<div class="flex w-8 flex-col">
+										<div class="flex flex-col w-8">
 											<button
 												class="btn btn-xs"
 												class:btn-disabled={selected.question >= selected.numberOfQuestion}
@@ -934,7 +934,7 @@
 									>END SLIDE
 								</button>
 
-								<span class="font-mono flex items-center justify-center text-2xl font-semibold"
+								<span class="flex items-center justify-center font-mono text-2xl font-semibold"
 									>{formatTime2(elapsed)}s</span
 								>
 							</div>
@@ -1026,7 +1026,7 @@
 									class="btn"
 									class:btn-disabled={selected.screen !== 'vd'}
 									on:click={() => {
-										startTimer(5);
+										startTimer(5000);
 										sendSoundRequest('vd_time_5');
 										setBellAllow(true);
 										setTimeout(() => {
@@ -1135,7 +1135,7 @@
 						{#if selected.slide.startsWith('pre_ques')}
 							<div class="grid grid-cols-5 gap-4">
 								{#each [0, 1, 2] as questionInSet}
-									<div class="flex justify-between rounded-xl border px-4 py-2">
+									<div class="flex justify-between px-4 py-2 border rounded-xl">
 										<span class="text-2xl font-black">{questionInSet + 1}</span>
 										{#each ['20', '30'] as questionPackage}
 											<label class="flex items-center gap-1">
@@ -1163,13 +1163,13 @@
 										}
 									}}>Set question set</button
 								>
-								<div class="font-mono flex items-center justify-center text-4xl">
+								<div class="flex items-center justify-center font-mono text-4xl">
 									{selectedContestantQuestionSet.join(' ')}
 								</div>
 							</div>
 							<div class="grid grid-cols-4 gap-4">
 								{#each [0, 1, 2] as questionOffset}
-									<div class="flex justify-between rounded-xl border px-4 py-2">
+									<div class="flex justify-between px-4 py-2 border rounded-xl">
 										<span class="text-2xl font-black">{questionOffset + 1}</span>
 										{#each [1, 2, 3] as questionPackage}
 											<label class="flex items-center gap-1">
@@ -1185,7 +1185,7 @@
 										{/each}
 									</div>
 								{/each}
-								<div class="font-mono flex items-center justify-center text-4xl">
+								<div class="flex items-center justify-center font-mono text-4xl">
 									{selectedContestantQuestionSetOffset.join(' ')}
 								</div>
 							</div>
@@ -1202,7 +1202,7 @@
 						{#if selected.screen === 'vcnv'}
 							{#if selected.slide === 'main_vcnv'}
 								<div class="grid grid-cols-7 gap-4">
-									<div class="col-span-2 flex gap-3">
+									<div class="flex col-span-2 gap-3">
 										{#each [1, 2, 3, 4] as item}
 											<label class="flex items-center gap-1">
 												<input
@@ -1305,14 +1305,14 @@
 											sendSoundRequest('vcnv_time_cnv');
 										}}>Start timer</button
 									>
-									<span class="font-mono flex items-center justify-center text-2xl font-semibold"
+									<span class="flex items-center justify-center font-mono text-2xl font-semibold"
 										>{formatTime2(elapsed)}s</span
 									>
 								</div>
 							{/if}
 							{#if selected.slide === 'image_vcnv'}
 								<div class="grid grid-cols-4">
-									<div class="col-span-2 flex gap-3">
+									<div class="flex col-span-2 gap-3">
 										{#each [1, 2, 3, 4, 'center'] as item}
 											<label class="flex items-center gap-1">
 												<input
@@ -1416,9 +1416,9 @@
 			</div>
 
 			<div class="col-span-2 flex items-center border-[3px] border-gray-400 pr-3">
-				<form class="h-full w-full" on:submit|preventDefault={createMessage}>
+				<form class="w-full h-full" on:submit|preventDefault={createMessage}>
 					<input
-						class="h-full w-full px-4 text-xl"
+						class="w-full h-full px-4 text-xl"
 						type="text"
 						placeholder="Nhập tin nhắn, nhấn Enter để gửi"
 						bind:value={messageContent}
@@ -1426,8 +1426,8 @@
 					/>
 				</form>
 				<button
-					title="Emoji"
-					class="btn btn-circle btn-sm ml-auto"
+					aria-label="Emoji"
+					class="ml-auto btn btn-circle btn-sm"
 					on:click|preventDefault={() => {}}
 				>
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">

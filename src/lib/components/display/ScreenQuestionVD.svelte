@@ -100,8 +100,8 @@
 	}
 </script>
 
-<div class="fixed h-full w-full bg-bg-2 bg-cover bg-no-repeat">
-	<div class="left-[1vw] top-[17vh] h-[65vh] w-[80vw]" bind:clientHeight={containerHeight}>
+<div class="fixed w-full h-full bg-no-repeat bg-cover bg-bg-2">
+	<div class="fixed left-[1vw] top-[17vh] h-[65vh] w-[80vw]" bind:clientHeight={containerHeight}>
 		<img
 			class="absolute top-[-10vh] w-[80vw]"
 			style={`filter: drop-shadow(8px 28px 32px #335);`}
@@ -178,7 +178,7 @@
 			in:scale
 		/>
 	{/if}
-	<!-- <div class="fixed left-0 top-0 text-4xl font-black">
+	<!-- <div class="fixed top-0 left-0 text-4xl font-black">
 		{questionFile}
 		{timeStatus}
 		{displayQuestion}

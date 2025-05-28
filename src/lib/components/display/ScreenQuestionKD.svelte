@@ -71,9 +71,9 @@
 	}
 </script>
 
-<div class="fixed h-full w-full bg-bg-2 bg-cover bg-no-repeat">
+<div class="fixed w-full h-full bg-no-repeat bg-cover bg-bg-2">
 	<div
-		class="left-[1vw] top-[17vh] h-[65vh] w-[80vw] font-semibold"
+		class="fixed left-[1vw] top-[17vh] h-[65vh] w-[80vw] font-semibold"
 		bind:clientHeight={containerHeight}
 	>
 		<img
@@ -138,5 +138,5 @@
 			{timeStatus ? (3 - $time).toFixed(0) : ''}
 		</div>
 	</div>
-	<!-- <div class="fixed left-0 top-0 text-4xl font-black">{questionFile}</div> -->
+	<!-- <div class="fixed top-0 left-0 text-4xl font-black">{questionFile}</div> -->
 </div>
