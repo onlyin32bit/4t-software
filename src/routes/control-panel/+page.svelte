@@ -1026,7 +1026,7 @@
 									class="btn"
 									class:btn-disabled={selected.screen !== 'vd'}
 									on:click={() => {
-										startTimer(5000);
+										startTimer(5);
 										sendSoundRequest('vd_time_5');
 										setBellAllow(true);
 										setTimeout(() => {

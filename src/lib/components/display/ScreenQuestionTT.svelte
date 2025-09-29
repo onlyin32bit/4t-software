@@ -46,7 +46,7 @@
 	}
 </script>
 
-<div class="fixed h-full w-full bg-bg-2 bg-cover bg-no-repeat" in:slide={{ duration: 1500 }}>
+<div class="fixed w-full h-full bg-no-repeat bg-cover bg-bg-2" in:slide={{ duration: 1500 }}>
 	<div>
 		<img
 			class="absolute left-[10vw] w-[73vw]"
@@ -81,14 +81,14 @@
 		</div>
 		<div class="fixed bottom-[4.42vh] left-[14vw] h-[72vh] w-[65vw]">
 			{#if displayQuestion}
-				{#if questionNumber % 2 === 1}
+				{#if questionNumber !== 4}
 					<img
-						class="absolute left-1/2 h-full -translate-x-1/2"
+						class="absolute h-full -translate-x-1/2 left-1/2"
 						src={questionFile}
 						alt={questionFile}
 					/>
 				{:else if $time > 0}
-					<video class="absolute left-1/2 h-full -translate-x-1/2" muted autoplay>
+					<video class="absolute h-full -translate-x-1/2 left-1/2" muted autoplay>
 						<source src={questionFile} type="video/mp4" />
 						<h1>ERROR</h1>
 					</video>
