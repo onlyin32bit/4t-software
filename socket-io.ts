@@ -1,8 +1,22 @@
 import { Server } from 'socket.io';
 import type { HttpServer } from 'vite';
-import { pb } from './src/lib/pocketBase';
-import { createLogMessage } from './src/lib/utils';
-import type { AuthModel } from 'pocketbase';
+import Pocketbase, { type AuthModel } from 'pocketbase';
+import { configDotenv } from 'dotenv';
+
+configDotenv();
+
+const pb = new Pocketbase(`http://${process.env.PUBLIC_PB_ADDR ?? '127.0.0.1'}:8090`);
+pb.autoCancellation(false);
+
+async function createLogMessage(from: string, type: string, content: string) {
+	const Message = {
+		time: Date.now().toLocaleString(),
+		from: from,
+		type: type,
+		content: content
+	};
+	await pb.collection('logs').create(Message);
+}
 
 export function attachSocket(server: HttpServer) {
 	const io = new Server(server);

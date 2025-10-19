@@ -5,24 +5,26 @@
 
 	export let screen: 'kd' | 'tt' | 'vcnv' | 'vd';
 
-	const nameMap: Map<string, { name: string; color: string; sound: string }> = new Map([
-		['kd', { name: 'KHỞI ĐỘNG', color: 'F58F3E', sound: 'kd_start_2' }],
-		['vcnv', { name: 'VƯỢT\n CHƯỚNG NGẠI VẬT', color: 'F58F3E', sound: 'vcnv_start' }],
-		['tt', { name: 'TĂNG TỐC', color: 'D52E29', sound: 'tt_start' }],
-		['vd', { name: 'VỀ ĐÍCH', color: 'FF0000', sound: 'vd_start' }]
-	]);
+	const scrRec: Record<typeof screen, { name: string; color: string; sound: string }> = {
+		'kd': { name: 'KHỞI ĐỘNG', color: 'F58F3E', sound: 'kd_start_2' },
+		'vcnv': { name: 'VƯỢT\n CHƯỚNG NGẠI VẬT', color: 'F58F3E', sound: 'vcnv_start' },
+		'tt': { name: 'TĂNG TỐC', color: 'D52E29', sound: 'tt_start' },
+		'vd': { name: 'VỀ ĐÍCH', color: 'FF0000', sound: 'vd_start' }
+	};
+
+	const scr = scrRec[screen];
 
 	onMount(() => {
-		sendSoundRequest(nameMap.get(screen)?.sound ?? '');
+		sendSoundRequest(scr.sound);
 	});
 </script>
 
-<div class="fixed h-full w-full bg-bg-3 bg-cover bg-no-repeat" in:scale={{ duration: 900 }}>
+<div class="fixed w-full h-full bg-no-repeat bg-cover bg-bg-3" in:scale={{ duration: 900 }}>
 	<h1
 		class="center-element fixed w-screen whitespace-pre-line text-center font-game-display text-[16vh] font-bold"
-		style={`-webkit-text-stroke: 1px #fff; color: #${nameMap.get(screen)?.color}; ${screen === 'vd' ? '-webkit-box-reflect: below -9vh linear-gradient(to bottom, rgba(0,0,0,0.0), rgba(0,0,0,0.2));' : ''}`}
+		style={`-webkit-text-stroke: 1px #fff; color: #${scr.color}; ${screen === 'vd' ? '-webkit-box-reflect: below -9vh linear-gradient(to bottom, rgba(0,0,0,0.0), rgba(0,0,0,0.2));' : ''}`}
 		in:scale={{ delay: 300, duration: 6000 }}
 	>
-		{nameMap.get(screen)?.name}
+		{scr.name}
 	</h1>
 </div>

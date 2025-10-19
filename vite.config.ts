@@ -15,7 +15,4 @@ const socketIO = {
 
 export default defineConfig({
 	plugins: [sveltekit(), socketIO],
-	define: {
-		'process.env.PUBLIC_DB_ADDRESS': JSON.stringify(process.env.PUBLIC_DB_ADDRESS)
-	}
 });

@@ -9,12 +9,12 @@
 
 	export let screen: 'kd' | 'tt' | 'vcnv' | 'vd';
 
-	const nameMap: Map<'kd' | 'tt' | 'vcnv' | 'vd', { name: string }> = new Map([
-		['kd', { name: 'KHỞI ĐỘNG' }],
-		['vcnv', { name: 'VƯỢT CHƯỚNG NGẠI VẬT' }],
-		['tt', { name: 'TĂNG TỐC' }],
-		['vd', { name: 'VỀ ĐÍCH' }]
-	]);
+	const name: Record<typeof screen, string> = {
+		'kd': 'KHỞI ĐỘNG',
+		'vcnv': 'VƯỢT CHƯỚNG NGẠI VẬT',
+		'tt': 'TĂNG TỐC',
+		'vd': 'VỀ ĐÍCH'
+	};
 
 	let particlesConfig = {
 		particles: {
@@ -82,10 +82,10 @@
 	}
 </script>
 
-<div class="fixed h-full w-full bg-bg-2 bg-cover bg-no-repeat" out:fade>
+<div class="fixed w-full h-full bg-no-repeat bg-cover bg-bg-2" out:fade>
 	<Particles
 		id="tsparticles"
-		class="h-screen w-screen"
+		class="w-screen h-screen"
 		style=""
 		options={particlesConfig}
 		on:particlesLoaded={onParticlesLoaded}
@@ -102,7 +102,7 @@
 		class="fixed left-1/2 top-[58vh] flex font-game-display text-[18vh] font-bold"
 		style={`${screen === 'vcnv' ? 'transform: translate(-50%,0)' : 'transform: scale(1.4) translate(-35%,0)'}`}
 	>
-		{#each nameMap.get(screen)?.name ?? '' as character, i}
+		{#each name[screen] as character, i}
 			<div
 				class="text-center"
 				style={`font-size: 12vh; width: ${getCharacterWidth(character)}vw; filter: drop-shadow(0.1vh 0.2vh 1vh #337);`}
