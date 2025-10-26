@@ -22,7 +22,7 @@
 		class="center-element fixed flex h-[40vh] w-[60vw] overflow-auto rounded-xl bg-white px-8 py-7 shadow-md"
 	>
 		<div class="flex flex-col items-start gap-4">
-			<img src="/src/lib/image/4t.png" alt="Logo 4T" class="h-20" />
+			<img src="/4t.png" alt="Logo 4T" class="h-20" />
 			<h1 class="text-4xl font-medium">Thách Thức Trí Tuệ</h1>
 			<h2>Đăng nhập ban tổ chức</h2>
 			<p class="mt-auto">InDev</p>

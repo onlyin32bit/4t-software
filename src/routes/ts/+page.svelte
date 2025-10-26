@@ -155,7 +155,7 @@
 	>
 		<div class="flex items-center justify-between border-[3px] border-gray-400 px-4">
 			<div class="flex items-center gap-8">
-				<img class="h-10" src="/src/lib/image/4t-blue.png" alt="Logo 4T" />
+				<img class="h-10" src="/4t-blue.png" alt="Logo 4T" />
 				<span class="text-3xl font-semibold">TRANG THÍ SINH - THÁCH THỨC TRÍ TUỆ MÙA 8</span>
 			</div>
 			<div class="flex items-center gap-4">

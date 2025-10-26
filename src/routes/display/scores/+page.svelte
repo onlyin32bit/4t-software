@@ -29,10 +29,10 @@
 
 <!-- main display -->
 <div class="h-screen w-screen bg-bg-2 bg-cover bg-no-repeat text-[6vh] text-white">
-	<img class="fixed right-[9vw] top-[3vh] h-[10vh]" src="/src/lib/image/4t.png" alt="Logo 4T" />
+	<img class="fixed right-[9vw] top-[3vh] h-[10vh]" src="/4t.png" alt="Logo 4T" />
 	<img
 		class="fixed right-[2vw] top-[3vh] h-[10.5vh]"
-		src="/src/lib/image/logo-cbt.png"
+		src="/logo-cbt.png"
 		alt="Logo THPT Chuyen Ben Tre"
 	/>
 	<h1

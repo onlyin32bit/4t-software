@@ -150,7 +150,7 @@
 				<img
 					class="absolute left-1/2 top-1/2 h-[95vh] w-[90vw] -translate-x-1/2 -translate-y-1/2"
 					style={`filter: drop-shadow(8px 28px 32px #335);`}
-					src="/src/lib/image/bg2.svg"
+					src="/bg2.svg"
 					alt=""
 				/>
 			</div>

@@ -341,6 +341,13 @@
 		createLogMessage('system', 'INFO', `Đã ${value ? 'mở' : 'đóng'} chuông`);
 	}
 
+	async function setFiveSecconds() {
+		await pb.collection('display_status').update('4T-DISPLAYSTATE', {
+			bellAllowed: true,
+			timer: 5,
+		});
+	}
+
 	async function clearContestantAnswer(log: boolean = false) {
 		contestants.forEach(async ({ id }) => {
 			await pb.collection('users').update(id, { answer: null, time: 0 });
@@ -476,7 +483,7 @@
 			<!-- header -->
 			<div class="flex items-center justify-between border-[3px] border-gray-400 p-2">
 				<div class="flex items-center gap-4 text-xl font-semibold">
-					<a href="/"><img src="/src/lib/image/4t-blue.png" alt="Logo 4T" class="h-10" /></a>
+					<a href="/"><img src="/4t-blue.png" alt="Logo 4T" class="h-10" /></a>
 					<h1>CONTROL PANEL - THÁCH THỨC TRÍ TUỆ MÙA {settings.season}</h1>
 				</div>
 				<div class="flex items-center gap-4">
@@ -1026,9 +1033,8 @@
 									class="btn"
 									class:btn-disabled={selected.screen !== 'vd'}
 									on:click={() => {
-										startTimer(5);
 										sendSoundRequest('vd_time_5');
-										setBellAllow(true);
+										setFiveSecconds()
 										setTimeout(() => {
 											setBellAllow(false);
 										}, 5000);

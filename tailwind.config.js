@@ -5,14 +5,14 @@ export default {
 	theme: {
 		extend: {
 			backgroundImage: {
-				'bg-1': "url('/src/lib/image/bg-1.png')",
-				// 'bg-2': "url('/src/lib/image/bg-2.jpg')",
-				'bg-2': "url('/src/lib/image/bg-4.jpg')",
-				'bg-3': "url('/src/lib/image/bg-3.png')",
-				start: "url('/src/lib/image/start.jpg')",
-				'bg-5': "url('/src/lib/image/bg-5.webp')",
-				'bg-rule': "url('/src/lib/image/rule.png')",
-				'bg-kd': "url('/src/lib/image/kd-bg.png')"
+				'bg-1': "url('/bg-1.png')",
+				// 'bg-2': "url('/bg-2.jpg')",
+				'bg-2': "url('/bg-4.jpg')",
+				'bg-3': "url('/bg-3.png')",
+				start: "url('/start.jpg')",
+				'bg-5': "url('/bg-5.webp')",
+				'bg-rule': "url('/rule.png')",
+				'bg-kd': "url('/kd-bg.png')"
 			},
 			fontFamily: {
 				'header-text': ['SVN-HEAD'],

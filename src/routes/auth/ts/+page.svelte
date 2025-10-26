@@ -24,7 +24,7 @@
 			out:fly={{ y: 100 }}
 		>
 			<div class="space-y-3">
-				<img src="/src/lib/image/4t.png" alt="Logo 4T" class="h-20" />
+				<img src="/4t.png" alt="Logo 4T" class="h-20" />
 				<h1 class="text-4xl font-medium">Thách Thức Trí Tuệ</h1>
 				<h2>Đăng nhập thí sinh</h2>
 			</div>

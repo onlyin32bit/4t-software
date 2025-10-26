@@ -105,7 +105,7 @@
 		<img
 			class="absolute top-[-10vh] w-[80vw]"
 			style={`filter: drop-shadow(8px 28px 32px #335);`}
-			src="/src/lib/image/bg-ques.svg"
+			src="/bg-ques.svg"
 			alt="BG"
 			in:scale={{ duration: 3000 }}
 		/>
@@ -173,7 +173,7 @@
 	{#if starStatus}
 		<img
 			class="fixed right-[18vw] top-[-5vh] h-[47vh]"
-			src="/src/lib/image/stars/Star_4T_1.gif"
+			src="/stars/Star_4T_1.gif"
 			alt="Star"
 			in:scale
 		/>

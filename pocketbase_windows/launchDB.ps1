@@ -9,6 +9,6 @@ if (Test-Path $envFilePath) {
 }
 
 # Start the Pocketbase server with the specified HTTP address
-$publicDbAddress = $env:PUBLIC_DB_ADDRESS
+$publicDbAddress = $env:PUBLIC_PB_ADDR
 $httpPort = "8090"
 Start-Process -NoNewWindow -File "./pocketbase" -ArgumentList "serve", "--http=${publicDbAddress}:$httpPort"

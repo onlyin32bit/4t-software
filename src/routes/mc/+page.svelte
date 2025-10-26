@@ -86,7 +86,7 @@
 			<div
 				class="col-span-2 flex items-center gap-8 border-[3px] border-gray-400 p-2 text-xl font-semibold"
 			>
-				<a href="/"><img src="/src/lib/image/4t-blue.png" alt="Logo 4T" class="h-10" /></a>
+				<a href="/"><img src="/4t-blue.png" alt="Logo 4T" class="h-10" /></a>
 				<h1>TRANG MC - THÁCH THỨC TRÍ TUỆ MÙA 8</h1>
 			</div>
 			<div class="row-span-2 flex flex-col border-[3px] border-gray-400">

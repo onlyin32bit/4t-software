@@ -23,7 +23,7 @@
 		<img
 			class="absolute left-[10vw] w-[73vw]"
 			style={`filter: drop-shadow(8px 28px 32px #335);`}
-			src="/src/lib/image/bg-tt.svg"
+			src="/bg-tt.svg"
 			alt="BG"
 		/>
 		<div

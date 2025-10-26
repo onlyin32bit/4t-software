@@ -32,10 +32,10 @@
 <div
 	class="pointer-events-none flex h-screen w-screen select-none bg-bg-2 bg-cover bg-no-repeat text-[8vh] font-semibold tracking-wide text-white"
 >
-	<img class="fixed left-[3vw] top-[5vh] h-[16vh]" src="/src/lib/image/4t.png" alt="Logo 4T" in:fade/>
+	<img class="fixed left-[3vw] top-[5vh] h-[16vh]" src="/4t.png" alt="Logo 4T" in:fade/>
 	<img
 		class="fixed right-[3vw] top-[5.5vh] h-[17vh]"
-		src="/src/lib/image/logo-cbt.png"
+		src="/logo-cbt.png"
 		alt="Logo THPT Chuyen Ben Tre"
 		in:fade
 	/>

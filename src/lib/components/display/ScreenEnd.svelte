@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { scale, slide, fade } from 'svelte/transition';
-	import logo from '$lib/image/4t.png';
 	import { sendSoundRequest } from '$lib/utils';
 	import { onMount } from 'svelte';
 
@@ -12,10 +11,10 @@
 	});
 </script>
 
-<div class="fixed h-full w-full bg-bg-3 bg-cover bg-no-repeat">
+<div class="fixed w-full h-full bg-no-repeat bg-cover bg-bg-3">
 	<img
 		class="center-element fixed h-[50vh]"
-		src={logo}
+		src="/4t.png"
 		alt="Logo 4T"
 		in:slide={{ duration: 4000 }}
 	/>

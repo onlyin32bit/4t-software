@@ -1,5 +1,4 @@
 <script lang="ts">
-	import logo from '$lib/image/4t.png';
 	import { fade, fly } from 'svelte/transition';
 	import { onMount } from 'svelte';
 	import { sendSoundRequest } from '$lib/utils';
@@ -93,7 +92,7 @@
 	<img
 		class="fixed left-[32.5vw] top-[15vh] w-[35vw]"
 		style={`filter: drop-shadow(8px 10px 1vh #337);`}
-		src={logo}
+		src="/4t.png"
 		alt="Logo 4T"
 		in:fly|global={{ duration: 3000, y: -600, opacity: 0.7 }}
 	/>

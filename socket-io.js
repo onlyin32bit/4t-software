@@ -1,6 +1,5 @@
 import { Server } from 'socket.io';
-import type { HttpServer } from 'vite';
-import Pocketbase, { type AuthModel } from 'pocketbase';
+import Pocketbase from 'pocketbase';
 import { configDotenv } from 'dotenv';
 
 configDotenv();
@@ -8,7 +7,12 @@ configDotenv();
 const pb = new Pocketbase(`http://${process.env.PUBLIC_PB_ADDR ?? '127.0.0.1'}:8090`);
 pb.autoCancellation(false);
 
-async function createLogMessage(from: string, type: string, content: string) {
+/**
+ * @param {string} from
+ * @param {string} type
+ * @param {string} content
+ */
+async function createLogMessage(from, type, content) {
 	const Message = {
 		time: Date.now().toLocaleString(),
 		from: from,
@@ -18,12 +22,18 @@ async function createLogMessage(from: string, type: string, content: string) {
 	await pb.collection('logs').create(Message);
 }
 
-export function attachSocket(server: HttpServer) {
+/**
+ * @param {Partial<import("socket.io").ServerOptions> | import("vite").HttpServer | undefined} server
+ */
+export function attachSocket(server) {
 	const io = new Server(server);
 
-	let connectedUsers: string[] = [];
+	/**
+	 * @type {any[]}
+	 */
+	let connectedUsers = [];
 
-	let numberOfRingedContestant: number = 0;
+	let numberOfRingedContestant = 0;
 
 	for (let contestantIndex = 1; contestantIndex <= 4; contestantIndex++) {
 		pb.collection('users').update(`4t-contestant-${contestantIndex}`, { online: false });
@@ -32,7 +42,10 @@ export function attachSocket(server: HttpServer) {
 	io.on('connection', (socket) => {
 		socket.emit('message', 'konnichiwa!');
 
-		let userKey: string;
+		/**
+		 * @type {string | any[]}
+		 */
+		let userKey;
 
 		console.log('Client mới truy cập:');
 		console.log(
@@ -43,7 +56,7 @@ export function attachSocket(server: HttpServer) {
 	Referer: ${socket.handshake.headers.referer}`
 		);
 
-		socket.on('knownUserAccessed', (user: AuthModel) => {
+		socket.on('knownUserAccessed', (user) => {
 			if (user) {
 				socket.data.user = user;
 				userKey = `${socket.id}_${user.id}`;
@@ -85,7 +98,7 @@ export function attachSocket(server: HttpServer) {
 			}
 		});
 
-		socket.on('bell', (game: string, userId: string) => {
+		socket.on('bell', (game, userId) => {
 			if (game === 'vcnv') {
 				io.to('sounds').emit('sound', `bell_vcnv`);
 				pb.collection('users').update(userId, { ring: 1 });
@@ -106,7 +119,7 @@ export function attachSocket(server: HttpServer) {
 			}
 		});
 
-		socket.on('message', (message: string) => {
+		socket.on('message', (message) => {
 			console.log(message);
 			if (message === 'joinSound') socket.join('sounds');
 		});

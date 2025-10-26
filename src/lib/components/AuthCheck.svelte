@@ -12,16 +12,16 @@
 </script>
 
 {#await userLoadPromise}
-	<div class="flex h-screen flex-col items-center justify-center gap-8">
-		<img src="src/lib/image/4t-blue.png" alt="4T logo" class="h-[150px]" />
+	<div class="flex flex-col items-center justify-center h-screen gap-8">
+		<img src="/4t-blue.png" alt="4T logo" class="h-[150px]" />
 		<span class="loading loading-spinner loading-lg"></span>
 	</div>
 {:then user}
 	{#if user && !(requiredBTC != (user.collectionName == 'btc'))}
 		<slot></slot>
 	{:else}
-		<div class="flex h-screen flex-col items-center justify-center gap-8">
-			<img src="src/lib/image/4t-blue.png" alt="4T logo" class="h-[150px]" />
+		<div class="flex flex-col items-center justify-center h-screen gap-8">
+			<img src="/4t-blue.png" alt="4T logo" class="h-[150px]" />
 			<h1 class="text-2xl font-semibold">
 				{requiredBTC != !user ? 'Sử dụng tài khoản BTC' : 'Đăng nhập'} để tiếp tục
 			</h1>

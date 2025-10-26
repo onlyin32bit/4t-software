@@ -19,14 +19,14 @@
 	<img
 		class="fixed left-[35vw] top-[17vh] w-[30vw]"
 		style={`filter: drop-shadow(8px 10px 10px #335);`}
-		src="/src/lib/image/4t.png"
+		src="/4t.png"
 		alt="Logo 4T"
 		in:scale
 	/>
 	<!-- <img
 		class="fixed left-[55vw] top-[23vh] h-[26vh]"
 		style={`filter: drop-shadow(8px 10px 10px #335);`}
-		src="/src/lib/image/logo-cbt.png"
+		src="/logo-cbt.png"
 		alt="Logo THPT Chuyen Ben Tre"
 	/> -->
 	<h1

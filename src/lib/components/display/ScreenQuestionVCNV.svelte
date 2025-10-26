@@ -57,7 +57,7 @@
 	<img
 		class="absolute left-[45vw] top-[2vh] h-[90vh] w-[90vw] -translate-x-1/2"
 		style={`filter: drop-shadow(8px 28px 32px #335);`}
-		src="/src/lib/image/bg-ques.svg"
+		src="/bg-ques.svg"
 		alt="BG"
 		in:scale={{ duration: 750 }}
 	/>

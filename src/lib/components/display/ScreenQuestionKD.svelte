@@ -79,7 +79,7 @@
 		<img
 			class="absolute top-[-10vh] w-[80vw]"
 			style={`filter: drop-shadow(8px 28px 32px #335);`}
-			src="/src/lib/image/bg-ques.svg"
+			src="/bg-ques.svg"
 			alt="BG"
 			in:scale={{ duration: 3000 }}
 		/>
