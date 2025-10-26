@@ -1,8 +1,18 @@
 import { Server } from 'socket.io';
 import type { HttpServer } from 'vite';
-import { pb } from './src/lib/pocketBase';
-import { createLogMessage } from './src/lib/utils';
-import type { AuthModel } from 'pocketbase';
+import Pocketbase, { type AuthModel } from 'pocketbase';
+
+const pb = new Pocketbase(process.env.PUBLIC_DB_ADDRESS);
+
+async function createLogMessage(from: string, type: string, content: string) {
+	const Message = {
+		time: Date.now().toLocaleString(),
+		from: from,
+		type: type,
+		content: content
+	};
+	await pb.collection('logs').create(Message);
+}
 
 export function attachSocket(server: HttpServer) {
 	const io = new Server(server);

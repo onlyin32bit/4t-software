@@ -43,22 +43,20 @@
 			{`${dictionary.get(settings.game) ?? '...'} ${settings.game === 'ck' ? '' : settings.game_number}`}
 		</h1>
 	{/if}
-	<table class="scale-95 font-medium">
+	<table class="font-medium scale-95">
 		<tbody>
 			{#each contestants as contestant, i}
-				<div in:fade={{ delay: (i + 1) * 100 }}>
-					{#if i > 0}
-						<tr>
-							<td class="h-[5vh]"></td>
-						</tr>
-					{/if}
-					<tr class="h-[14vh] shadow-lg">
-						<td class="w-[45vw] bg-black text-center">{contestant.name.toUpperCase()}</td>
-						<td class="w-[31vw] bg-gradient-to-b from-red-600 to-red-800 pl-[2vw]">
-							{contestant.class.toUpperCase()}
-						</td>
+				{#if i > 0}
+					<tr in:fade={{ delay: (i + 1) * 100 }}>
+						<td class="h-[5vh]"></td>
 					</tr>
-				</div>
+				{/if}
+				<tr class="h-[14vh] shadow-lg" in:fade={{ delay: (i + 1) * 100 }}>
+					<td class="w-[45vw] bg-black text-center">{contestant.name.toUpperCase()}</td>
+					<td class="w-[31vw] bg-gradient-to-b from-red-600 to-red-800 pl-[2vw]">
+						{contestant.class.toUpperCase()}
+					</td>
+				</tr>
 			{/each}
 		</tbody>
 	</table>
