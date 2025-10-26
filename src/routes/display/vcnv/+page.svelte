@@ -144,13 +144,13 @@
 {:else if scr_slide === 'intro'}
 	<ScreenIntro screen="vcnv" />
 {:else if scr_slide === 'main_vcnv'}
-	<div class="fixed h-full w-full bg-bg-2 bg-cover bg-no-repeat">
+	<div class="fixed w-full h-full bg-no-repeat bg-cover bg-bg-2">
 		<div class="relative -left-[5vw] -top-[3vh] h-full w-full">
 			<div in:fade>
 				<img
 					class="absolute left-1/2 top-1/2 h-[95vh] w-[90vw] -translate-x-1/2 -translate-y-1/2"
 					style={`filter: drop-shadow(8px 28px 32px #335);`}
-					src="/bg2.svg"
+					src="/bg-vcnv.svg"
 					alt=""
 				/>
 			</div>
@@ -228,7 +228,7 @@
 	</div>
 {:else if scr_slide === 'image_vcnv'}
 	<div class="h-full w-full text-[20vh] font-bold">
-		<img class="fixed left-1/2 h-screen -translate-x-1/2" src={obstacleImageUrl} alt="" />
+		<img class="fixed h-screen -translate-x-1/2 left-1/2" src={obstacleImageUrl} alt="" />
 		{#if !displayStatus.image[0]}
 			<div
 				class="fixed left-0 h-[50vh] w-[50vw] border-8 bg-gradient-to-tr from-[#0F247D] to-[#26164D]"

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { cubicOut } from 'svelte/easing';
-	import logo from '$lib/image/4t.png';
 	import { fly, fade, slide, scale } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { pb } from '$lib/pocketBase';
@@ -47,7 +46,7 @@
 
 <!-- main display -->
 <div class="h-screen w-screen bg-bg-1 bg-cover bg-no-repeat text-[8vh] text-white">
-	<img class="center-element fixed h-[50vh] opacity-25" src={logo} alt="Logo 4T" in:fade />
+	<img class="center-element fixed h-[50vh] opacity-25" src="/4t.png" alt="Logo 4T" in:fade />
 	<div
 		class="fixed left-[23vw] top-1/2 h-[110vh] w-[3vw] -translate-y-1/2 bg-white"
 		in:fly={{ y: -1300, duration: 1300, opacity: 1 }}
@@ -75,7 +74,7 @@
 						<span class="mr-[2vw] text-[7vh] font-bold tracking-tighter">
 							{answer.toUpperCase()}
 						</span>
-						<span class="font-mono ml-auto font-medium tracking-tighter"
+						<span class="ml-auto font-mono font-medium tracking-tighter"
 							>{(time / 1000).toFixed(2)}</span
 						>
 					</div>
