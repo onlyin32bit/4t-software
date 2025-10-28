@@ -9,6 +9,7 @@
 	export let questionContent: string;
 	export let questionFile: string;
 	export let displayQuestion: boolean = false;
+	export let questionTime: number = 30;
 
 	onMount(async () => {
 		sendSoundRequest('tt_start_question');
@@ -25,7 +26,7 @@
 	let time = tweened(0, { duration: 30000 });
 
 	async function timer() {
-		$time = 31;
+		$time = questionTime;
 	}
 
 	$: if (questionNumber) {
@@ -46,7 +47,7 @@
 	}
 </script>
 
-<div class="fixed h-full w-full bg-bg-2 bg-cover bg-no-repeat" in:slide={{ duration: 1500 }}>
+<div class="fixed w-full h-full bg-no-repeat bg-cover bg-bg-2" in:slide={{ duration: 1500 }}>
 	<div>
 		<img
 			class="absolute left-[10vw] w-[73vw]"
@@ -62,7 +63,7 @@
 		>
 			<div
 				class="absolute top-0 h-[110%] w-full"
-				style={`background: linear-gradient(to top, #f00 ${($time / 32) * 100}%, rgba(0,0,0,0) ${($time / 32) * 100 + 10}%);`}
+				style={`background: linear-gradient(to top, #f00 ${($time / questionTime) * 100}%, rgba(0,0,0,0) ${($time / questionTime) * 100 + 10}%);`}
 			></div>
 		</div>
 		<div
@@ -83,12 +84,12 @@
 			{#if displayQuestion}
 				{#if questionNumber % 2 === 1}
 					<img
-						class="absolute left-1/2 h-full -translate-x-1/2"
+						class="absolute h-full -translate-x-1/2 left-1/2"
 						src={questionFile}
 						alt={questionFile}
 					/>
 				{:else if $time > 0}
-					<video class="absolute left-1/2 h-full -translate-x-1/2" muted autoplay>
+					<video class="absolute h-full -translate-x-1/2 left-1/2" muted autoplay>
 						<source src={questionFile} type="video/mp4" />
 						<h1>ERROR</h1>
 					</video>

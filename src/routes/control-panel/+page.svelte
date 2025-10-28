@@ -37,19 +37,16 @@
 	$: current.numberOfQuestion = getNumberOfQuestion(current);
 
 	function getNumberOfQuestion(displayState: DisplayObject): number {
-		return (
-			numberOfQues.get(
-				displayState.screen +
-					(displayState.screen === 'kd'
-						? displayState.slide === 'ques_chung'
-							? '_chung'
-							: displayState.slide.startsWith('ques_ts')
-								? '_rieng'
-								: ''
-						: '')
-			) ?? 0
-		);
-	}
+        let key = displayState.screen;
+        if (displayState.screen === 'kd') {
+            if (displayState.slide === 'ques_chung') {
+                key += '_chung';
+            } else if (displayState.slide.startsWith('ques_ts')) {
+                key += '_rieng';
+            }
+        }
+        return numberOfQues.get(key) ?? 0;
+    }
 
 	let selectedScore: number[] = [0, 0, 0, 0];
 
@@ -71,45 +68,28 @@
 		game_number: 1
 	};
 
-	let selectionSlideList: string[] = ['start', 'rule', 'ques', 'end'];
-	$: if (selected.screen === 'kd') {
-		selectionSlideList = [
-			'start',
-			'rule',
-			'intro',
-			'main_kd',
-			'ques_chung',
-			'ques_ts1',
-			'ques_ts2',
-			'ques_ts3',
-			'ques_ts4',
-			'end_ts',
-			'end'
-		];
-	} else if (selected.screen === 'tt') {
-		selectionSlideList = ['start', 'rule', 'intro', 'ques', 'solve', 'end'];
-	} else if (selected.screen === 'vcnv') {
-		selectionSlideList = ['start', 'rule', 'intro', 'main_vcnv', 'image_vcnv', 'ques', 'end'];
-	} else if (selected.screen === 'vd') {
-		selectionSlideList = [
-			'start',
-			'rule',
-			'intro',
-			'main_vd',
-			'pre_ques_ts1',
-			'ques_ts1',
-			'pre_ques_ts2',
-			'ques_ts2',
-			'pre_ques_ts3',
-			'ques_ts3',
-			'pre_ques_ts4',
-			'ques_ts4',
-			'end_ts',
-			'end'
-		];
-	} else {
-		selectionSlideList = ['start', 'rule', 'ques', 'end'];
-	}
+	let selectedSlideList: string[] = ['start', 'rule', 'ques', 'end'];
+	$: {
+        if (selected.screen === 'kd') {
+            selectedSlideList = [
+                'start', 'rule', 'intro', 'main_kd', 'ques_chung',
+                'ques_ts1', 'ques_ts2', 'ques_ts3', 'ques_ts4', 'end_ts', 'end'
+            ];
+        } else if (selected.screen === 'tt') {
+            selectedSlideList = ['start', 'rule', 'intro', 'ques', 'solve', 'end'];
+        } else if (selected.screen === 'vcnv') {
+            selectedSlideList = ['start', 'rule', 'intro', 'main_vcnv', 'image_vcnv', 'ques', 'end'];
+        } else if (selected.screen === 'vd') {
+            selectedSlideList = [
+                'start', 'rule', 'intro', 'main_vd',
+                'pre_ques_ts1', 'ques_ts1', 'pre_ques_ts2', 'ques_ts2',
+                'pre_ques_ts3', 'ques_ts3', 'pre_ques_ts4', 'ques_ts4',
+                'end_ts', 'end'
+            ];
+        } else {
+            selectedSlideList = ['start', 'rule', 'ques', 'end'];
+        }
+    }
 
 	let contestant_info = [
 		{ name: undefined, class: undefined },
@@ -125,15 +105,24 @@
 	// chay khi component duoc load
 	onMount(async () => {
 		// fetch data
-		const userListRecord = await pb.collection('users').getFullList();
-		const otherUserListRecord = await pb.collection('btc').getFullList();
-		const logsRecord = await pb.collection('logs').getList(1, 200);
-		const displayStatusRecord = await pb.collection('display_status').getOne('4T-DISPLAYSTATE');
 		// const settingsRecord = await pb.collection('settings').getOne('GLOBAL-SETTINGS');
+		const [
+            userListRecord,
+            otherUserListRecord,
+            logsRecord,
+            displayStatusRecord
+        ] = await Promise.all([
+            pb.collection('users').getFullList(),
+            pb.collection('btc').getFullList(),
+            pb.collection('logs').getList(1, 200, { sort: '-created' }),
+            pb.collection('display_status').getOne('4T-DISPLAYSTATE')
+        ]);
 
 		contestants = userListRecord;
 		otherUsers = otherUserListRecord;
-		logs = logsRecord.items;
+		logs = logsRecord.items.sort((a, b) =>
+			a.created < b.created ? -1 : a.created > b.created ? 1 : 0
+		);
 		current = {
 			screen: displayStatusRecord.screen,
 			slide: displayStatusRecord.slide,
@@ -181,7 +170,7 @@
 		];
 	});
 	// chay khi component bi pha huy
-	onDestroy(() => unsub.forEach((currentValue) => currentValue?.()));
+	onDestroy(() => unsub.forEach(fn => fn?.()));
 
 	const timePreset: { [key: string]: number } = {
 		20: 15,
@@ -788,14 +777,14 @@
 								class:btn-disabled={selected.slide === 'start' ||
 									selected.screen !== current.screen}
 								on:click={() => {
-									const prevIndex = selectionSlideList.indexOf(selected.slide) - 1;
-									selected.slide = selectionSlideList[prevIndex];
+									const prevIndex = selectedSlideList.indexOf(selected.slide) - 1;
+									selected.slide = selectedSlideList[prevIndex];
 									setSlide();
 								}}
 								>{'<'}
 							</button>
 							<select class="text-xl select select-bordered select-md" bind:value={selected.slide}>
-								{#each selectionSlideList as value}
+								{#each selectedSlideList as value}
 									<option {value}>{dictionary.get(value)}</option>
 								{/each}
 							</select>
@@ -803,8 +792,8 @@
 								class="btn"
 								class:btn-disabled={selected.slide === 'end' || selected.screen !== current.screen}
 								on:click={() => {
-									const nextIndex = selectionSlideList.indexOf(selected.slide) + 1;
-									selected.slide = selectionSlideList[nextIndex];
+									const nextIndex = selectedSlideList.indexOf(selected.slide) + 1;
+									selected.slide = selectedSlideList[nextIndex];
 									setSlide();
 								}}
 								>{'>'}

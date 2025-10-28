@@ -100,7 +100,7 @@
 	}
 </script>
 
-<div class="fixed h-full w-full bg-bg-2 bg-cover bg-no-repeat">
+<div class="fixed w-full h-full bg-no-repeat bg-cover bg-bg-2">
 	<div class="left-[1vw] top-[17vh] h-[65vh] w-[80vw]" bind:clientHeight={containerHeight}>
 		<img
 			class="absolute top-[-10vh] w-[80vw]"
@@ -173,12 +173,12 @@
 	{#if starStatus}
 		<img
 			class="fixed right-[18vw] top-[-5vh] h-[47vh]"
-			src="/stars/Star_4T_1.gif"
+			src="/star.gif"
 			alt="Star"
 			in:scale
 		/>
 	{/if}
-	<!-- <div class="fixed left-0 top-0 text-4xl font-black">
+	<!-- <div class="fixed top-0 left-0 text-4xl font-black">
 		{questionFile}
 		{timeStatus}
 		{displayQuestion}
