@@ -82,7 +82,7 @@
 		</div>
 		<div class="fixed bottom-[4.42vh] left-[14vw] h-[72vh] w-[65vw]">
 			{#if displayQuestion}
-				{#if questionNumber % 2 === 1}
+				{#if (/\.(png|webp|jpg|jpeg)(\?.*)?$/i).test(questionFile)}
 					<img
 						class="absolute h-full -translate-x-1/2 left-1/2"
 						src={questionFile}

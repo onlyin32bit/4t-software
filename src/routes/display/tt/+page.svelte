@@ -9,7 +9,7 @@
 	import ScreenSolvedTT from '$lib/components/display/ScreenSolvedTT.svelte';
 	import ScreenEnd from '$lib/components/display/ScreenEnd.svelte';
 
-	let questions: string[] = [];
+	let questions: {content:string, time: number}[] = [];
 	let questionFile: string[] = [];
 	let questionFileSolved: string[] = [];
 
@@ -23,7 +23,7 @@
 		ques = displayStatus.ques;
 
 		const data = await pb.collection('tt').getOne('4T-QUESTIONS-TT');
-		questions = data.question as string[];
+		questions = data.question as  {content:string, time: number}[];
 		questionFile = [
 			pb.files.getUrl(data, data[1]),
 			pb.files.getUrl(data, data[2]),
@@ -61,7 +61,8 @@
 {:else if scr_slide === 'ques'}
 	<ScreenQuestionTT
 		questionNumber={ques}
-		questionContent={questions[ques - 1]}
+		questionContent={questions[ques - 1].content}
+		questionTime={questions[ques - 1].time}
 		questionFile={questionFile[ques - 1]}
 		{displayQuestion}
 	/>
@@ -69,7 +70,7 @@
 {:else if scr_slide === 'solve'}
 	<ScreenSolvedTT
 		questionNumber={ques}
-		questionContent={questions[ques - 1]}
+		questionContent={questions[ques - 1].content}
 		questionFile={questionFileSolved[ques - 1]}
 	/>
 {:else if scr_slide === 'end'}
