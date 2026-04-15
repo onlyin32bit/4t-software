@@ -7,7 +7,7 @@
 
 <div class="fixed h-full w-full bg-bg-2 bg-cover bg-no-repeat" transition:fade>
 	<div
-		class="fixed right-[2vw] top-[26vh] space-y-[3vh] text-[4vh] font-medium"
+		class="fixed right-[2vw] top-[20vh] space-y-[3vh] text-[4vh] font-medium"
 		in:fade={{ duration: 1000 }}
 	>
 		{#each contestants as contestant, i}

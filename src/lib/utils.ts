@@ -165,6 +165,7 @@ export const soundsCollection: Map<string, string> = new Map([
 	['tong_ket_diem', 'main/PointSummary.mp3'],
 	['space', 'main/Space.mp3'],
 	['start', 'main/Start.mp3'],
+	['hoihop', 'main/HoiHop.m4a'],
 
 	['kd_start', 'kd/StartRound.mp3'],
 	['kd_start_2', 'kd/StartTurn.mp3'],
@@ -194,6 +195,7 @@ export const soundsCollection: Map<string, string> = new Map([
 	['tt_start', 'tt/StartRound.mp3'],
 	['tt_start_question', 'tt/QuestionShowing.mp3'],
 	['tt_time', 'tt/30Seconds.mp3'],
+	['tt_time20', 'tt/20Seconds.mp3'],
 	['tt_end', 'vd/FinishRound.mp3'],
 	['tt_show_answer', 'tt/AnswersShowing.ogg'],
 	['tt_correct', 'tt/Correct.mp3'],

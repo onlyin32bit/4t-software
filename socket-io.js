@@ -128,7 +128,6 @@ export function attachSocket(server) {
 
 		socket.on('bell', async (game, userId) => {
 			debug('EVENT', `bell -> game=${game} userId=${userId}`);
-			if (!game || !userId) return;
 			if (game === 'clear') {
 				ringed = 0;
 				debug('RING', 'Cleared all ring states.');
@@ -144,7 +143,7 @@ export function attachSocket(server) {
 					pb.collection('display_status').update('4T-DISPLAYSTATE', { bellAllowed: false })
 				);
 			} else {
-				debug('RING', `Bell ignored - already ringed.`);
+				debug('RING', `Bell ignored - already ringed.`, game, userId, ringed);
 			}
 		});
 
@@ -158,7 +157,7 @@ export function attachSocket(server) {
 
 		socket.on('soundReq', (sound) => {
 			debug('EVENT', `soundReq -> ${sound}`);
-			if (user && user.username !== 'user_kt_2') {
+			if (user && (user.username === 'user_kt_1' || [].includes(sound))) {
 				io.to('sounds').emit('sound', sound);
 				debug('EMIT', `Broadcasted sound '${sound}'`);
 			}

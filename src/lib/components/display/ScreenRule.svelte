@@ -21,16 +21,16 @@
 			'tt',
 			{
 				fullname: 'TĂNG TỐC',
-				content: `    	Trong vòng 30 giây, các thí sinh cùng trả lời bằng máy tính:
+				content: `    	Phần thi sẽ có 4 câu hỏi. Câu 1 và Câu 2 có thời gian trả lời là 20 giây, Câu 3 và Câu 4 có thời gian trả lời là 30 giây. Các thí sinh cùng trả lời bằng máy tính:
 • Thí sinh trả lời đúng và nhanh nhất được 40 điểm.
 • Thí sinh trả lời đúng và nhanh thứ 2 được 30 điểm.
 • Thí sinh trả lời đúng và nhanh thứ 3 được 20 điểm.
 • Thí sinh trả lời đúng và nhanh thứ 4 được 10 điểm.
-		Phần thi sẽ có 4 câu hỏi:
+		Các câu hỏi trong phần thi sẽ có dạng:
 • 1 câu hỏi suy luận, tư duy nhanh.
-• 1 câu hỏi IQ-Logic bao gồm các dạng: Tìm số thích hợp điền vào chỗ trống, tìm hình khác nhất, tìm hình còn thiếu, giải mật mã,…
-• 1 câu hỏi dữ kiện: các dữ kiện sẽ lần lượt xuất hiện với độ khó giảm dần. Thí sinh sẽ trả lời các câu hỏi như: Đây là ai? Đây là gì?...
-• 1 câu hỏi sắp xếp bao gồm ghép nối các dữ kiện theo từng cặp hoặc sắp xếp theo một thứ tự nhất định.`,
+• 1 câu hỏi dạng IQ-Logic bao gồm các dạng: Tìm số thích hợp điền vào chỗ trống, tìm hình khác nhất, tìm hình còn thiếu, giải mật mã,…
+• 1 câu hỏi dạng sắp xếp, ghép nối: bao gồm ghép nối các dữ liệu theo từng cặp hoặc sắp xếp theo một thứ tự nhất định
+• 1 câu hỏi dữ kiện: các dữ kiện sẽ lần lượt xuất hiện với độ khó giảm dần. Thí sinh sẽ trả lời các câu hỏi như: Đây là ai? Đây là địa danh nào? Đây là gì?...`,
 				fontSize: 3.6
 			}
 		],
@@ -68,7 +68,7 @@
 </script>
 
 <div
-	class="fixed h-screen w-screen bg-bg-rule bg-contain bg-center bg-no-repeat"
+	class="fixed w-screen h-screen bg-center bg-no-repeat bg-contain bg-bg-rule"
 	in:slide={{ duration: 2000 }}
 	out:scale={{ duration: 1000 }}
 >

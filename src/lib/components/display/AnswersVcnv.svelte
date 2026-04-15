@@ -24,10 +24,6 @@
 					);
 				}
 			}),
-			await pb.collection('display_status').subscribe('*', ({ action, record }) => {
-				if (action === 'update' && record.screen !== 'answers_vcnv')
-					goto('/display/' + record.screen);
-			})
 		];
 		contestants.forEach(async ({ id }) => {
 			await pb.collection('users').update(id, { wrong: false });

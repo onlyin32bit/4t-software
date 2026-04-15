@@ -6,6 +6,8 @@
 	import { slide, scale, fade } from 'svelte/transition';
 	import { tweened } from 'svelte/motion';
 
+	let unsubscribe: () => void;
+
 	export let questionNumber: number;
 	export let questionContent: string;
 	export let questionType: string;
@@ -25,7 +27,7 @@
 	onMount(async () => {
 		sendSoundRequest('vd_choose_package');
 
-		await pb
+		unsubscribe = await pb
 			.collection('display_status')
 			.subscribe('4T-DISPLAYSTATE', async ({ action, record }) => {
 				if (action === 'update') {
@@ -61,7 +63,7 @@
 				}
 			});
 	});
-	onDestroy(() => pb.collection('display_status').unsubscribe('4T-DISPLAYSTATE'));
+	onDestroy(() => unsubscribe?.());
 
 	let time = tweened(0, { duration: 0 });
 	let timeStatus: boolean = false;

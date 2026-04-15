@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Screen from '$lib/components/display/Screen.svelte';
 	import {
 		dictionary,
 		timerSettings,
@@ -138,7 +139,6 @@
 	async function ringBell() {
 		if (bellAllowed && thisContestant.ring === 0) {
 			socket.emit('bell', current.screen, thisContestant.id);
-			createLogMessage(thisContestant.name, 'BELL', 'Đã nhấn chuông');
 		}
 	}
 </script>
@@ -156,7 +156,7 @@
 		<div class="flex items-center justify-between border-[3px] border-gray-400 px-4">
 			<div class="flex items-center gap-8">
 				<img class="h-10" src="/4t-blue.png" alt="Logo 4T" />
-				<span class="text-3xl font-semibold">TRANG THÍ SINH - THÁCH THỨC TRÍ TUỆ MÙA 8</span>
+				<span class="text-3xl font-semibold">TRANG THÍ SINH - THÁCH THỨC TRÍ TUỆ MÙA 9</span>
 			</div>
 			<div class="flex items-center gap-4">
 				<div>Thí sinh hiện tại: {thisContestant.name} - {thisContestant.class}</div>
@@ -205,73 +205,79 @@
 				</div>
 			{/each}
 		</div>
-		{#if (current.screen === 'kd' && (current.slide === 'ques_chung' || current.slide === 'test_bell')) || current.screen === 'vd'}
-			<button
-				class=" font-mono select-none border-[3px] border-gray-400 text-center text-6xl hover:bg-red-100"
-				on:click|preventDefault={ringBell}
-				><div class="flex flex-col items-center gap-4">
-					<svg class="w-10" viewBox="0 0 448 512"
-						><path
-							d="M224 0c-17.7 0-32 14.3-32 32l0 19.2C119 66 64 130.6 64 208l0 18.8c0 47-17.3 92.4-48.5 127.6l-7.4 8.3c-8.4 9.4-10.4 22.9-5.3 34.4S19.4 416 32 416l384 0c12.6 0 24-7.4 29.2-18.9s3.1-25-5.3-34.4l-7.4-8.3C401.3 319.2 384 273.9 384 226.8l0-18.8c0-77.4-55-142-128-156.8L256 32c0-17.7-14.3-32-32-32zm45.3 493.3c12-12 18.7-28.3 18.7-45.3l-64 0-64 0c0 17 6.7 33.3 18.7 45.3s28.3 18.7 45.3 18.7s33.3-6.7 45.3-18.7z"
-						/></svg
-					>
-					<div class="flex flex-col">NHẤN CHUÔNG</div>
-				</div></button
-			>
-		{:else if current.screen === 'vcnv' || current.screen === 'tt'}
-			<div class="grid grid-cols-5">
-				<div class="col-span-4 grid grid-rows-[1fr_100px] text-6xl">
-					<div class="border-[3px] border-gray-400">
-						<div></div>
+			<!-- {#if current.screen === 'kd' || current.screen === 'vd'}
+				<div class="grid grid-cols-[1fr_0.5fr] border-[3px] border-gray-400">
+					<div>
+						<div class="fixed top-0 -left-[17vw] pointer-events-none h-screen w-screen scale-[60%] select-none overflow-hidden bg-black text-white"><Screen /></div>
 					</div>
-					<div class="grid grid-cols-[1fr_12rem] grid-rows-[2rem_1fr] border-[3px] border-gray-400">
-						<div class="px-4 text-2xl">Câu trả lời đã gửi:</div>
-						<div class="font-mono row-span-2 flex items-center justify-center font-bold">
-							{formatTime2(thisContestant.time)}
-						</div>
-						<div class="flex items-center px-4 text-5xl font-semibold">{thisContestant.answer}</div>
-					</div>
-				</div>
-				<div class="grid grid-rows-2">
-					<div
-						class="font-mono flex flex-col items-center justify-center gap-4 border-[3px] border-gray-400 text-6xl font-semibold"
-					>
-						<span class="text-xl">Thời gian:</span>
-						{#if elapsed === 0}
-							<span class="text-center text-5xl font-medium">Đã hết thời gian</span>
-						{:else}
-							<span>{(elapsed / 1000).toFixed(2)}s</span>
-						{/if}
-					</div>
-					<div class="select-none border-[3px] border-gray-400">
-						{#if ['main_vcnv', 'image_vcnv', 'ques'].includes(current.slide) && current.screen !== 'tt'}
-							<button
-								class="font-mono h-full text-center text-6xl hover:bg-red-100"
-								on:click|preventDefault={ringBell}
-								><div class="flex flex-col items-center gap-4">
-									<svg class="w-10" viewBox="0 0 448 512"
-										><path
-											d="M224 0c-17.7 0-32 14.3-32 32l0 19.2C119 66 64 130.6 64 208l0 18.8c0 47-17.3 92.4-48.5 127.6l-7.4 8.3c-8.4 9.4-10.4 22.9-5.3 34.4S19.4 416 32 416l384 0c12.6 0 24-7.4 29.2-18.9s3.1-25-5.3-34.4l-7.4-8.3C401.3 319.2 384 273.9 384 226.8l0-18.8c0-77.4-55-142-128-156.8L256 32c0-17.7-14.3-32-32-32zm45.3 493.3c12-12 18.7-28.3 18.7-45.3l-64 0-64 0c0 17 6.7 33.3 18.7 45.3s28.3 18.7 45.3 18.7s33.3-6.7 45.3-18.7z"
-										/></svg
-									>
-									<div class="flex flex-col">NHẤN CHUÔNG</div>
-								</div></button
+					<button
+						class=" select-none border-[3px] border-gray-400 text-center font-mono text-6xl hover:bg-red-100"
+						on:click|preventDefault={ringBell}
+						><div class="flex flex-col items-center gap-4">
+							<svg class="w-10" viewBox="0 0 448 512"
+								><path
+									d="M224 0c-17.7 0-32 14.3-32 32l0 19.2C119 66 64 130.6 64 208l0 18.8c0 47-17.3 92.4-48.5 127.6l-7.4 8.3c-8.4 9.4-10.4 22.9-5.3 34.4S19.4 416 32 416l384 0c12.6 0 24-7.4 29.2-18.9s3.1-25-5.3-34.4l-7.4-8.3C401.3 319.2 384 273.9 384 226.8l0-18.8c0-77.4-55-142-128-156.8L256 32c0-17.7-14.3-32-32-32zm45.3 493.3c12-12 18.7-28.3 18.7-45.3l-64 0-64 0c0 17 6.7 33.3 18.7 45.3s28.3 18.7 45.3 18.7s33.3-6.7 45.3-18.7z"
+								/></svg
 							>
-						{/if}
+							<div class="flex flex-col">NHẤN CHUÔNG</div>
+						</div></button	
+					>
+				</div>
+			{:else if current.screen === 'vcnv' || current.screen === 'tt'} -->
+				<div class="grid grid-cols-5">
+					<div class="col-span-4 grid grid-rows-[1fr_100px] text-6xl">
+						<div class="border-[3px] border-gray-400">
+							<div class="fixed -left-[15vw] -top-[5vh] pointer-events-none h-screen w-screen aspect-video scale-[60%] select-none overflow-hidden bg-black text-white"><Screen /></div>
+						</div>
+						<div class="grid grid-cols-[1fr_12rem] grid-rows-[2rem_1fr] border-[3px] border-gray-400">
+							<div class="px-4 text-2xl">Câu trả lời đã gửi:</div>
+							<div class="row-span-2 flex items-center justify-center font-mono font-bold">
+								{formatTime2(thisContestant.time)}
+							</div>
+							<div class="flex items-center px-4 text-5xl font-semibold">{thisContestant.answer}</div>
+						</div>
+					</div>
+					<div class="grid grid-rows-2">
+						<div
+							class="flex flex-col items-center justify-center gap-4 border-[3px] border-gray-400 font-mono text-6xl font-semibold"
+						>
+							<span class="text-xl">Thời gian:</span>
+							{#if elapsed === 0}
+								<span class="text-center text-5xl font-medium">Đã hết thời gian</span>
+							{:else}
+								<span>{(elapsed / 1000).toFixed(2)}s</span>
+							{/if}
+						</div>
+						<div class="select-none border-[3px] border-gray-400">
+							{#if ['kd', 'vcnv', 'vd'].includes(current.screen)}
+								<button
+									class="h-full text-center font-mono text-6xl hover:bg-red-100"
+									on:click|preventDefault={ringBell}
+									><div class="flex flex-col items-center gap-4">
+										<svg class="w-10" viewBox="0 0 448 512"
+											><path
+												d="M224 0c-17.7 0-32 14.3-32 32l0 19.2C119 66 64 130.6 64 208l0 18.8c0 47-17.3 92.4-48.5 127.6l-7.4 8.3c-8.4 9.4-10.4 22.9-5.3 34.4S19.4 416 32 416l384 0c12.6 0 24-7.4 29.2-18.9s3.1-25-5.3-34.4l-7.4-8.3C401.3 319.2 384 273.9 384 226.8l0-18.8c0-77.4-55-142-128-156.8L256 32c0-17.7-14.3-32-32-32zm45.3 493.3c12-12 18.7-28.3 18.7-45.3l-64 0-64 0c0 17 6.7 33.3 18.7 45.3s28.3 18.7 45.3 18.7s33.3-6.7 45.3-18.7z"
+											/></svg
+										>
+										<div class="flex flex-col">NHẤN CHUÔNG</div>
+									</div></button
+								>
+							{/if}
+						</div>
 					</div>
 				</div>
-			</div>
-			<div class="border-[3px] border-gray-400">
-				<form on:submit|preventDefault={createAnswer} class="h-full">
-					<input
-						class="h-full w-full px-4 text-6xl uppercase"
-						type="text"
-						placeholder="Nhập câu trả lời của bạn, ENTER để gửi"
-						bind:value={answer}
-						bind:this={answerInputElement}
-					/>
-				</form>
-			</div>
-		{/if}
+				<div class="border-[3px] border-gray-400">
+					<form on:submit|preventDefault={createAnswer} class="h-full">
+						<input
+							class="h-full w-full px-4 text-6xl uppercase disabled:hidden"
+							disabled={!['vcnv', 'tt'].includes(current.screen)}
+							type="text"
+							placeholder="Nhập câu trả lời của bạn, ENTER để gửi"
+							bind:value={answer}
+							bind:this={answerInputElement}
+						/>
+					</form>
+				</div>
+			<!-- {/if} -->
 	</div>
 </AuthCheck>

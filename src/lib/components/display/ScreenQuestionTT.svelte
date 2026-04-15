@@ -5,28 +5,31 @@
 	import { slide, scale } from 'svelte/transition';
 	import { tweened } from 'svelte/motion';
 
+	let unsubscribe: () => void;
+
 	export let questionNumber: number;
 	export let questionContent: string;
 	export let questionFile: string;
 	export let displayQuestion: boolean = false;
 	export let questionTime: number = 30;
+	
+	let time = tweened(0, { duration: (questionNumber < 2 ? 20 : 30) * 1000 });
 
 	onMount(async () => {
 		sendSoundRequest('tt_start_question');
 
-		await pb.collection('display_status').subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
+		unsubscribe = await pb.collection('display_status').subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
 			if (action === 'update' && record.timer !== -1) {
 				time.set(0, { duration: 0 });
 				timer();
 			}
 		});
 	});
-	onDestroy(() => pb.collection('display_status').unsubscribe('4T-DISPLAYSTATE'));
+	onDestroy(() => unsubscribe?.());
 
-	let time = tweened(0, { duration: 30000 });
 
 	async function timer() {
-		$time = questionTime;
+		$time = questionNumber < 2 ? 20 : 30;
 	}
 
 	$: if (questionNumber) {

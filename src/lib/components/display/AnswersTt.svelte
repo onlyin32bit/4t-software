@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { cubicOut } from 'svelte/easing';
 	import { fly, fade, slide, scale } from 'svelte/transition';
-	import { goto } from '$app/navigation';
 	import { pb } from '$lib/pocketBase';
 	import { onDestroy, onMount } from 'svelte';
 	import type { RecordModel } from 'pocketbase';
@@ -27,10 +26,6 @@
 					);
 				}
 			}),
-			await pb.collection('display_status').subscribe('*', ({ action, record }) => {
-				if (action === 'update' && record.screen !== 'answers_tt')
-					goto('/display/' + record.screen);
-			})
 		];
 		contestants.forEach(async ({ id, answer }) => {
 			await pb.collection('users').update(id, { wrong: false });

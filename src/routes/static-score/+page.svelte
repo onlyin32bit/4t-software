@@ -23,7 +23,6 @@
 	onDestroy(() => unsub.forEach((currentValue) => currentValue?.()));
 </script>
 
-<!-- main display -->
 <div class="h-screen w-screen bg-bg-2 bg-cover bg-no-repeat text-[6vh] text-white">
 	<img class="fixed right-[9vw] top-[3vh] h-[10vh]" src="/4t.png" alt="Logo 4T" />
 	<img
@@ -37,10 +36,10 @@
 	>
 		BẢNG ĐIỂM
 	</h1>
-	<div class="fixed left-1/2 top-[40vh] flex -translate-x-1/2 gap-[2.5vw] font-header">
+	<div class="fixed left-1/2 top-[40vh] flex -translate-x-1/2 gap-[2.5vw] font-sans">
 		{#each contestants as contestant, i}
 			<div
-				class="w-[22vw] border-[0.8vh] border-slate-200 text-[4.9vh]"
+				class="w-[22vw] border-[0.8vh] border-slate-200 text-[4.3vh]"
 				style={`filter: drop-shadow(8px 28px 32px #335); ${contestant.ring > 0 ? 'outline: 2vh solid red' : ''}`}
 				in:scale={{ delay: i * 100 }}
 			>

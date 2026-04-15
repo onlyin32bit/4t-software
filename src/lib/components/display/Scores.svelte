@@ -1,16 +1,24 @@
 <script lang="ts">
 	import { fade, scale } from 'svelte/transition';
-	import { goto } from '$app/navigation';
 	import { pb } from '$lib/pocketBase';
 	import { onDestroy, onMount } from 'svelte';
 	import type { RecordModel } from 'pocketbase';
+	import { dictionary } from '$lib/utils';
 
 	let contestants: RecordModel[] = [];
+
+	let settings: { game: string; game_number: number } = { game: '', game_number: -1 };
 
 	let unsub: (() => void)[] = [];
 	onMount(async () => {
 		const userList = await pb.collection('users').getFullList();
 		contestants = userList;
+
+		const settingsRecord = await pb.collection('settings').getOne('GLOBAL-SETTINGS');
+		settings = {
+			game: settingsRecord.field.game,
+			game_number: settingsRecord.field.game_number
+		};
 
 		unsub = [
 			await pb.collection('users').subscribe('*', ({ action, record }) => {
@@ -19,9 +27,6 @@
 						currentValue.id === record.id ? record : currentValue
 					);
 			}),
-			await pb.collection('display_status').subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
-				if (action === 'update' && record.screen !== 'scores') goto('/display/' + record.screen);
-			})
 		];
 	});
 	onDestroy(() => unsub.forEach((currentValue) => currentValue?.()));
@@ -36,15 +41,19 @@
 		alt="Logo THPT Chuyen Ben Tre"
 	/>
 	<h1
-		class="fixed top-[11vh] w-screen text-center text-[18vh] font-extrabold"
+		class="fixed top-[8vh] w-screen text-center text-[16vh] font-extrabold"
 		style={`text-shadow: 0.1vh 0.5vh 1vh rgba(103, 103, 140, 1);`}
 	>
 		BẢNG ĐIỂM
 	</h1>
-	<div class="fixed left-1/2 top-[40vh] flex -translate-x-1/2 gap-[2.5vw] font-header">
+	<h2
+	class="fixed top-[27vh] w-screen text-center text-[8vh] font-extrabold opacity-80 uppercase"
+		style={`text-shadow: 0.1vh 0.5vh 1vh rgba(103, 103, 140, 1);`}
+	>{`${dictionary.get(settings.game) ?? '...'} ${settings.game === 'ck' ? '' : settings.game_number}`}</h2>
+	<div class="fixed left-1/2 top-[42vh] flex -translate-x-1/2 gap-[2.5vw] font-sans">
 		{#each contestants as contestant, i}
 			<div
-				class="w-[22vw] border-[0.8vh] border-slate-100 text-[4.9vh]"
+				class="w-[22.5vw] border-[0.8vh] border-slate-100 text-[4.3vh]"
 				style={`filter: drop-shadow(8px 28px 32px #335);`}
 				in:scale={{ delay: i * 100 }}
 			>

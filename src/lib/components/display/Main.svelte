@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { fly, scale, fade } from 'svelte/transition';
-	import { goto } from '$app/navigation';
 	import { pb } from '$lib/pocketBase';
 	import { dictionary } from '$lib/utils';
 	import { onDestroy, onMount } from 'svelte';
@@ -9,7 +8,6 @@
 	let contestants: RecordModel[] = [];
 	let settings: { game: string; game_number: number } = { game: '', game_number: -1 };
 
-	let unsub: (() => void)[] = [];
 	onMount(async () => {
 		const userList = await pb.collection('users').getFullList();
 		contestants = userList;
@@ -19,14 +17,7 @@
 			game: settingsRecord.field.game,
 			game_number: settingsRecord.field.game_number
 		};
-
-		unsub = [
-			await pb.collection('display_status').subscribe('*', ({ action, record }) => {
-				if (action === 'update' && record.screen !== 'main') goto('/display/' + record.screen);
-			})
-		];
 	});
-	onDestroy(() => unsub.forEach((currentValue) => currentValue?.()));
 </script>
 
 <div
@@ -41,7 +32,7 @@
 	/>
 	{#if settings.game}
 		<h1
-			class="fixed left-0 top-[1.5vh] w-screen text-center font-number-display text-[17vh] font-bold uppercase text-blue-50"
+			class="fixed left-0 top-[1.5vh] w-screen text-center font-[Montserrat] text-[17vh] font-bold uppercase text-blue-50"
 			style={`text-shadow: 0.1vh 0.5vh 1vh rgba(103, 103, 140, 1);`}
 			in:scale={{ duration: 700 }}
 		>

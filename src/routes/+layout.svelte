@@ -17,6 +17,6 @@
 	$: if ($user !== null) socket.emit('knownUserAccessed', $user);
 </script>
 
-<div class="font-sans">
+<div class="font-sans" style="background: transparent;">
 	<slot />
 </div>

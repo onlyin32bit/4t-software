@@ -1,13 +1,15 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { pb } from '$lib/pocketBase';
-	import { onDestroy, onMount } from 'svelte';
 	import ScreenStart from '$lib/components/display/ScreenStart.svelte';
 	import ScreenRule from '$lib/components/display/ScreenRule.svelte';
 	import ScreenIntro from '$lib/components/display/ScreenIntro.svelte';
 	import ScreenQuestionTT from '$lib/components/display/ScreenQuestionTT.svelte';
 	import ScreenSolvedTT from '$lib/components/display/ScreenSolvedTT.svelte';
 	import ScreenEnd from '$lib/components/display/ScreenEnd.svelte';
+	import type { RecordModel } from 'pocketbase';
+
+	export let displayStatus: RecordModel;
+	export let tt: { questions: RecordModel; solve: RecordModel };
 
 	let questions: {content:string, time: number}[] = [];
 	let questionFile: string[] = [];
@@ -17,35 +19,26 @@
 	let ques: number = 1;
 	let displayQuestion: boolean = false;
 
-	onMount(async () => {
-		const displayStatus = await pb.collection('display_status').getOne('4T-DISPLAYSTATE');
-		scr_slide = displayStatus.slide;
-		ques = displayStatus.ques;
-
-		const data = await pb.collection('tt').getOne('4T-QUESTIONS-TT');
-		questions = data.question as  {content:string, time: number}[];
+	$: scr_slide = displayStatus?.slide || '';
+	$: ques = displayStatus?.ques || 1;
+	$: displayQuestion = displayStatus?.displayQuestion || false;
+	$: if (tt.questions) {
+		questions = tt.questions.question as {content:string, time: number}[];
 		questionFile = [
-			pb.files.getUrl(data, data[1]),
-			pb.files.getUrl(data, data[2]),
-			pb.files.getUrl(data, data[3]),
-			pb.files.getUrl(data, data[4])
+			pb.files.getUrl(tt.questions, tt.questions[1]),
+			pb.files.getUrl(tt.questions, tt.questions[2]),
+			pb.files.getUrl(tt.questions, tt.questions[3]),
+			pb.files.getUrl(tt.questions, tt.questions[4])
 		];
-
-		// unsub = [
-		await pb.collection('display_status').subscribe('*', ({ action, record }) => {
-			if (action === 'update') {
-				if (record.screen !== 'tt') goto('/display/' + record.screen);
-				else {
-					if (scr_slide !== record.slide) scr_slide = record.slide;
-					if (ques !== record.ques) ques = record.ques;
-					if (displayQuestion !== record.displayQuestion) displayQuestion = record.displayQuestion;
-				}
-				console.log('ASDSAFAGEGAVDSADFASD');
-			}
-		});
-		// ];
-	});
-	onDestroy(() => pb.collection('display_status').unsubscribe('*'));
+	}
+	$: if (tt.solve) {
+		questionFileSolved = [
+			pb.files.getUrl(tt.solve, tt.solve[1]),
+			pb.files.getUrl(tt.solve, tt.solve[2]),
+			pb.files.getUrl(tt.solve, tt.solve[3]),
+			pb.files.getUrl(tt.solve, tt.solve[4])
+		];
+	}
 </script>
 
 <svelte:head>
@@ -61,8 +54,8 @@
 {:else if scr_slide === 'ques'}
 	<ScreenQuestionTT
 		questionNumber={ques}
-		questionContent={questions[ques - 1].content}
-		questionTime={questions[ques - 1].time}
+		questionContent={questions[ques - 1]?.content ?? ''}
+		questionTime={questions[ques - 1]?.time ?? 30}
 		questionFile={questionFile[ques - 1]}
 		{displayQuestion}
 	/>
@@ -70,7 +63,7 @@
 {:else if scr_slide === 'solve'}
 	<ScreenSolvedTT
 		questionNumber={ques}
-		questionContent={questions[ques - 1].content}
+		questionContent={questions[ques - 1]?.content ?? ''}
 		questionFile={questionFileSolved[ques - 1]}
 	/>
 {:else if scr_slide === 'end'}

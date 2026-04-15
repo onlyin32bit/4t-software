@@ -6,6 +6,8 @@
 	import { fly, scale, slide, fade } from 'svelte/transition';
 	import { onMount, onDestroy } from 'svelte';
 
+	let unsubscribe: () => void;
+
 	export let questionNumber: number = 0;
 	export let questionContent: string = '';
 	export let questionType: string = '';
@@ -18,7 +20,7 @@
 	onMount(async () => {
 		sendSoundRequest('vcnv_row_question');
 
-		await pb.collection('display_status').subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
+		unsubscribe = await pb.collection('display_status').subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
 			if (action === 'update') {
 				if (record.timer === -1) {
 					if ($time !== 15) time.set(0, { duration: 0 });
@@ -29,7 +31,7 @@
 			}
 		});
 	});
-	onDestroy(() => pb.collection('display_status').unsubscribe('4T-DISPLAYSTATE'));
+	onDestroy(() => unsubscribe?.());
 
 	function timer() {
 		$time = 15;

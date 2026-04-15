@@ -86,14 +86,11 @@
 		unsub = [
 			await pb.collection('display_status').subscribe('*', ({ action, record }) => {
 				if (action === 'update') {
-					if (record.screen !== 'vd') goto('/display/' + record.screen);
-					else {
 						if (scr_slide !== record.slide) {
 							scr_slide = record.slide;
 						}
 						if (question !== record.ques) question = record.ques;
 						displayQuestion = record.displayQuestion;
-					}
 				}
 			}),
 			await pb

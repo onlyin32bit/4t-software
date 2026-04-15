@@ -25,6 +25,7 @@
 			<a href="/sounds">Âm thanh</a>
 			<a href="/control-panel">Control Panel</a>
 			<a href="/settings">Global Settings</a>
+			<a href="/enter-question">Nhập câu hỏi</a>
 		{:else}
 			<a href="/auth/ts">Đăng nhập thí sinh</a>
 			<a href="/auth/btc">Đăng nhập BTC</a>

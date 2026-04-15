@@ -349,7 +349,7 @@
 		contestants.forEach(async ({ id }) => {
 			await pb.collection('users').update(id, { ring: 0 });
 		});
-		socket.emit('bell', 'clear');
+		socket.emit('bell', 'clear', 1);
 		createLogMessage('system', 'INFO', 'Đã xóa chuông thí sinh');
 	}
 
@@ -960,22 +960,26 @@
 									on:click={() => {
 										if (current.screen === 'kd') sendSoundRequest('kd_time_3');
 										else
-											sendSoundRequest(
-												`${current.screen}_time${
+										{	
+											let sr = `${current.screen}_time${
 													selected.screen === 'vd'
 														? `_${timePreset[selectedContestantQuestionSet[selected.question - 1]]}`
 														: ''
-												}`
-											);
+												}`;
+											if (current.screen === 'tt' && current.question < 3) sr = 'tt_time20';
+											sendSoundRequest(sr);
+										}
 
-										startTimer(
-											timerSettings.get(
+										let ts = timerSettings.get(
 												current.screen +
 													(selected.screen === 'vd'
 														? `_${timePreset[selectedContestantQuestionSet[selected.question - 1]]}`
 														: '')
-											) ?? 0
-										);
+											) ?? 0;
+
+										if (current.screen === 'tt' && current.question < 3) ts = 20000;
+
+										startTimer(ts);
 									}}
 									><svg class="h-5" viewBox="0 0 384 512"
 										><path

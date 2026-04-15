@@ -68,7 +68,7 @@
 </script>
 
 {#if !soundAllowed}
-	<div class="flex h-screen items-center justify-center">
+	<div class="flex items-center justify-center h-screen">
 		<button
 			class="btn"
 			on:click={() => {
@@ -93,4 +93,12 @@
 			}}>TEST</button
 		>
 	</div>
+	<!-- <div>
+		<button
+			class="btn btn-lg"
+			on:click={() => {
+				playSound('hoihop');
+			}}>Nhac hoi hop</button
+		>
+	</div> -->
 {/if}

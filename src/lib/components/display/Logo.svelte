@@ -1,18 +1,5 @@
 <script lang="ts">
 	import { fade, scale, slide } from 'svelte/transition';
-	import { goto } from '$app/navigation';
-	import { pb } from '$lib/pocketBase';
-	import { onDestroy, onMount } from 'svelte';
-
-	let unsub: (() => void)[] = [];
-	onMount(async () => {
-		unsub = [
-			await pb.collection('display_status').subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
-				if (action === 'update' && record.screen !== 'scores') goto('/display/' + record.screen);
-			})
-		];
-	});
-	onDestroy(() => unsub.forEach((currentValue) => currentValue?.()));
 </script>
 
 <div class="bg-bg-4 h-screen w-screen bg-cover bg-no-repeat text-white">

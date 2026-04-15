@@ -6,6 +6,8 @@
 	import { slide, scale, fade } from 'svelte/transition';
 	import { tweened } from 'svelte/motion';
 
+	let unsubscribe: () => void;
+
 	export let questionNumber: number;
 	export let questionContent: string;
 	export let questionType: string;
@@ -20,7 +22,7 @@
 			sendSoundRequest('kd_start_question');
 		}, 4500);
 
-		await pb.collection('display_status').subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
+		unsubscribe = await pb.collection('display_status').subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
 			if (action === 'update') {
 				if (record.timer === -1) {
 					if ($time !== 3) {
@@ -35,7 +37,7 @@
 			}
 		});
 	});
-	onDestroy(() => pb.collection('display_status').unsubscribe('4T-DISPLAYSTATE'));
+	onDestroy(() => unsubscribe?.());
 
 	let time = tweened(0, { duration: 3000 });
 	// let stopTimer = false;
@@ -116,7 +118,7 @@
 		{/if}
 	</div>
 
-	<div class="fixed right-[2vw] top-[26vh] space-y-[3vh] text-[4vh] font-medium">
+	<div class="fixed right-[2vw] top-[20vh] space-y-[3vh] text-[4vh] font-medium">
 		{#each contestants as contestant, i}
 			<div
 				class="flex w-[18vw] items-center justify-between bg-gradient-to-tr from-[#093278] to-[#093278] px-[1vw]"

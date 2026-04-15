@@ -1,17 +1,20 @@
 <script lang="ts">
 	import { fly, fade, scale, slide } from 'svelte/transition';
 	// import logo from '$lib/image/4t.png';
-	import { goto } from '$app/navigation';
 	import { pb } from '$lib/pocketBase';
 	import type { RecordModel } from 'pocketbase';
 	import type { QuestionObject, VCNVQuestionObject } from '$lib/types';
 	import { tweened } from 'svelte/motion';
-	import { onDestroy, onMount } from 'svelte';
 	import ScreenIntro from '$lib/components/display/ScreenIntro.svelte';
 	import ScreenRule from '$lib/components/display/ScreenRule.svelte';
 	import ScreenStart from '$lib/components/display/ScreenStart.svelte';
 	import ScreenQuestionVcnv from '$lib/components/display/ScreenQuestionVCNV.svelte';
 	import ScreenEnd from '$lib/components/display/ScreenEnd.svelte';
+
+	export let users: RecordModel[];
+	export let displayStatus: RecordModel;
+	export let displayStatusVcnv: RecordModel;
+	export let vcnv: RecordModel;
 
 	// let questionSet: { [key: string]: any } = {};
 	let obstacleText: string = '';
@@ -23,7 +26,7 @@
 	let scr_slide: string = '';
 	let question: number = 1;
 	let startStatus: boolean = false;
-	let displayStatus: {
+	let displayStatusLocal: {
 		obstacle: boolean;
 		rowsState: Array<string>;
 		image: Array<boolean>;
@@ -36,95 +39,48 @@
 	let time = tweened(0, { duration: 15000 });
 	let displayQuestion: boolean = false;
 
-	// let unsub: (() => void)[] = [];
-	onMount(async () => {
-		const userListRecord = await pb.collection('users').getFullList();
-		contestants = userListRecord;
-
-		const displayStatusRecord = await pb.collection('display_status').getOne('4T-DISPLAYSTATE');
-		screen = displayStatusRecord.screen;
-		scr_slide = displayStatusRecord.slide;
-		question = displayStatusRecord.ques;
-
-		const displayStatusVcnv = await pb.collection('display_status_vcnv').getOne('4T-DISPLAYSTATE');
-		startStatus = displayStatusVcnv.start;
-		displayStatus = {
-			obstacle: displayStatusVcnv.obstacle,
-			rowsState: [
-				displayStatusVcnv[1],
-				displayStatusVcnv[2],
-				displayStatusVcnv[3],
-				displayStatusVcnv[4]
-			],
-			image: [
-				displayStatusVcnv['h1'],
-				displayStatusVcnv['h2'],
-				displayStatusVcnv['h3'],
-				displayStatusVcnv['h4'],
-				displayStatusVcnv['hcenter']
-			]
-		};
-
-		const questionData = await pb.collection('vcnv').getOne('4T-QUES-VCNV-BK');
-		const questionSet = questionData.question;
-
+	$: contestants = [...users].sort((a, b) => (a.ring > b.ring ? -1 : 1));
+	$: scr_slide = displayStatus?.slide || '';
+	$: question = displayStatus?.ques || 1;
+	$: displayQuestion = displayStatus?.displayQuestion || false;
+	$: startStatus = displayStatusVcnv?.start || false;
+	$: displayStatusLocal = {
+		obstacle: displayStatusVcnv?.obstacle || false,
+		rowsState: [
+			displayStatusVcnv?.[1] || '',
+			displayStatusVcnv?.[2] || '',
+			displayStatusVcnv?.[3] || '',
+			displayStatusVcnv?.[4] || ''
+		],
+		image: [
+			displayStatusVcnv?.h1 || false,
+			displayStatusVcnv?.h2 || false,
+			displayStatusVcnv?.h3 || false,
+			displayStatusVcnv?.h4 || false,
+			displayStatusVcnv?.hcenter || false
+		]
+	};
+	$: if (vcnv) {
+		const questionSet = vcnv.question;
 		obstacleText = questionSet.obstacle as string;
-		obstacleImageUrl = pb.files.getUrl(questionData, questionData.image);
+		obstacleImageUrl = pb.files.getUrl(vcnv, vcnv.image);
 		rows = questionSet.rows as VCNVQuestionObject[];
 		centerQuestion = questionSet.center_ques as QuestionObject;
-		if (JSON.stringify(questionData.files) !== '[]') {
+		if (JSON.stringify(vcnv.files) !== '[]') {
 			for (let index = 1; index <= 5; index++) {
 				files[index - 1] = pb.files.getUrl(
-					questionData,
-					questionData.files?.find((currentValue: string) =>
+					vcnv,
+					vcnv.files?.find((currentValue: string) =>
 						currentValue.startsWith(`${index}_ques`)
 					) ?? ''
 				);
 			}
 		}
-
-		// unsub = [
-		await pb.collection('display_status').subscribe('*', ({ action, record }) => {
-			if (action === 'update') {
-				if (record.screen !== 'vcnv') goto('/display/' + record.screen);
-				else {
-					if (scr_slide !== record.slide) scr_slide = record.slide;
-					if (question !== record.ques) question = record.ques;
-					displayQuestion = record.displayQuestion;
-					if (record.timer !== -1 && scr_slide === 'main_vcnv') {
-						time.set(0, { duration: 0 });
-						timer();
-					}
-				}
-			}
-		});
-		await pb
-			.collection('display_status_vcnv')
-			.subscribe('4T-DISPLAYSTATE', ({ action, record }) => {
-				if (action === 'update') {
-					if (startStatus !== record.start) startStatus = record.start;
-					displayStatus = {
-						obstacle: record.obstacle,
-						rowsState: [record[1], record[2], record[3], record[4]],
-						image: [record['h1'], record['h2'], record['h3'], record['h4'], record['hcenter']]
-					};
-				}
-			});
-		await pb.collection('users').subscribe('*', ({ action, record }) => {
-			if (action === 'update') {
-				contestants = contestants.map((currentValue) =>
-					currentValue.id === record.id ? record : currentValue
-				);
-				contestants.sort((a, b) => (a.ring > b.ring ? -1 : 1));
-			}
-		});
-		// ];
-	});
-	onDestroy(() => {
-		pb.collection('display_status').unsubscribe('*');
-		pb.collection('display_status_vcnv').unsubscribe('4T-DISPLAYSTATE');
-		pb.collection('users').unsubscribe('*');
-	});
+	}
+	$: if (displayStatus?.timer !== -1 && scr_slide === 'main_vcnv') {
+		time.set(0, { duration: 0 });
+		timer();
+	}
 
 	async function timer() {
 		$time = 15;
@@ -156,14 +112,14 @@
 			</div>
 			{#if startStatus}
 				<div
-					class="absolute left-2/3 top-[10vh] w-[75vw] -translate-x-3/4 bg-white text-center text-[8vh] font-bold text-black"
+					class="absolute left-2/3 top-[10vh] w-[77vw] -translate-x-3/4 bg-white text-center text-[7.7vh] font-bold text-black"
 					style={`clip-path: polygon(98% 0, 100% 50%, 98% 99%, 2% 100%, 0 53%, 2% 0);`}
 					in:scale={{ duration: 900 }}
 				>
-					{#if displayStatus.obstacle}
+					{#if displayStatusLocal.obstacle}
 						<h1 class="text-red-500" in:scale>{obstacleText.toUpperCase()}</h1>
 					{:else}
-						<h1>CHƯỚNG NGẠI VẬT CÓ {obstacleText.replaceAll(' ', '').length} KÍ TỰ</h1>
+						<h1>CHƯỚNG NGẠI VẬT CÓ {obstacleText.replaceAll(/[\s-]/g, '').length} CHỮ CÁI</h1>
 					{/if}
 				</div>
 				<div
@@ -180,15 +136,15 @@
 								</div>
 								{#each row.keyword.toUpperCase() as character}
 									<div
-										class="flex size-[10vh] items-center justify-center rounded-full border-[0.7vh] text-[6vh] font-black text-blue-950"
+										class="flex size-[9.3vh] items-center justify-center rounded-full border-[0.7vh] text-[6vh] font-black text-blue-950"
 										style={`
 												// background: rgb(255,255,255);
-												background: radial-gradient(circle at 45% 40%, #bbcfe8, #${getRowBackgroundColor(displayStatus.rowsState[i])});
+												background: radial-gradient(circle at 45% 40%, #bbcfe8, #${getRowBackgroundColor(displayStatusLocal.rowsState[i])});
 												box-shadow: 0.6vh 0.65vh 1px rgba(100, 100, 100, 0.6), inset 0.5vh 0.5vh 5px rgba(0, 0, 0, 0.6);
-												filter: brightness(${displayStatus.rowsState[i] === 'wrong' ? '0.65' : '1.1'});
+												filter: brightness(${displayStatusLocal.rowsState[i] === 'wrong' ? '0.65' : '1.1'});
 												`}
 									>
-										{displayStatus?.rowsState[i] === 'correct' ? character : ''}
+										{displayStatusLocal?.rowsState[i] === 'correct' ? character : ''}
 									</div>
 								{/each}
 							</div>
@@ -229,7 +185,7 @@
 {:else if scr_slide === 'image_vcnv'}
 	<div class="h-full w-full text-[20vh] font-bold">
 		<img class="fixed h-screen -translate-x-1/2 left-1/2" src={obstacleImageUrl} alt="" />
-		{#if !displayStatus.image[0]}
+		{#if !displayStatusLocal.image[0]}
 			<div
 				class="fixed left-0 h-[50vh] w-[50vw] border-8 bg-gradient-to-tr from-[#0F247D] to-[#26164D]"
 				style={`clip-path: polygon(0 0, 100% 0, 100% 55%, 55% 55%, 55% 100%, 0 100%);`}
@@ -237,7 +193,7 @@
 				<h1 class="absolute left-[11vw] top-[5vh]">1</h1>
 			</div>
 		{/if}
-		{#if !displayStatus.image[1]}
+		{#if !displayStatusLocal.image[1]}
 			<div
 				class="fixed right-0 h-[50vh] w-[50vw] border-8 bg-gradient-to-tr from-[#0F247D] to-[#26164D]"
 				style={`clip-path: polygon(0 0, 100% 0, 100% 100%, 45% 100%, 45% 55%, 0 55%);`}
@@ -245,7 +201,7 @@
 				<h1 class="absolute right-[11vw] top-[5vh]">2</h1>
 			</div>
 		{/if}
-		{#if !displayStatus.image[2]}
+		{#if !displayStatusLocal.image[2]}
 			<div
 				class="fixed bottom-0 left-0 h-[50vh] w-[50vw] border-8 bg-gradient-to-tr from-[#0F247D] to-[#26164D]"
 				style={`clip-path: polygon(55% 0, 55% 45%, 100% 45%, 100% 100%, 0 100%, 0 0);`}
@@ -253,7 +209,7 @@
 				<h1 class="absolute bottom-[7vh] left-[11vw]">3</h1>
 			</div>
 		{/if}
-		{#if !displayStatus.image[3]}
+		{#if !displayStatusLocal.image[3]}
 			<div
 				class="fixed bottom-0 right-0 h-[50vh] w-[50vw] border-8 bg-gradient-to-tr from-[#0F247D] to-[#26164D]"
 				style={`clip-path: polygon(45% 45%, 45% 0, 100% 0, 100% 100%, 0 100%, 0 45%);`}
@@ -262,7 +218,7 @@
 			</div>
 		{/if}
 
-		{#if !displayStatus.image[4]}
+		{#if !displayStatusLocal.image[4]}
 			<div
 				class="fixed left-1/2 top-1/2 h-[45vh] w-[45vw] -translate-x-1/2 -translate-y-1/2 border-[16px] bg-gradient-to-tr from-[#0F247D] to-[#26164D]"
 			></div>
